@@ -6,7 +6,7 @@ namespace Cheqi.Sdk.Models.Ubl;
 /// <summary>
 /// UBL Purchase Receipt - represents a complete receipt document.
 /// </summary>
-[XmlType(Namespace = UblNamespaces.Cac)]
+[XmlRoot("PurchaseReceipt", Namespace = UblNamespaces.PurchaseReceipt)]
 public sealed class PurchaseReceipt
 {
     /// <summary>

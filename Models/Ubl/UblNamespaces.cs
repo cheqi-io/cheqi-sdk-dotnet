@@ -16,6 +16,11 @@ public static class UblNamespaces
     public const string CreditNote = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2";
 
     /// <summary>
+    /// Cheqi Purchase Receipt namespace.
+    /// </summary>
+    public const string PurchaseReceipt = "urn:cheqi:names:specification:ubl:schema:xsd:PurchaseReceipt-1";
+
+    /// <summary>
     /// Common Basic Components namespace (for simple elements like ID, Name, etc.).
     /// </summary>
     public const string Cbc = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
