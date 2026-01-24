@@ -1,147 +1,172 @@
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace Cheqi.Sdk.Models.Ubl;
 
 /// <summary>
 /// UBL Payment Means - describes how payment is made.
 /// </summary>
+[XmlType(Namespace = UblNamespaces.Cac)]
 public sealed class PaymentMeans
 {
     /// <summary>
     /// Payment means code (UNCL 4461).
     /// </summary>
     [JsonPropertyName("paymentMeansCode")]
+    [XmlElement("PaymentMeansCode", Namespace = UblNamespaces.Cbc)]
     public string? PaymentMeansCode { get; set; }
 
     /// <summary>
     /// Payment means description.
     /// </summary>
     [JsonPropertyName("paymentMeansDescription")]
+    [XmlElement("PaymentMeansDescription", Namespace = UblNamespaces.Cbc)]
     public string? PaymentMeansDescription { get; set; }
 
     /// <summary>
     /// Payment ID or reference.
     /// </summary>
     [JsonPropertyName("paymentId")]
+    [XmlElement("PaymentID", Namespace = UblNamespaces.Cbc)]
     public string? PaymentId { get; set; }
 
     /// <summary>
     /// Payment due date.
     /// </summary>
     [JsonPropertyName("paymentDueDate")]
+    [XmlElement("PaymentDueDate", Namespace = UblNamespaces.Cbc)]
     public DateTimeOffset? PaymentDueDate { get; set; }
 
     /// <summary>
     /// Instruction ID.
     /// </summary>
     [JsonPropertyName("instructionId")]
+    [XmlElement("InstructionID", Namespace = UblNamespaces.Cbc)]
     public string? InstructionId { get; set; }
 
     /// <summary>
     /// Instruction note.
     /// </summary>
     [JsonPropertyName("instructionNote")]
+    [XmlElement("InstructionNote", Namespace = UblNamespaces.Cbc)]
     public string? InstructionNote { get; set; }
 
     /// <summary>
     /// Card account details.
     /// </summary>
     [JsonPropertyName("cardAccount")]
+    [XmlElement("CardAccount", Namespace = UblNamespaces.Cac)]
     public CardAccount? CardAccount { get; set; }
 
     /// <summary>
     /// Payee financial account.
     /// </summary>
     [JsonPropertyName("payeeFinancialAccount")]
+    [XmlElement("PayeeFinancialAccount", Namespace = UblNamespaces.Cac)]
     public FinancialAccount? PayeeFinancialAccount { get; set; }
 
     /// <summary>
     /// Payer financial account.
     /// </summary>
     [JsonPropertyName("payerFinancialAccount")]
+    [XmlElement("PayerFinancialAccount", Namespace = UblNamespaces.Cac)]
     public FinancialAccount? PayerFinancialAccount { get; set; }
 }
 
 /// <summary>
 /// UBL Card Account.
 /// </summary>
+[XmlType(Namespace = UblNamespaces.Cac)]
 public sealed class CardAccount
 {
     /// <summary>
     /// Primary account number (masked).
     /// </summary>
     [JsonPropertyName("primaryAccountNumberId")]
+    [XmlElement("PrimaryAccountNumberID", Namespace = UblNamespaces.Cbc)]
     public string? PrimaryAccountNumberId { get; set; }
 
     /// <summary>
     /// Card network ID (e.g., "VISA").
     /// </summary>
     [JsonPropertyName("networkId")]
+    [XmlElement("NetworkID", Namespace = UblNamespaces.Cbc)]
     public string? NetworkId { get; set; }
 
     /// <summary>
     /// Card type code.
     /// </summary>
     [JsonPropertyName("cardTypeCode")]
+    [XmlElement("CardTypeCode", Namespace = UblNamespaces.Cbc)]
     public string? CardTypeCode { get; set; }
 
     /// <summary>
     /// Card holder name.
     /// </summary>
     [JsonPropertyName("holderName")]
+    [XmlElement("HolderName", Namespace = UblNamespaces.Cbc)]
     public string? HolderName { get; set; }
 
     /// <summary>
     /// Expiry date.
     /// </summary>
     [JsonPropertyName("expiryDate")]
+    [XmlElement("ExpiryDate", Namespace = UblNamespaces.Cbc)]
     public string? ExpiryDate { get; set; }
 }
 
 /// <summary>
 /// UBL Financial Account.
 /// </summary>
+[XmlType(Namespace = UblNamespaces.Cac)]
 public sealed class FinancialAccount
 {
     /// <summary>
     /// Account ID (e.g., IBAN).
     /// </summary>
     [JsonPropertyName("id")]
+    [XmlElement("ID", Namespace = UblNamespaces.Cbc)]
     public string? Id { get; set; }
 
     /// <summary>
     /// Account ID scheme (e.g., "IBAN").
     /// </summary>
     [JsonPropertyName("schemeId")]
+    [XmlIgnore]
     public string? SchemeId { get; set; }
 
     /// <summary>
     /// Account name.
     /// </summary>
     [JsonPropertyName("name")]
+    [XmlElement("Name", Namespace = UblNamespaces.Cbc)]
     public string? Name { get; set; }
 
     /// <summary>
     /// Financial institution branch.
     /// </summary>
     [JsonPropertyName("financialInstitutionBranch")]
+    [XmlElement("FinancialInstitutionBranch", Namespace = UblNamespaces.Cac)]
     public FinancialInstitutionBranch? FinancialInstitutionBranch { get; set; }
 }
 
 /// <summary>
 /// UBL Financial Institution Branch.
 /// </summary>
+[XmlType(Namespace = UblNamespaces.Cac)]
 public sealed class FinancialInstitutionBranch
 {
     /// <summary>
     /// Branch ID (e.g., BIC/SWIFT).
     /// </summary>
     [JsonPropertyName("id")]
+    [XmlElement("ID", Namespace = UblNamespaces.Cbc)]
     public string? Id { get; set; }
 
     /// <summary>
     /// Branch name.
     /// </summary>
     [JsonPropertyName("name")]
+    [XmlElement("Name", Namespace = UblNamespaces.Cbc)]
     public string? Name { get; set; }
 }
