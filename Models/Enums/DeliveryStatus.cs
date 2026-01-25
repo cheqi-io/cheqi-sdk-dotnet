@@ -9,22 +9,22 @@ namespace Cheqi.Sdk.Models.Enums;
 public enum DeliveryStatus
 {
     /// <summary>
-    /// Receipt was delivered successfully.
+    /// Receipt successfully delivered to customer's Cheqi app/devices.
     /// </summary>
-    DELIVERED,
+    DELIVERED_DIGITAL,
 
     /// <summary>
-    /// Receipt is pending delivery.
+    /// Receipt sent via email (fallback).
     /// </summary>
-    PENDING,
+    DELIVERED_EMAIL,
 
     /// <summary>
-    /// Receipt delivery failed.
+    /// Customer not found - email required.
     /// </summary>
-    FAILED,
+    CUSTOMER_NOT_FOUND,
 
     /// <summary>
-    /// No recipient found for the identifier.
+    /// Processing failed.
     /// </summary>
-    NO_RECIPIENT
+    FAILED
 }

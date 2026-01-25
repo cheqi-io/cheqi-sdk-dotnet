@@ -3,23 +3,28 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Enums;
 
 /// <summary>
-/// Type of customer identifier.
+/// Types of customer identifiers supported for matching.
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum IdentifierType
 {
     /// <summary>
-    /// Payment card identifier.
+    /// Payment Account Reference - tokenized card identifier.
     /// </summary>
-    CARD,
+    PAR,
 
     /// <summary>
-    /// IBAN bank account identifier.
+    /// Customer email address.
     /// </summary>
-    IBAN,
+    EMAIL,
 
     /// <summary>
-    /// Email address identifier.
+    /// Primary Account Number - card number.
     /// </summary>
-    EMAIL
+    PAN,
+
+    /// <summary>
+    /// International Bank Account Number.
+    /// </summary>
+    IBAN
 }

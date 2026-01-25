@@ -50,7 +50,7 @@ public sealed class CreditNoteResult
         IsSuccess = true,
         CreditNoteId = creditNoteId,
         DeliveryCount = deliveryCount,
-        Status = DeliveryStatus.DELIVERED,
+        Status = DeliveryStatus.DELIVERED_DIGITAL,
         RecipientsFound = true
     };
 
@@ -60,7 +60,7 @@ public sealed class CreditNoteResult
     public static CreditNoteResult NoRecipients() => new()
     {
         IsSuccess = false,
-        Status = DeliveryStatus.NO_RECIPIENT,
+        Status = DeliveryStatus.CUSTOMER_NOT_FOUND,
         RecipientsFound = false,
         ErrorMessage = "No recipients found for the provided identification details"
     };

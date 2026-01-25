@@ -1,57 +1,229 @@
 using System.Text.Json.Serialization;
+using Cheqi.Sdk.Models.Enums;
 
 namespace Cheqi.Sdk.Models;
 
 /// <summary>
-/// Request DTO for submitting encrypted receipts.
+/// Request DTO for submitting an encrypted receipt.
 /// </summary>
 public sealed class EncryptedReceiptRequestDto
 {
     /// <summary>
-    /// List of encrypted receipts for each recipient.
-    /// </summary>
-    [JsonPropertyName("encryptedReceipts")]
-    public List<EncryptedReceiptData> EncryptedReceipts { get; set; } = new();
-}
-
-/// <summary>
-/// Encrypted receipt data for a single recipient.
-/// </summary>
-public sealed class EncryptedReceiptData
-{
-    /// <summary>
-    /// Recipient ID.
+    /// The UUID of the target recipient for this encrypted receipt.
     /// </summary>
     [JsonPropertyName("recipientId")]
-    public string RecipientId { get; set; } = string.Empty;
+    public Guid recipientId { get; }
+
+    /// <summary>
+    /// The receipt ID.
+    /// </summary>
+    [JsonPropertyName("receiptId")]
+    public string receiptId { get; }
+
+    /// <summary>
+    /// The receiver type (DEVICE or WEBHOOK).
+    /// </summary>
+    [JsonPropertyName("receiverType")]
+    public ReceiverType receiverType { get; }
 
     /// <summary>
     /// Base64-encoded encrypted receipt data.
     /// </summary>
-    [JsonPropertyName("encryptedData")]
-    public string EncryptedData { get; set; } = string.Empty;
+    [JsonPropertyName("encryptedReceipt")]
+    public string encryptedReceipt { get; }
 
     /// <summary>
-    /// Base64-encoded initialization vector.
+    /// Base64-encoded encrypted symmetric key.
     /// </summary>
-    [JsonPropertyName("iv")]
-    public string Iv { get; set; } = string.Empty;
+    [JsonPropertyName("encryptedSymmetricKey")]
+    public string encryptedSymmetricKey { get; }
 
     /// <summary>
-    /// Base64-encoded authentication tag.
+    /// Final hash of the receipt.
     /// </summary>
-    [JsonPropertyName("authTag")]
-    public string AuthTag { get; set; } = string.Empty;
+    [JsonPropertyName("finalHash")]
+    public string FinalHash { get; }
 
     /// <summary>
-    /// Base64-encoded encrypted AES key (encrypted with recipient's public key).
+    /// Public key used to encrypt the symmetric key.
     /// </summary>
-    [JsonPropertyName("encryptedKey")]
-    public string EncryptedKey { get; set; } = string.Empty;
+    [JsonPropertyName("publicKey")]
+    public string publicKey { get; }
 
     /// <summary>
-    /// Hash of the original receipt data for integrity verification.
+    /// Supplier party ID for tracking purposes.
     /// </summary>
-    [JsonPropertyName("dataHash")]
-    public string? DataHash { get; set; }
+    [JsonPropertyName("supplierPartyId")]
+    public Guid? supplierPartyId { get; }
+
+    // ===== CONSTRUCTOR =====
+
+    private EncryptedReceiptRequestDto(
+        Guid recipientId,
+        string receiptId,
+        ReceiverType receiverType,
+        string encryptedReceipt,
+        string encryptedSymmetricKey,
+        string finalHash,
+        string publicKey,
+        Guid? supplierPartyId)
+    {
+        this.recipientId = recipientId;
+        this.receiptId = receiptId;
+        this.receiverType = receiverType;
+        this.encryptedReceipt = encryptedReceipt;
+        this.encryptedSymmetricKey = encryptedSymmetricKey;
+        FinalHash = finalHash;
+        this.publicKey = publicKey;
+        this.supplierPartyId = supplierPartyId;
+    }
+
+    // ===== BUILDER =====
+
+    public static EncryptedReceiptRequestDtoBuilder Builder() => new EncryptedReceiptRequestDtoBuilder();
+
+    public sealed class EncryptedReceiptRequestDtoBuilder
+    {
+        private Guid? _recipientId;
+        private string? _receiptId;
+        private ReceiverType? _receiverType;
+        private string? _encryptedReceipt;
+        private string? _encryptedSymmetricKey;
+        private string? _finalHash;
+        private string? _publicKey;
+        private Guid? _supplierPartyId;
+
+        internal EncryptedReceiptRequestDtoBuilder() { }
+
+        public EncryptedReceiptRequestDtoBuilder From(EncryptedReceiptRequestDto other)
+        {
+            _recipientId = other.recipientId;
+            _receiptId = other.receiptId;
+            _receiverType = other.receiverType;
+            _encryptedReceipt = other.encryptedReceipt;
+            _encryptedSymmetricKey = other.encryptedSymmetricKey;
+            _finalHash = other.FinalHash;
+            _publicKey = other.publicKey;
+            _supplierPartyId = other.supplierPartyId;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDtoBuilder RecipientId(Guid recipientId)
+        {
+            _recipientId = recipientId;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDtoBuilder ReceiptId(string receiptId)
+        {
+            _receiptId = receiptId;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDtoBuilder ReceiverType(ReceiverType receiverType)
+        {
+            _receiverType = receiverType;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDtoBuilder EncryptedReceipt(string encryptedReceipt)
+        {
+            _encryptedReceipt = encryptedReceipt;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDtoBuilder EncryptedSymmetricKey(string encryptedSymmetricKey)
+        {
+            _encryptedSymmetricKey = encryptedSymmetricKey;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDtoBuilder FinalHash(string finalHash)
+        {
+            _finalHash = finalHash;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDtoBuilder PublicKey(string publicKey)
+        {
+            _publicKey = publicKey;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDtoBuilder SupplierPartyId(Guid? supplierPartyId)
+        {
+            _supplierPartyId = supplierPartyId;
+            return this;
+        }
+
+        public EncryptedReceiptRequestDto Build()
+        {
+            if (_recipientId == null)
+                throw new InvalidOperationException("RecipientId is required");
+            if (_receiptId == null)
+                throw new InvalidOperationException("ReceiptId is required");
+            if (_receiverType == null)
+                throw new InvalidOperationException("ReceiverType is required");
+            if (_encryptedReceipt == null)
+                throw new InvalidOperationException("EncryptedReceipt is required");
+            if (_encryptedSymmetricKey == null)
+                throw new InvalidOperationException("EncryptedSymmetricKey is required");
+            if (_finalHash == null)
+                throw new InvalidOperationException("FinalHash is required");
+            if (_publicKey == null)
+                throw new InvalidOperationException("PublicKey is required");
+
+            return new EncryptedReceiptRequestDto(
+                _recipientId.Value,
+                _receiptId,
+                _receiverType.Value,
+                _encryptedReceipt,
+                _encryptedSymmetricKey,
+                _finalHash,
+                _publicKey,
+                _supplierPartyId
+            );
+        }
+    }
+
+    // ===== EQUALS, HASHCODE, TOSTRING =====
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not EncryptedReceiptRequestDto other) return false;
+        return recipientId == other.recipientId
+            && receiptId == other.receiptId
+            && receiverType == other.receiverType
+            && encryptedReceipt == other.encryptedReceipt
+            && encryptedSymmetricKey == other.encryptedSymmetricKey
+            && FinalHash == other.FinalHash
+            && publicKey == other.publicKey
+            && supplierPartyId == other.supplierPartyId;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            recipientId,
+            receiptId,
+            receiverType,
+            encryptedReceipt,
+            encryptedSymmetricKey,
+            FinalHash,
+            publicKey,
+            supplierPartyId);
+    }
+
+    public override string ToString()
+    {
+        return $"EncryptedReceiptRequestDto{{" +
+               $"recipientId={recipientId}, " +
+               $"receiptId='{receiptId}', " +
+               $"receiverType={receiverType}, " +
+               $"encryptedReceipt='{encryptedReceipt}', " +
+               $"encryptedSymmetricKey='{encryptedSymmetricKey}', " +
+               $"finalHash='{FinalHash}', " +
+               $"publicKey='{publicKey}', " +
+               $"supplierPartyId={supplierPartyId}}}";
+    }
 }

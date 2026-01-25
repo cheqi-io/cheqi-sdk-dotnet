@@ -8,44 +8,73 @@ namespace Cheqi.Sdk.Models.Company;
 public sealed class Address
 {
     /// <summary>
-    /// Street address line 1.
+    /// Street name.
     /// </summary>
-    [JsonPropertyName("streetAddress")]
-    public string? StreetAddress { get; set; }
+    [JsonPropertyName("streetName")]
+    public string? StreetName { get; set; }
 
     /// <summary>
-    /// Street address line 2.
+    /// Additional street name.
     /// </summary>
-    [JsonPropertyName("streetAddress2")]
-    public string? StreetAddress2 { get; set; }
+    [JsonPropertyName("additionalStreetName")]
+    public string? AdditionalStreetName { get; set; }
+
+    /// <summary>
+    /// Address line.
+    /// </summary>
+    [JsonPropertyName("addressLine")]
+    public string? AddressLine { get; set; }
+
+    /// <summary>
+    /// Region or state.
+    /// </summary>
+    [JsonPropertyName("region")]
+    public string? Region { get; set; }
 
     /// <summary>
     /// City name.
     /// </summary>
-    [JsonPropertyName("city")]
-    public string? City { get; set; }
+    [JsonPropertyName("cityName")]
+    public string? CityName { get; set; }
 
     /// <summary>
-    /// State or province.
+    /// Postal zone or ZIP code.
     /// </summary>
-    [JsonPropertyName("state")]
-    public string? State { get; set; }
+    [JsonPropertyName("postalZone")]
+    public string? PostalZone { get; set; }
 
     /// <summary>
-    /// Postal or ZIP code.
+    /// Country ISO code (2-letter).
     /// </summary>
-    [JsonPropertyName("postalCode")]
-    public string? PostalCode { get; set; }
+    [JsonPropertyName("countryIsoCode")]
+    public string? CountryIsoCode { get; set; }
 
     /// <summary>
-    /// Country code (ISO 3166-1 alpha-2).
+    /// Validates the address.
     /// </summary>
-    [JsonPropertyName("countryCode")]
-    public string? CountryCode { get; set; }
+    public bool IsValid() => GetValidationErrors().Count == 0;
 
     /// <summary>
-    /// Country name.
+    /// Gets validation errors for the address.
     /// </summary>
-    [JsonPropertyName("country")]
-    public string? Country { get; set; }
+    public List<string> GetValidationErrors()
+    {
+        var errors = new List<string>();
+        
+        if (string.IsNullOrWhiteSpace(StreetName))
+            errors.Add("streetName is required");
+        
+        if (string.IsNullOrWhiteSpace(CityName))
+            errors.Add("cityName is required");
+        
+        if (string.IsNullOrWhiteSpace(PostalZone))
+            errors.Add("postalZone is required");
+        
+        if (string.IsNullOrWhiteSpace(CountryIsoCode))
+            errors.Add("countryIsoCode is required");
+        else if (CountryIsoCode.Length != 2)
+            errors.Add("countryIsoCode must be a 2-letter ISO code");
+        
+        return errors;
+    }
 }

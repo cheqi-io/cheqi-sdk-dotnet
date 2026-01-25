@@ -41,4 +41,19 @@ public sealed class EncryptedData
     /// Gets the authentication tag as a Base64 string.
     /// </summary>
     public string AuthTagBase64 => Convert.ToBase64String(AuthTag);
+
+    /// <summary>
+    /// Converts the encrypted data to a Base64 string in the format: IV + ciphertext + tag.
+    /// This matches the Java SDK format for encrypted data.
+    /// </summary>
+    public string ToBase64String()
+    {
+        // Combine IV + ciphertext + tag into a single byte array
+        byte[] combined = new byte[Iv.Length + Ciphertext.Length + AuthTag.Length];
+        Array.Copy(Iv, 0, combined, 0, Iv.Length);
+        Array.Copy(Ciphertext, 0, combined, Iv.Length, Ciphertext.Length);
+        Array.Copy(AuthTag, 0, combined, Iv.Length + Ciphertext.Length, AuthTag.Length);
+        
+        return Convert.ToBase64String(combined);
+    }
 }

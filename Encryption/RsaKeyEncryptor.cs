@@ -3,10 +3,37 @@ using System.Security.Cryptography;
 namespace Cheqi.Sdk.Encryption;
 
 /// <summary>
-/// RSA-OAEP encryption for wrapping AES keys.
+/// Encrypts AES keys with RSA-OAEP for hybrid encryption.
 /// </summary>
-public sealed class RsaKeyEncryptor
+public class RsaKeyEncryptor
 {
+    private readonly RsaPublicKeyParser _keyParser;
+
+    public RsaKeyEncryptor()
+    {
+        _keyParser = new RsaPublicKeyParser();
+    }
+
+    /// <summary>
+    /// Encrypts an AES key with RSA-OAEP using the recipient's public key.
+    /// </summary>
+    public string EncryptKey(byte[] aesKey, string publicKeyBase64)
+    {
+        try
+        {
+            using var publicKey = _keyParser.Parse(publicKeyBase64);
+
+            // Encrypt with RSA-OAEP (SHA-256, MGF1)
+            byte[] encryptedKey = publicKey.Encrypt(aesKey, RSAEncryptionPadding.OaepSHA256);
+
+            return Convert.ToBase64String(encryptedKey);
+        }
+        catch (Exception e)
+        {
+            throw new EncryptionException("Failed to encrypt AES key with RSA", e);
+        }
+    }
+
     /// <summary>
     /// Encrypts an AES key using RSA-OAEP with SHA-256.
     /// </summary>

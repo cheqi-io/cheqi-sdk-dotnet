@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Cheqi.Sdk.Config;
 using Cheqi.Sdk.CreditNote;
+using Cheqi.Sdk.Http.Exceptions;
 using Cheqi.Sdk.Models;
 using Cheqi.Sdk.Models.Company;
 using Microsoft.Extensions.Logging;
@@ -66,6 +67,15 @@ public sealed class CheqiApiClient : ICheqiApiClient
         return response;
     }
 
+    public Task<RecipientResolutionResponse> MatchCustomerAsync(
+        IdentificationDetails identificationDetails,
+        string? accessToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Alias for ResolveRecipientsAsync - same functionality, different name for consistency
+        return ResolveRecipientsAsync(identificationDetails, accessToken, cancellationToken);
+    }
+
     public async Task<string> GenerateReceiptTemplateAsync(
         ReceiptTemplateRequest templateRequest,
         string? accessToken = null,
@@ -106,7 +116,7 @@ public sealed class CheqiApiClient : ICheqiApiClient
     }
 
     public async Task<CreditNoteCreatedResponse> SubmitEncryptedCreditNotesAsync(
-        EncryptedCreditNoteRequestDto encryptedRequest,
+        EncryptedCreditNotesRequest encryptedRequest,
         string? accessToken = null,
         CancellationToken cancellationToken = default)
     {
@@ -256,14 +266,15 @@ public sealed class CheqiApiClient : ICheqiApiClient
             {
                 throw new CheqiApiException(
                     $"Failed to obtain access token: {content}",
-                    response.StatusCode,
-                    content);
+                    (int)response.StatusCode,
+                    "TOKEN_REQUEST_FAILED",
+                    null);
             }
 
             var tokenResponse = JsonSerializer.Deserialize<OAuthTokenResponse>(content, _jsonOptions);
             if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.AccessToken))
             {
-                throw new CheqiApiException("Invalid token response", HttpStatusCode.InternalServerError);
+                throw new CheqiApiException("Invalid token response", 500, "INVALID_TOKEN_RESPONSE", null);
             }
 
             _cachedAccessToken = tokenResponse.AccessToken;
@@ -312,7 +323,7 @@ public sealed class CheqiApiClient : ICheqiApiClient
     {
         var json = await SendRawAsync(request, cancellationToken);
         var result = JsonSerializer.Deserialize<T>(json, _jsonOptions);
-        return result ?? throw new CheqiApiException("Failed to deserialize response", HttpStatusCode.InternalServerError);
+        return result ?? throw new CheqiApiException("Failed to deserialize response", 500, "DESERIALIZATION_FAILED", null);
     }
 
     private async Task SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -327,8 +338,8 @@ public sealed class CheqiApiClient : ICheqiApiClient
             _logger?.LogError("Request failed: {StatusCode} - {Content}", response.StatusCode, content);
             throw new CheqiApiException(
                 $"Request failed with status {response.StatusCode}",
-                response.StatusCode,
-                content,
+                (int)response.StatusCode,
+                "REQUEST_FAILED",
                 request.RequestUri?.ToString());
         }
     }
@@ -345,12 +356,27 @@ public sealed class CheqiApiClient : ICheqiApiClient
             _logger?.LogError("Request failed: {StatusCode} - {Content}", response.StatusCode, content);
             throw new CheqiApiException(
                 $"Request failed with status {response.StatusCode}",
-                response.StatusCode,
-                content,
+                (int)response.StatusCode,
+                "REQUEST_FAILED",
                 request.RequestUri?.ToString());
         }
 
         return content;
+    }
+
+    public async Task SendReceiptViaEmailAsync(
+        string customerEmail,
+        Models.Ubl.PurchaseReceipt purchaseReceipt,
+        string? accessToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        var emailRequest = new EmailReceiptRequest(customerEmail, purchaseReceipt);
+        
+        var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.ReceiptEmail);
+        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken);
+        request.Content = CreateJsonContent(emailRequest);
+
+        await SendAsync(request, cancellationToken);
     }
 
     public void Dispose()

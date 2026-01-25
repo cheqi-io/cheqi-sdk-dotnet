@@ -1,154 +1,82 @@
-using System.Security.Cryptography;
 using Cheqi.Sdk.Config;
 using Microsoft.Extensions.Logging;
 
 namespace Cheqi.Sdk;
 
 /// <summary>
-/// Builder for creating CheqiSdk instances with fluent configuration.
+/// Builder class for CheqiSDK configuration.
 /// </summary>
 public sealed class CheqiSdkBuilder
 {
-    private readonly CheqiSdkConfig.Builder _configBuilder = CheqiSdkConfig.CreateBuilder();
+    private readonly CheqiSdkConfig.Builder _configBuilder = CheqiSdkConfig.BuilderInstance();
     private ILoggerFactory? _loggerFactory;
-    private HttpClient? _httpClient;
 
     /// <summary>
     /// Sets the API endpoint using a predefined environment.
     /// </summary>
-    /// <param name="environment">The target environment.</param>
-    /// <returns>This builder for chaining.</returns>
-    public CheqiSdkBuilder ApiEndpoint(Config.Environment environment)
+    /// <param name="apiEndpoint">the predefined environment (SANDBOX, TEST, PRODUCTION)</param>
+    /// <returns>this builder instance</returns>
+    public CheqiSdkBuilder ApiEndpoint(Config.Environment apiEndpoint)
     {
-        _configBuilder.WithEnvironment(environment);
+        _configBuilder.ApiEndpoint(apiEndpoint);
         return this;
     }
 
     /// <summary>
     /// Sets a custom API endpoint URL.
+    /// Use this method when you need to connect to a custom or self-hosted Cheqi API instance.
     /// </summary>
-    /// <param name="apiEndpoint">The API endpoint URL.</param>
-    /// <returns>This builder for chaining.</returns>
-    public CheqiSdkBuilder ApiEndpoint(string apiEndpoint)
+    /// <param name="customUrl">the custom API base URL (e.g., "https://custom.api.example.com")</param>
+    /// <returns>this builder instance</returns>
+    public CheqiSdkBuilder CustomApiEndpoint(string customUrl)
     {
-        _configBuilder.WithApiEndpoint(apiEndpoint);
+        _configBuilder.CustomApiEndpoint(customUrl);
         return this;
     }
 
-    /// <summary>
-    /// Sets the API key for authentication.
-    /// </summary>
-    /// <param name="apiKey">The API key.</param>
-    /// <returns>This builder for chaining.</returns>
-    public CheqiSdkBuilder ApiKey(string apiKey)
-    {
-        _configBuilder.WithApiKey(apiKey);
-        return this;
-    }
-
-    /// <summary>
-    /// Sets the OAuth client credentials for authentication.
-    /// </summary>
-    /// <param name="clientId">The client ID.</param>
-    /// <param name="clientSecret">The client secret.</param>
-    /// <returns>This builder for chaining.</returns>
     public CheqiSdkBuilder SupplierCredentials(string clientId, string clientSecret)
     {
-        _configBuilder.WithClientCredentials(clientId, clientSecret);
+        _configBuilder.SupplierCredentials(clientId, clientSecret);
         return this;
     }
 
-    /// <summary>
-    /// Sets the private key for decryption from PEM format.
-    /// </summary>
-    /// <param name="privateKeyPem">The private key in PEM format.</param>
-    /// <returns>This builder for chaining.</returns>
-    public CheqiSdkBuilder PrivateKey(string privateKeyPem)
+    public CheqiSdkBuilder ApiKey(string apiKey)
     {
-        _configBuilder.WithPrivateKey(privateKeyPem);
+        _configBuilder.ApiKey(apiKey);
         return this;
     }
 
-    /// <summary>
-    /// Sets the private key for decryption.
-    /// </summary>
-    /// <param name="privateKey">The RSA private key.</param>
-    /// <returns>This builder for chaining.</returns>
-    public CheqiSdkBuilder PrivateKey(RSA privateKey)
+    public CheqiSdkBuilder PrivateKey(string privateKey)
     {
-        _configBuilder.WithPrivateKey(privateKey);
+        _configBuilder.PrivateKey(privateKey);
         return this;
     }
 
-    /// <summary>
-    /// Sets the HTTP request timeout.
-    /// </summary>
-    /// <param name="timeout">The timeout duration.</param>
-    /// <returns>This builder for chaining.</returns>
-    public CheqiSdkBuilder Timeout(TimeSpan timeout)
+    public CheqiSdkBuilder TimeoutSeconds(int timeoutSeconds)
     {
-        _configBuilder.WithTimeout(timeout);
+        _configBuilder.TimeoutSeconds(timeoutSeconds);
         return this;
     }
 
-    /// <summary>
-    /// Sets the maximum number of retry attempts.
-    /// </summary>
-    /// <param name="maxRetries">The maximum number of retries.</param>
-    /// <returns>This builder for chaining.</returns>
     public CheqiSdkBuilder MaxRetries(int maxRetries)
     {
-        _configBuilder.WithMaxRetries(maxRetries);
-        return this;
-    }
-
-    /// <summary>
-    /// Sets the encryption configuration.
-    /// </summary>
-    /// <param name="config">The encryption configuration.</param>
-    /// <returns>This builder for chaining.</returns>
-    public CheqiSdkBuilder EncryptionConfig(EncryptionConfig config)
-    {
-        _configBuilder.WithEncryptionConfig(config);
+        _configBuilder.MaxRetries(maxRetries);
         return this;
     }
 
     /// <summary>
     /// Sets the logger factory for SDK logging.
     /// </summary>
-    /// <param name="loggerFactory">The logger factory.</param>
-    /// <returns>This builder for chaining.</returns>
+    /// <param name="loggerFactory">The logger factory instance</param>
+    /// <returns>this builder instance</returns>
     public CheqiSdkBuilder LoggerFactory(ILoggerFactory loggerFactory)
     {
         _loggerFactory = loggerFactory;
         return this;
     }
 
-    /// <summary>
-    /// Sets a custom HTTP client to use for API requests.
-    /// </summary>
-    /// <param name="httpClient">The HTTP client.</param>
-    /// <returns>This builder for chaining.</returns>
-    public CheqiSdkBuilder HttpClient(HttpClient httpClient)
-    {
-        _httpClient = httpClient;
-        return this;
-    }
-
-    /// <summary>
-    /// Builds the CheqiSdk instance.
-    /// </summary>
-    /// <returns>The configured CheqiSdk instance.</returns>
     public CheqiSdk Build()
     {
-        var config = _configBuilder.Build();
-
-        if (!config.HasValidAuthentication)
-        {
-            throw new InvalidOperationException(
-                "Authentication must be configured. Use ApiKey() or SupplierCredentials().");
-        }
-
-        return new CheqiSdk(config, _loggerFactory, _httpClient);
+        return new CheqiSdk(_configBuilder.Build(), _loggerFactory);
     }
 }

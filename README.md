@@ -454,10 +454,671 @@ dotnet test
 dotnet pack
 ```
 
+## Email Delivery
+
+When customers don't have the Cheqi app, receipts can be sent via email:
+
+```csharp
+// Email delivery with API key
+var result = await sdk.ReceiptService.SendReceiptViaEmailAsync(
+    "customer@example.com",
+    purchaseReceipt
+);
+
+// Email delivery with OAuth token
+var result = await sdk.ReceiptService.SendReceiptViaEmailAsync(
+    "customer@example.com",
+    purchaseReceipt,
+    accessToken
+);
+
+if (result.DeliveryMethod == DeliveryMethod.Email)
+{
+    Console.WriteLine($"Receipt sent to {result.EmailAddress}");
+}
+```
+
+## Advanced Usage Patterns
+
+### Dependency Injection
+
+Integrate the SDK with ASP.NET Core DI:
+
+```csharp
+// Startup.cs or Program.cs
+services.AddSingleton<CheqiSdk>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    
+    return CheqiSdk.Builder()
+        .ApiEndpoint(Environment.Production)
+        .ApiKey(config["Cheqi:ApiKey"])
+        .TimeoutSeconds(60)
+        .MaxRetries(3)
+        .Build();
+});
+
+// Use in controllers
+public class ReceiptController : ControllerBase
+{
+    private readonly CheqiSdk _cheqiSdk;
+    
+    public ReceiptController(CheqiSdk cheqiSdk)
+    {
+        _cheqiSdk = cheqiSdk;
+    }
+    
+    [HttpPost("receipts")]
+    public async Task<IActionResult> CreateReceipt([FromBody] ReceiptRequest request)
+    {
+        var result = await _cheqiSdk.ReceiptService.ProcessCompleteReceiptAsync(
+            request.Customer,
+            request.Receipt
+        );
+        
+        return Ok(result);
+    }
+}
+```
+
+### Batch Processing
+
+Process multiple receipts efficiently:
+
+```csharp
+var receipts = GetPendingReceipts(); // Your data source
+
+var tasks = receipts.Select(async receipt =>
+{
+    try
+    {
+        var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
+            receipt.Customer,
+            receipt.Data
+        );
+        
+        return new { Receipt = receipt, Result = result, Success = true };
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Failed to process receipt {Id}", receipt.Id);
+        return new { Receipt = receipt, Result = (ReceiptResult)null, Success = false };
+    }
+});
+
+var results = await Task.WhenAll(tasks);
+
+var successful = results.Count(r => r.Success);
+var failed = results.Count(r => !r.Success);
+
+Console.WriteLine($"Processed {successful} receipts, {failed} failed");
+```
+
+### Custom Logging
+
+Integrate with your logging framework:
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder
+        .AddConsole()
+        .AddDebug()
+        .SetMinimumLevel(LogLevel.Debug);
+});
+
+var sdk = CheqiSdk.Builder()
+    .ApiEndpoint(Environment.Production)
+    .ApiKey("your-api-key")
+    .Build();
+
+// SDK automatically uses ILogger<T> for all services
+```
+
+### Cancellation Token Support
+
+All async methods support cancellation:
+
+```csharp
+using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+try
+{
+    var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
+        customer,
+        receipt,
+        cts.Token
+    );
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("Operation timed out after 30 seconds");
+}
+```
+
+### Manual Workflow Control
+
+For advanced scenarios, control each step manually:
+
+```csharp
+// Step 1: Match customer
+var matchResponse = await sdk.MatchingService.MatchCustomerAsync(customer);
+
+if (!matchResponse.CustomerFound)
+{
+    // Fallback to email
+    return await sdk.ReceiptService.SendReceiptViaEmailAsync(
+        customer.Email,
+        receipt
+    );
+}
+
+// Step 2: Generate template
+var template = await sdk.ReceiptService.GenerateReceiptTemplateAsync(receiptRequest);
+
+// Step 3: Parse and canonicalize
+var purchaseReceipt = JsonSerializer.Deserialize<PurchaseReceipt>(template);
+var canonicalJson = sdk.EncryptionService.CanonicalizeJson(template);
+var templateHash = HashUtils.Sha256Hex(canonicalJson);
+
+// Step 4: Create encrypted receipts
+var encryptedReceipts = sdk.ReceiptService.CreateEncryptedReceipts(
+    canonicalJson,
+    matchResponse.Recipients
+);
+
+// Step 5: Send to backend
+var response = await sdk.ReceiptService.SendEncryptedReceiptsAsync(
+    encryptedReceipts,
+    templateHash,
+    matchResponse
+);
+
+Console.WriteLine($"Delivered to {response.RecipientCount} devices");
+```
+
+## Testing
+
+### Unit Testing
+
+Mock the SDK services for unit tests:
+
+```csharp
+using Moq;
+using Xunit;
+
+public class ReceiptProcessorTests
+{
+    [Fact]
+    public async Task ProcessReceipt_Success_ReturnsResult()
+    {
+        // Arrange
+        var mockSdk = new Mock<CheqiSdk>();
+        var mockReceiptService = new Mock<IReceiptService>();
+        
+        mockReceiptService
+            .Setup(x => x.ProcessCompleteReceiptAsync(
+                It.IsAny<IdentificationDetails>(),
+                It.IsAny<ReceiptTemplateRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ReceiptResult.Success("receipt-123", 1));
+        
+        // Act
+        var processor = new ReceiptProcessor(mockSdk.Object);
+        var result = await processor.ProcessAsync(customer, receipt);
+        
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.ReceiptCount);
+    }
+}
+```
+
+### Integration Testing
+
+Test against sandbox environment:
+
+```csharp
+[Fact]
+public async Task IntegrationTest_ProcessReceipt()
+{
+    var sdk = CheqiSdk.Builder()
+        .ApiEndpoint(Environment.Sandbox)
+        .ApiKey(Environment.GetEnvironmentVariable("CHEQI_TEST_API_KEY"))
+        .Build();
+    
+    var customer = new IdentificationDetails
+    {
+        Email = "test@example.com"
+    };
+    
+    var receipt = CreateTestReceipt();
+    
+    var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
+        customer,
+        receipt
+    );
+    
+    Assert.NotNull(result);
+}
+```
+
+## Best Practices
+
+### 1. Reuse SDK Instance
+
+Create one SDK instance and reuse it throughout your application:
+
+```csharp
+// ✅ Good - Singleton pattern
+public class ReceiptService
+{
+    private static readonly CheqiSdk _sdk = CheqiSdk.Builder()
+        .ApiEndpoint(Environment.Production)
+        .ApiKey("your-api-key")
+        .Build();
+}
+
+// ❌ Bad - Creating new instances
+public async Task ProcessReceipt()
+{
+    var sdk = CheqiSdk.Builder().Build(); // Don't do this repeatedly
+}
+```
+
+### 2. Handle All Result Cases
+
+Always check result status:
+
+```csharp
+var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, receipt);
+
+if (result.IsSuccess)
+{
+    // Receipt delivered successfully
+    await UpdateDatabase(result.ReceiptId, "delivered");
+}
+else if (!result.RecipientsFound)
+{
+    // No Cheqi users found - consider email fallback
+    await SendEmailReceipt(customer.Email, receipt);
+}
+else if (result.HasError)
+{
+    // Processing error occurred
+    _logger.LogError("Receipt processing failed: {Error}", result.ErrorMessage);
+    await QueueForRetry(receipt);
+}
+```
+
+### 3. Use Appropriate Identifiers
+
+Choose the most reliable identifier available:
+
+```csharp
+// Priority order (most to least reliable):
+// 1. PAR (Payment Account Reference) - most stable
+// 2. IBAN - good for bank transfers
+// 3. PAN (Primary Account Number) - can change with card replacement
+// 4. Email - fallback option
+
+var customer = new IdentificationDetails
+{
+    CardDetails = new CardDetails
+    {
+        Par = transaction.Par,           // Best option
+        Pan = transaction.Pan,           // Fallback if PAR unavailable
+        CardProvider = CardProvider.VISA
+    },
+    PaymentAccountDetails = new PaymentAccountDetails
+    {
+        Iban = transaction.Iban          // For bank transfers
+    },
+    Email = transaction.CustomerEmail    // Last resort
+};
+```
+
+### 4. Implement Retry Logic
+
+For transient failures, implement retry with exponential backoff:
+
+```csharp
+public async Task<ReceiptResult> ProcessWithRetry(
+    IdentificationDetails customer,
+    ReceiptTemplateRequest receipt,
+    int maxRetries = 3)
+{
+    for (int attempt = 1; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            return await sdk.ReceiptService.ProcessCompleteReceiptAsync(
+                customer,
+                receipt
+            );
+        }
+        catch (CheqiApiException ex) when (ex.HttpStatusCode >= 500)
+        {
+            if (attempt == maxRetries) throw;
+            
+            var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt));
+            _logger.LogWarning("Attempt {Attempt} failed, retrying in {Delay}s", 
+                attempt, delay.TotalSeconds);
+            
+            await Task.Delay(delay);
+        }
+    }
+    
+    throw new InvalidOperationException("Should not reach here");
+}
+```
+
+### 5. Validate Data Before Sending
+
+Ensure data quality before API calls:
+
+```csharp
+public async Task<ReceiptResult> ProcessReceipt(
+    IdentificationDetails customer,
+    ReceiptTemplateRequest receipt)
+{
+    // Validate customer has at least one identifier
+    if (string.IsNullOrWhiteSpace(customer.Email) &&
+        customer.CardDetails == null &&
+        customer.PaymentAccountDetails == null)
+    {
+        throw new ArgumentException("Customer must have at least one identifier");
+    }
+    
+    // Validate receipt data
+    if (receipt.Products == null || !receipt.Products.Any())
+    {
+        throw new ArgumentException("Receipt must contain at least one product");
+    }
+    
+    if (receipt.TotalAmount <= 0)
+    {
+        throw new ArgumentException("Total amount must be positive");
+    }
+    
+    // Validate tax calculations
+    var calculatedTax = receipt.Products.Sum(p => p.Tax?.TaxAmount ?? 0);
+    if (Math.Abs(calculatedTax - receipt.TotalTaxAmount) > 0.01m)
+    {
+        _logger.LogWarning("Tax mismatch: calculated {Calculated}, provided {Provided}",
+            calculatedTax, receipt.TotalTaxAmount);
+    }
+    
+    return await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, receipt);
+}
+```
+
+### 6. Secure API Key Storage
+
+Never hardcode API keys:
+
+```csharp
+// ✅ Good - Use configuration
+var apiKey = configuration["Cheqi:ApiKey"];
+var apiKey = Environment.GetEnvironmentVariable("CHEQI_API_KEY");
+
+// ❌ Bad - Hardcoded
+var apiKey = "sk_live_abc123"; // Never do this!
+```
+
+### 7. Monitor and Log
+
+Implement comprehensive logging:
+
+```csharp
+public async Task<ReceiptResult> ProcessReceipt(
+    IdentificationDetails customer,
+    ReceiptTemplateRequest receipt)
+{
+    var sw = Stopwatch.StartNew();
+    
+    _logger.LogInformation("Processing receipt {ReceiptId} for customer", 
+        receipt.ReceiptId);
+    
+    try
+    {
+        var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
+            customer,
+            receipt
+        );
+        
+        sw.Stop();
+        
+        _logger.LogInformation(
+            "Receipt {ReceiptId} processed successfully in {Duration}ms. " +
+            "Delivered to {Count} devices",
+            receipt.ReceiptId,
+            sw.ElapsedMilliseconds,
+            result.ReceiptCount
+        );
+        
+        return result;
+    }
+    catch (Exception ex)
+    {
+        sw.Stop();
+        
+        _logger.LogError(ex,
+            "Failed to process receipt {ReceiptId} after {Duration}ms",
+            receipt.ReceiptId,
+            sw.ElapsedMilliseconds
+        );
+        
+        throw;
+    }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Authentication Failures
+
+```
+Error: Invalid or expired access token
+```
+
+**Solution**: Ensure your API key is valid and not expired:
+
+```csharp
+// Check API key format
+if (!apiKey.StartsWith("sk_live_") && !apiKey.StartsWith("sk_test_"))
+{
+    throw new InvalidOperationException("Invalid API key format");
+}
+```
+
+#### 2. Customer Not Found
+
+```
+Result: RecipientsFound = false
+```
+
+**Solution**: Customer doesn't have Cheqi app. Use email fallback:
+
+```csharp
+if (!result.RecipientsFound && !string.IsNullOrEmpty(customer.Email))
+{
+    return await sdk.ReceiptService.SendReceiptViaEmailAsync(
+        customer.Email,
+        receipt
+    );
+}
+```
+
+#### 3. Timeout Errors
+
+```
+Error: The operation was canceled
+```
+
+**Solution**: Increase timeout or check network connectivity:
+
+```csharp
+var sdk = CheqiSdk.Builder()
+    .ApiEndpoint(Environment.Production)
+    .ApiKey("your-api-key")
+    .TimeoutSeconds(120) // Increase from default 30s
+    .Build();
+```
+
+#### 4. Validation Errors
+
+```
+Error: Total amount must be positive
+```
+
+**Solution**: Validate data before sending:
+
+```csharp
+// Ensure amounts are positive
+receipt.TotalAmount = Math.Abs(receipt.TotalAmount);
+
+// Ensure product quantities are valid
+foreach (var product in receipt.Products)
+{
+    if (product.Quantity <= 0)
+        product.Quantity = 1;
+}
+```
+
+#### 5. Encryption Errors
+
+```
+Error: Failed to encrypt receipt
+```
+
+**Solution**: Ensure recipient has valid public key:
+
+```csharp
+var matchResponse = await sdk.MatchingService.MatchCustomerAsync(customer);
+
+if (matchResponse.Recipients.Any(r => string.IsNullOrEmpty(r.PublicKey)))
+{
+    _logger.LogWarning("Some recipients missing public keys");
+}
+```
+
+### Debug Mode
+
+Enable detailed logging for troubleshooting:
+
+```csharp
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder
+        .AddConsole()
+        .SetMinimumLevel(LogLevel.Debug) // Enable debug logs
+        .AddFilter("Cheqi.Sdk", LogLevel.Trace); // Trace SDK internals
+});
+```
+
+### Network Diagnostics
+
+Test connectivity to Cheqi API:
+
+```csharp
+public async Task<bool> TestConnectivity()
+{
+    try
+    {
+        using var client = new HttpClient();
+        var response = await client.GetAsync("https://api.cheqi.io/health");
+        return response.IsSuccessStatusCode;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Connectivity test failed");
+        return false;
+    }
+}
+```
+
+## Performance Optimization
+
+### Connection Pooling
+
+The SDK automatically uses connection pooling via `HttpClient`. Reuse the SDK instance:
+
+```csharp
+// ✅ Singleton - connections are pooled
+private static readonly CheqiSdk _sdk = CreateSdk();
+
+// ❌ Multiple instances - connections not pooled
+public async Task Process()
+{
+    var sdk = CreateSdk(); // Don't create new instances
+}
+```
+
+### Parallel Processing
+
+Process multiple receipts in parallel:
+
+```csharp
+var receipts = GetBatchReceipts();
+
+var options = new ParallelOptions
+{
+    MaxDegreeOfParallelism = 10 // Limit concurrent requests
+};
+
+await Parallel.ForEachAsync(receipts, options, async (receipt, ct) =>
+{
+    try
+    {
+        await sdk.ReceiptService.ProcessCompleteReceiptAsync(
+            receipt.Customer,
+            receipt.Data,
+            ct
+        );
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Failed to process receipt {Id}", receipt.Id);
+    }
+});
+```
+
+### Caching
+
+Cache customer matching results:
+
+```csharp
+private readonly MemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
+
+public async Task<RecipientResolutionResponse> GetOrMatchCustomer(
+    IdentificationDetails customer)
+{
+    var cacheKey = $"customer_{customer.GetHashCode()}";
+    
+    if (_cache.TryGetValue(cacheKey, out RecipientResolutionResponse cached))
+    {
+        return cached;
+    }
+    
+    var result = await sdk.MatchingService.MatchCustomerAsync(customer);
+    
+    _cache.Set(cacheKey, result, TimeSpan.FromMinutes(15));
+    
+    return result;
+}
+```
+
 ## Support
 
 - **Documentation**: [https://docs.cheqi.io](https://docs.cheqi.io)
-- **Email**: info@cheqi.io
+- **API Reference**: [https://docs.cheqi.io/api-reference/](https://api.cheqi.io/docs)
+- **Email**: support@cheqi.io
+- **GitHub Issues**: [https://github.com/cheqi/cheqi-sdk-dotnet/issues](https://github.com/cheqi/cheqi-sdk-dotnet/issues)
 
 ## License
 

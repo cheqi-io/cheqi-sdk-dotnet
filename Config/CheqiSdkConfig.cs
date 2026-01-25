@@ -1,205 +1,195 @@
-using System.Security.Cryptography;
+using Cheqi.Sdk.Encryption;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cheqi.Sdk.Config;
 
 /// <summary>
-/// Immutable configuration for the Cheqi SDK.
+/// Main configuration class for the Cheqi SDK.
+///
+/// Contains all configuration needed for SDK operation including:
+/// - API endpoints and credentials
+/// - Encryption configuration
+/// - Timeout and retry settings
+///
+/// Thread-safe and immutable after construction.
 /// </summary>
 public sealed class CheqiSdkConfig
 {
-    /// <summary>
-    /// The base URL for the Cheqi API.
-    /// </summary>
     public string ApiEndpoint { get; }
-
-    /// <summary>
-    /// API key for direct authentication (optional if using OAuth).
-    /// </summary>
     public string? ApiKey { get; }
-
-    /// <summary>
-    /// OAuth client ID for client credentials flow (optional if using API key).
-    /// </summary>
-    public string? ClientId { get; }
-
-    /// <summary>
-    /// OAuth client secret for client credentials flow (optional if using API key).
-    /// </summary>
-    public string? ClientSecret { get; }
-
-    /// <summary>
-    /// Private key for decryption operations (PEM format, optional).
-    /// </summary>
-    public RSA? PrivateKey { get; }
-
-    /// <summary>
-    /// HTTP request timeout.
-    /// </summary>
-    public TimeSpan Timeout { get; }
-
-    /// <summary>
-    /// Maximum number of retry attempts for failed requests.
-    /// </summary>
+    public string? SupplierClientId { get; }
+    public string? SupplierClientSecret { get; }
+    public string? PrivateKeyBase64 { get; }
+    public Encryption.EncryptionConfig? EncryptionConfig { get; }
+    public int TimeoutSeconds { get; }
     public int MaxRetries { get; }
+    
+    // Convenience properties for API client
+    public string? ClientId => SupplierClientId;
+    public string? ClientSecret => SupplierClientSecret;
+    public TimeSpan Timeout => TimeSpan.FromSeconds(TimeoutSeconds);
 
-    /// <summary>
-    /// Encryption configuration.
-    /// </summary>
-    public EncryptionConfig EncryptionConfig { get; }
-
-    private CheqiSdkConfig(
-        string apiEndpoint,
-        string? apiKey,
-        string? clientId,
-        string? clientSecret,
-        RSA? privateKey,
-        TimeSpan timeout,
-        int maxRetries,
-        EncryptionConfig encryptionConfig)
+    private CheqiSdkConfig(Builder builder)
     {
-        ApiEndpoint = apiEndpoint;
-        ApiKey = apiKey;
-        ClientId = clientId;
-        ClientSecret = clientSecret;
-        PrivateKey = privateKey;
-        Timeout = timeout;
-        MaxRetries = maxRetries;
-        EncryptionConfig = encryptionConfig;
+        ApiEndpoint = builder._apiEndpoint!;
+        ApiKey = builder._apiKey;
+        SupplierClientId = builder._supplierClientId;
+        SupplierClientSecret = builder._supplierClientSecret;
+        PrivateKeyBase64 = builder._privateKeyBase64;
+        EncryptionConfig = builder._encryptionConfig;
+        TimeoutSeconds = builder._timeoutSeconds;
+        MaxRetries = builder._maxRetries;
     }
 
-    /// <summary>
-    /// Creates a new configuration builder.
-    /// </summary>
-    public static Builder CreateBuilder() => new();
+    public static Builder BuilderInstance() => new Builder();
 
-    /// <summary>
-    /// Validates that the configuration has valid authentication credentials.
-    /// </summary>
-    public bool HasValidAuthentication =>
-        !string.IsNullOrEmpty(ApiKey) ||
-        (!string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret));
-
-    /// <summary>
-    /// Builder for creating CheqiSdkConfig instances.
-    /// </summary>
     public sealed class Builder
     {
-        private string _apiEndpoint = Environment.Production.GetBaseUrl();
-        private string? _apiKey;
-        private string? _clientId;
-        private string? _clientSecret;
-        private RSA? _privateKey;
-        private TimeSpan _timeout = TimeSpan.FromSeconds(30);
-        private int _maxRetries = 3;
-        private EncryptionConfig _encryptionConfig = EncryptionConfig.Default;
+        internal string? _apiEndpoint;
+        internal string? _apiKey;
+        internal string? _supplierClientId;
+        internal string? _supplierClientSecret;
+        internal string? _privateKeyBase64;
+        internal Encryption.EncryptionConfig? _encryptionConfig;
+        internal int _timeoutSeconds = 30;
+        internal int _maxRetries = 3;
+        private readonly ILogger? _logger;
+
+        public Builder(ILogger? logger = null)
+        {
+            _logger = logger;
+        }
 
         /// <summary>
         /// Sets the API endpoint using a predefined environment.
         /// </summary>
-        public Builder WithEnvironment(Environment environment)
+        public Builder ApiEndpoint(Environment apiEndpoint)
         {
-            _apiEndpoint = environment.GetBaseUrl();
+            _apiEndpoint = apiEndpoint.GetBaseUrl();
             return this;
         }
 
         /// <summary>
         /// Sets a custom API endpoint URL.
         /// </summary>
-        public Builder WithApiEndpoint(string apiEndpoint)
+        public Builder CustomApiEndpoint(string customUrl)
         {
-            _apiEndpoint = apiEndpoint ?? throw new ArgumentNullException(nameof(apiEndpoint));
+            _apiEndpoint = customUrl;
             return this;
         }
 
         /// <summary>
-        /// Sets the API key for authentication.
+        /// Sets the API key for direct company access.
+        /// Use this for companies accessing their own data.
         /// </summary>
-        public Builder WithApiKey(string apiKey)
+        public Builder ApiKey(string apiKey)
         {
-            _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
+            _apiKey = apiKey;
             return this;
         }
 
         /// <summary>
-        /// Sets the OAuth client credentials for authentication.
+        /// Sets client credentials for OAuth token generation.
+        /// Only needed for client applications using OAuth flow.
         /// </summary>
-        public Builder WithClientCredentials(string clientId, string clientSecret)
+        public Builder SupplierCredentials(string clientId, string clientSecret)
         {
-            _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            _clientSecret = clientSecret ?? throw new ArgumentNullException(nameof(clientSecret));
+            _supplierClientId = clientId;
+            _supplierClientSecret = clientSecret;
             return this;
         }
 
-        /// <summary>
-        /// Sets the private key for decryption from PEM format.
-        /// </summary>
-        public Builder WithPrivateKey(string privateKeyPem)
+        public Builder EncryptionConfig(Encryption.EncryptionConfig encryptionConfig)
         {
-            if (string.IsNullOrEmpty(privateKeyPem))
-                throw new ArgumentNullException(nameof(privateKeyPem));
-
-            _privateKey = RSA.Create();
-            _privateKey.ImportFromPem(privateKeyPem);
+            _encryptionConfig = encryptionConfig;
             return this;
         }
 
-        /// <summary>
-        /// Sets the private key for decryption.
-        /// </summary>
-        public Builder WithPrivateKey(RSA privateKey)
+        public Builder TimeoutSeconds(int timeoutSeconds)
         {
-            _privateKey = privateKey ?? throw new ArgumentNullException(nameof(privateKey));
+            _timeoutSeconds = timeoutSeconds;
             return this;
         }
 
-        /// <summary>
-        /// Sets the HTTP request timeout.
-        /// </summary>
-        public Builder WithTimeout(TimeSpan timeout)
+        public Builder MaxRetries(int maxRetries)
         {
-            if (timeout <= TimeSpan.Zero)
-                throw new ArgumentException("Timeout must be positive", nameof(timeout));
-            _timeout = timeout;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets the maximum number of retry attempts.
-        /// </summary>
-        public Builder WithMaxRetries(int maxRetries)
-        {
-            if (maxRetries < 0)
-                throw new ArgumentException("Max retries cannot be negative", nameof(maxRetries));
             _maxRetries = maxRetries;
             return this;
         }
 
         /// <summary>
-        /// Sets the encryption configuration.
+        /// Sets the issuer's private key for decrypting credit note requests.
         /// </summary>
-        public Builder WithEncryptionConfig(EncryptionConfig config)
+        public Builder PrivateKey(string privateKeyBase64)
         {
-            _encryptionConfig = config ?? throw new ArgumentNullException(nameof(config));
+            _privateKeyBase64 = privateKeyBase64;
             return this;
         }
 
-        /// <summary>
-        /// Builds the configuration instance.
-        /// </summary>
         public CheqiSdkConfig Build()
         {
-            if (string.IsNullOrEmpty(_apiEndpoint))
-                throw new InvalidOperationException("API endpoint must be configured");
+            var logger = _logger ?? NullLogger.Instance;
 
-            return new CheqiSdkConfig(
-                _apiEndpoint,
-                _apiKey,
-                _clientId,
-                _clientSecret,
-                _privateKey,
-                _timeout,
-                _maxRetries,
-                _encryptionConfig);
+            // Validate API endpoint
+            if (string.IsNullOrWhiteSpace(_apiEndpoint))
+            {
+                throw new InvalidOperationException("API endpoint must be set using either ApiEndpoint(Environment) or CustomApiEndpoint(String)");
+            }
+
+            // Optional authentication validation - log warning if no auth configured
+            bool hasApiKey = !string.IsNullOrWhiteSpace(_apiKey);
+            bool hasClientCredentials = !string.IsNullOrWhiteSpace(_supplierClientId) &&
+                                       !string.IsNullOrWhiteSpace(_supplierClientSecret);
+
+            if (!hasApiKey && !hasClientCredentials)
+            {
+                logger.LogWarning("No authentication configured. API calls will fail unless access tokens are provided explicitly.");
+            }
+
+            if (hasApiKey && !IsValidApiKeyFormat(_apiKey!))
+            {
+                logger.LogWarning("API key does not match expected format (sk_live_* or sk_test_*)");
+            }
+
+            // Validate timeout
+            if (_timeoutSeconds <= 0)
+            {
+                throw new ArgumentException($"Timeout must be positive, got: {_timeoutSeconds}");
+            }
+            if (_timeoutSeconds > 300)
+            {
+                logger.LogWarning("Timeout is very high ({TimeoutSeconds}s). Consider using a lower value for better UX", _timeoutSeconds);
+            }
+
+            // Validate retries
+            if (_maxRetries < 0)
+            {
+                throw new ArgumentException($"Max retries cannot be negative, got: {_maxRetries}");
+            }
+            if (_maxRetries > 10)
+            {
+                logger.LogWarning("Max retries is very high ({MaxRetries}). Consider using a lower value", _maxRetries);
+            }
+
+            // Use default encryption config if not provided
+            if (_encryptionConfig == null)
+            {
+                logger.LogDebug("No encryption config provided, using default");
+                _encryptionConfig = Encryption.EncryptionConfig.BuilderInstance().Build();
+            }
+
+            var config = new CheqiSdkConfig(this);
+            string authMode = hasApiKey ? "API Key" : (hasClientCredentials ? "OAuth Client Credentials" : "None (tokens required per-call)");
+            logger.LogInformation("CheqiSDKConfig created: endpoint={Endpoint}, authMode={AuthMode}, timeout={Timeout}s, maxRetries={MaxRetries}",
+                _apiEndpoint, authMode, _timeoutSeconds, _maxRetries);
+
+            return config;
+        }
+
+        private static bool IsValidApiKeyFormat(string key)
+        {
+            return key.StartsWith("sk_live_") || key.StartsWith("sk_test_");
         }
     }
 }

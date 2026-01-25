@@ -1,24 +1,26 @@
 namespace Cheqi.Sdk.Config;
 
 /// <summary>
-/// Predefined API environments for the Cheqi SDK.
+/// Predefined Cheqi API environments.
+/// 
+/// Use these for standard deployments, or use customApiEndpoint() for custom URLs.
 /// </summary>
 public enum Environment
 {
     /// <summary>
-    /// Sandbox environment for development and testing.
+    /// Sandbox environment for testing and development.
     /// </summary>
-    Sandbox,
+    SANDBOX,
 
     /// <summary>
     /// Test environment for integration testing.
     /// </summary>
-    Test,
+    TEST,
 
     /// <summary>
-    /// Production environment for live transactions.
+    /// Production environment for live operations.
     /// </summary>
-    Production
+    PRODUCTION
 }
 
 /// <summary>
@@ -27,13 +29,15 @@ public enum Environment
 public static class EnvironmentExtensions
 {
     /// <summary>
-    /// Gets the base URL for the specified environment.
+    /// Returns the base URL for this environment.
     /// </summary>
+    /// <param name="environment">The environment</param>
+    /// <returns>The API base URL</returns>
     public static string GetBaseUrl(this Environment environment) => environment switch
     {
-        Environment.Sandbox => "https://sandbox.api.cheqi.io",
-        Environment.Test => "https://test.api.cheqi.io",
-        Environment.Production => "https://api.cheqi.io",
+        Environment.SANDBOX => "https://sandbox.api.cheqi.io",
+        Environment.TEST => "https://test.api.cheqi.io",
+        Environment.PRODUCTION => "https://api.cheqi.io",
         _ => throw new ArgumentOutOfRangeException(nameof(environment), environment, "Unknown environment")
     };
 }

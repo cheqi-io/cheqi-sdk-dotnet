@@ -9,39 +9,45 @@ namespace Cheqi.Sdk.CreditNote;
 public sealed class CreditNoteTemplateRequest
 {
     /// <summary>
-    /// Unique credit note identifier from the POS system.
+    /// Reference to the original receipt/document.
     /// </summary>
-    [JsonPropertyName("creditNoteId")]
-    public string CreditNoteId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Reference to the original receipt ID.
-    /// </summary>
-    [JsonPropertyName("originalReceiptId")]
+    [JsonPropertyName("originatorDocumentReference")]
     public string? OriginalReceiptId { get; set; }
 
     /// <summary>
-    /// Credit note timestamp.
+    /// Unique credit note/document number from the POS system.
     /// </summary>
-    [JsonPropertyName("issueDateTime")]
+    [JsonPropertyName("documentNumber")]
+    public string CreditNoteId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Additional identifiers for the credit note.
+    /// </summary>
+    [JsonPropertyName("identifiers")]
+    public List<Identifier>? Identifiers { get; set; }
+
+    /// <summary>
+    /// Issue date/time of the credit note.
+    /// </summary>
+    [JsonPropertyName("issueDate")]
     public DateTimeOffset IssueDateTime { get; set; }
 
     /// <summary>
     /// Currency code (ISO 4217, e.g., "EUR").
     /// </summary>
-    [JsonPropertyName("currencyCode")]
+    [JsonPropertyName("currency")]
     public string CurrencyCode { get; set; } = "EUR";
 
     /// <summary>
-    /// Total credit amount including tax.
+    /// Invoice subtotal.
     /// </summary>
-    [JsonPropertyName("totalAmount")]
-    public decimal TotalAmount { get; set; }
+    [JsonPropertyName("invoiceSubtotal")]
+    public decimal? InvoiceSubtotal { get; set; }
 
     /// <summary>
     /// Total credit amount excluding tax.
     /// </summary>
-    [JsonPropertyName("totalAmountExcludingTax")]
+    [JsonPropertyName("totalBeforeTax")]
     public decimal? TotalAmountExcludingTax { get; set; }
 
     /// <summary>
@@ -51,22 +57,10 @@ public sealed class CreditNoteTemplateRequest
     public decimal? TotalTaxAmount { get; set; }
 
     /// <summary>
-    /// Reason for the credit note.
+    /// Total credit amount including tax.
     /// </summary>
-    [JsonPropertyName("reason")]
-    public string? Reason { get; set; }
-
-    /// <summary>
-    /// Store identifier.
-    /// </summary>
-    [JsonPropertyName("storeId")]
-    public string? StoreId { get; set; }
-
-    /// <summary>
-    /// Store name.
-    /// </summary>
-    [JsonPropertyName("storeName")]
-    public string? StoreName { get; set; }
+    [JsonPropertyName("totalAmount")]
+    public decimal TotalAmount { get; set; }
 
     /// <summary>
     /// Line items being credited.
@@ -75,20 +69,20 @@ public sealed class CreditNoteTemplateRequest
     public List<Product> Products { get; set; } = new();
 
     /// <summary>
+    /// Credit note-level discounts.
+    /// </summary>
+    [JsonPropertyName("discounts")]
+    public List<Discount>? Discounts { get; set; }
+
+    /// <summary>
     /// Tax breakdown by category.
     /// </summary>
     [JsonPropertyName("taxes")]
     public List<Tax>? Taxes { get; set; }
 
     /// <summary>
-    /// Additional notes or comments.
+    /// Additional note or reason for the credit note.
     /// </summary>
-    [JsonPropertyName("notes")]
-    public string? Notes { get; set; }
-
-    /// <summary>
-    /// Custom metadata as key-value pairs.
-    /// </summary>
-    [JsonPropertyName("metadata")]
-    public Dictionary<string, string>? Metadata { get; set; }
+    [JsonPropertyName("note")]
+    public string? Reason { get; set; }
 }

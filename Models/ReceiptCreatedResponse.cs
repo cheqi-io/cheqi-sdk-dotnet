@@ -5,41 +5,40 @@ namespace Cheqi.Sdk.Models;
 /// <summary>
 /// Response from the receipt creation API.
 /// </summary>
-public sealed class ReceiptCreatedResponse
+public class ReceiptCreatedResponse
 {
     /// <summary>
-    /// Whether the receipt was created successfully.
+    /// Unique Cheqi receipt ID assigned by the system.
     /// </summary>
-    [JsonPropertyName("success")]
-    public bool Success { get; set; }
+    [JsonPropertyName("cheqiReceiptId")]
+    public string? cheqiReceiptId { get; set; }
 
     /// <summary>
-    /// Unique receipt ID assigned by Cheqi.
+    /// Timestamp when the receipt was created.
     /// </summary>
-    [JsonPropertyName("receiptId")]
-    public string? ReceiptId { get; set; }
+    [JsonPropertyName("createdAt")]
+    public DateTimeOffset? createdAt { get; set; }
 
     /// <summary>
-    /// Number of recipients the receipt was delivered to.
+    /// Hash of the receipt template used.
     /// </summary>
-    [JsonPropertyName("recipientCount")]
-    public int RecipientCount { get; set; }
+    [JsonPropertyName("templateHash")]
+    public string? templateHash { get; set; }
 
     /// <summary>
-    /// Message providing additional context.
+    /// Default constructor.
     /// </summary>
-    [JsonPropertyName("message")]
-    public string? Message { get; set; }
+    public ReceiptCreatedResponse()
+    {
+    }
 
     /// <summary>
-    /// Error code if the request failed.
+    /// Constructor with all fields.
     /// </summary>
-    [JsonPropertyName("errorCode")]
-    public string? ErrorCode { get; set; }
-
-    /// <summary>
-    /// Timestamp when the receipt was processed.
-    /// </summary>
-    [JsonPropertyName("timestamp")]
-    public DateTimeOffset? Timestamp { get; set; }
+    public ReceiptCreatedResponse(string cheqiReceiptId, DateTimeOffset createdAt, string templateHash)
+    {
+        this.cheqiReceiptId = cheqiReceiptId;
+        this.createdAt = createdAt;
+        this.templateHash = templateHash;
+    }
 }

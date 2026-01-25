@@ -1,4 +1,5 @@
 using System.Net;
+using Cheqi.Sdk.Http.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Cheqi.Sdk.Http;
@@ -88,7 +89,9 @@ public sealed class RetryHandler : DelegatingHandler
             {
                 throw new CheqiApiException(
                     $"Request failed after {_maxRetries} retries",
-                    response?.StatusCode ?? HttpStatusCode.InternalServerError);
+                    (int)(response?.StatusCode ?? HttpStatusCode.InternalServerError),
+                    "MAX_RETRIES_EXCEEDED",
+                    null);
             }
 
             var delay = CalculateDelay(attempt, response);

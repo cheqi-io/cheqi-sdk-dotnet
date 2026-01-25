@@ -9,42 +9,51 @@ namespace Cheqi.Sdk.Models.Enums;
 public enum PaymentType
 {
     /// <summary>
-    /// Card payment (credit/debit).
+    /// Card payment (credit/debit) - UBL code 48.
     /// </summary>
     CARD_PAYMENT,
 
     /// <summary>
-    /// Bank transfer payment.
-    /// </summary>
-    BANK_TRANSFER,
-
-    /// <summary>
-    /// Cash payment.
-    /// </summary>
-    CASH,
-
-    /// <summary>
-    /// Direct debit payment.
+    /// Direct debit payment - UBL code 49.
     /// </summary>
     DIRECT_DEBIT,
 
     /// <summary>
-    /// Gift card payment.
+    /// Cash payment - UBL code 10.
     /// </summary>
-    GIFT_CARD,
+    CASH
+}
+
+/// <summary>
+/// Extension methods for PaymentType enum.
+/// </summary>
+public static class PaymentTypeExtensions
+{
+    /// <summary>
+    /// Gets the UBL payment means code for the payment type.
+    /// </summary>
+    public static string GetValue(this PaymentType paymentType)
+    {
+        return paymentType switch
+        {
+            PaymentType.CARD_PAYMENT => "48",
+            PaymentType.DIRECT_DEBIT => "49",
+            PaymentType.CASH => "10",
+            _ => throw new ArgumentOutOfRangeException(nameof(paymentType), paymentType, null)
+        };
+    }
 
     /// <summary>
-    /// Loyalty points payment.
+    /// Parses a UBL payment means code to PaymentType enum.
     /// </summary>
-    LOYALTY_POINTS,
-
-    /// <summary>
-    /// Mobile payment (Apple Pay, Google Pay, etc.).
-    /// </summary>
-    MOBILE_PAYMENT,
-
-    /// <summary>
-    /// Other payment method.
-    /// </summary>
-    OTHER
+    public static PaymentType FromValue(string value)
+    {
+        return value switch
+        {
+            "48" => PaymentType.CARD_PAYMENT,
+            "49" => PaymentType.DIRECT_DEBIT,
+            "10" => PaymentType.CASH,
+            _ => throw new ArgumentException($"Unknown payment type value: {value}", nameof(value))
+        };
+    }
 }

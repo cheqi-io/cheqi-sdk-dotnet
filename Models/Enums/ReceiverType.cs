@@ -9,12 +9,12 @@ namespace Cheqi.Sdk.Models.Enums;
 public enum ReceiverType
 {
     /// <summary>
-    /// Individual customer.
+    /// Webhook receiver - receipt delivered via HTTP webhook.
     /// </summary>
-    CUSTOMER,
+    WEBHOOK,
 
     /// <summary>
-    /// Business entity.
+    /// Device receiver - receipt delivered to a registered device.
     /// </summary>
-    BUSINESS
+    DEVICE
 }

@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -5,33 +8,108 @@ using System.Text.Json.Nodes;
 namespace Cheqi.Sdk.Utils;
 
 /// <summary>
-/// JSON canonicalization per RFC 8785 (JCS - JSON Canonicalization Scheme).
+/// RFC 8785 compliant JSON canonicalization implementation.
+/// 
+/// Provides deterministic JSON serialization for consistent hashing and signing.
+/// This implementation follows the RFC 8785 specification which defines:
+/// - Lexicographic ordering of object keys
+/// - Specific string escaping rules
+/// - Consistent number representation
+/// - No insignificant whitespace
+/// 
+/// Thread-safe and can be reused across multiple canonicalization operations.
 /// </summary>
-public static class Rfc8785Canonicalizer
+public class RFC8785Canonicalizer
 {
+    private readonly ILogger<RFC8785Canonicalizer> _logger;
+    private readonly JsonSerializerOptions _jsonOptions;
+
     /// <summary>
-    /// Canonicalizes a JSON string according to RFC 8785.
+    /// Creates a new RFC8785Canonicalizer instance.
     /// </summary>
-    /// <param name="json">The JSON string to canonicalize.</param>
-    /// <returns>The canonicalized JSON string.</returns>
-    public static string Canonicalize(string json)
+    public RFC8785Canonicalizer(ILogger<RFC8785Canonicalizer>? logger = null)
     {
-        if (string.IsNullOrEmpty(json))
-            throw new ArgumentException("JSON cannot be null or empty", nameof(json));
-
-        var node = JsonNode.Parse(json);
-        if (node == null)
-            throw new ArgumentException("Invalid JSON", nameof(json));
-
-        return Canonicalize(node);
+        _logger = logger ?? NullLogger<RFC8785Canonicalizer>.Instance;
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        _logger.LogDebug("RFC8785Canonicalizer initialized");
     }
 
     /// <summary>
-    /// Canonicalizes a JsonNode according to RFC 8785.
+    /// Canonicalizes JSON string according to RFC 8785.
     /// </summary>
-    /// <param name="node">The JSON node to canonicalize.</param>
-    /// <returns>The canonicalized JSON string.</returns>
-    public static string Canonicalize(JsonNode? node)
+    /// <param name="json">JSON string to canonicalize</param>
+    /// <returns>Canonicalized JSON string</returns>
+    /// <exception cref="ArgumentException">if json is null or empty</exception>
+    /// <exception cref="JsonException">if JSON parsing fails</exception>
+    public string Canonicalize(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            throw new ArgumentException("JSON string cannot be null or empty", nameof(json));
+        }
+
+        _logger.LogDebug("Canonicalizing JSON string");
+        var node = JsonNode.Parse(json);
+        if (node == null)
+        {
+            throw new ArgumentException("Invalid JSON", nameof(json));
+        }
+
+        string canonical = CanonicalizeNode(node);
+        _logger.LogDebug("JSON canonicalization complete");
+        return canonical;
+    }
+
+    /// <summary>
+    /// Canonicalizes an object directly by first converting to JSON.
+    /// </summary>
+    /// <param name="obj">Object to canonicalize</param>
+    /// <returns>Canonicalized JSON string</returns>
+    /// <exception cref="ArgumentNullException">if object is null</exception>
+    public string Canonicalize(object obj)
+    {
+        if (obj == null)
+        {
+            throw new ArgumentNullException(nameof(obj), "Object cannot be null");
+        }
+
+        _logger.LogDebug("Canonicalizing object of type: {Type}", obj.GetType().Name);
+        string json = JsonSerializer.Serialize(obj, _jsonOptions);
+        return Canonicalize(json);
+    }
+
+    /// <summary>
+    /// Calculates SHA-256 hash of canonicalized JSON.
+    /// </summary>
+    /// <param name="json">JSON string to hash</param>
+    /// <returns>Hex-encoded SHA-256 hash</returns>
+    public string CalculateHash(string json)
+    {
+        _logger.LogDebug("Calculating hash for JSON string");
+        string canonical = Canonicalize(json);
+        string hash = CalculateSHA256(canonical);
+        _logger.LogDebug("Hash calculated: {HashPrefix}...", hash.Substring(0, 8));
+        return hash;
+    }
+
+    /// <summary>
+    /// Calculates SHA-256 hash of canonicalized object.
+    /// </summary>
+    /// <param name="obj">Object to hash</param>
+    /// <returns>Hex-encoded SHA-256 hash</returns>
+    public string CalculateHash(object obj)
+    {
+        _logger.LogDebug("Calculating hash for object of type: {Type}", obj.GetType().Name);
+        string canonical = Canonicalize(obj);
+        string hash = CalculateSHA256(canonical);
+        _logger.LogDebug("Hash calculated: {HashPrefix}...", hash.Substring(0, 8));
+        return hash;
+    }
+
+    private string CanonicalizeNode(JsonNode? node)
     {
         if (node == null)
             return "null";
@@ -41,7 +119,7 @@ public static class Rfc8785Canonicalizer
         return sb.ToString();
     }
 
-    private static void WriteCanonical(JsonNode? node, StringBuilder sb)
+    private void WriteCanonical(JsonNode? node, StringBuilder sb)
     {
         switch (node)
         {
@@ -63,7 +141,7 @@ public static class Rfc8785Canonicalizer
         }
     }
 
-    private static void WriteValue(JsonValue value, StringBuilder sb)
+    private void WriteValue(JsonValue value, StringBuilder sb)
     {
         var element = value.GetValue<JsonElement>();
 
@@ -95,7 +173,7 @@ public static class Rfc8785Canonicalizer
         }
     }
 
-    private static void WriteString(string value, StringBuilder sb)
+    private void WriteString(string value, StringBuilder sb)
     {
         sb.Append('"');
         foreach (var c in value)
@@ -138,7 +216,7 @@ public static class Rfc8785Canonicalizer
         sb.Append('"');
     }
 
-    private static void WriteNumber(JsonElement element, StringBuilder sb)
+    private void WriteNumber(JsonElement element, StringBuilder sb)
     {
         // RFC 8785 requires specific number formatting
         if (element.TryGetInt64(out var longValue))
@@ -172,7 +250,7 @@ public static class Rfc8785Canonicalizer
         }
     }
 
-    private static void WriteArray(JsonArray array, StringBuilder sb)
+    private void WriteArray(JsonArray array, StringBuilder sb)
     {
         sb.Append('[');
         var first = true;
@@ -185,7 +263,7 @@ public static class Rfc8785Canonicalizer
         sb.Append(']');
     }
 
-    private static void WriteObject(JsonObject obj, StringBuilder sb)
+    private void WriteObject(JsonObject obj, StringBuilder sb)
     {
         sb.Append('{');
 
@@ -205,5 +283,22 @@ public static class Rfc8785Canonicalizer
         }
 
         sb.Append('}');
+    }
+
+    /// <summary>
+    /// Calculates SHA-256 hash of the input string
+    /// </summary>
+    private string CalculateSHA256(string input)
+    {
+        var inputBytes = Encoding.UTF8.GetBytes(input);
+        var hash = SHA256.HashData(inputBytes);
+
+        var hexString = new StringBuilder();
+        foreach (byte b in hash)
+        {
+            hexString.Append($"{b:x2}");
+        }
+
+        return hexString.ToString();
     }
 }

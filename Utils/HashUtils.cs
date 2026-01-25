@@ -1,71 +1,95 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Cheqi.Sdk.Utils;
 
 /// <summary>
-/// Utility methods for cryptographic hashing.
+/// Utility class for cryptographic hashing operations.
+/// 
+/// Provides static methods for generating SHA-256 hashes in hexadecimal format.
+/// All methods are thread-safe and optimized for performance.
 /// </summary>
 public static class HashUtils
 {
-    /// <summary>
-    /// Computes the SHA-256 hash of a string and returns it as a hex string.
-    /// </summary>
-    /// <param name="input">The input string to hash.</param>
-    /// <returns>The SHA-256 hash as a lowercase hex string.</returns>
-    public static string ComputeSha256Hash(string input)
-    {
-        if (input == null)
-            throw new ArgumentNullException(nameof(input));
+    private static ILogger? _logger;
 
-        var inputBytes = Encoding.UTF8.GetBytes(input);
-        return ComputeSha256Hash(inputBytes);
+    /// <summary>
+    /// Sets the logger for HashUtils (optional).
+    /// </summary>
+    public static void SetLogger(ILogger logger)
+    {
+        _logger = logger;
     }
 
     /// <summary>
-    /// Computes the SHA-256 hash of a byte array and returns it as a hex string.
+    /// Generates a SHA-256 hash of the input string.
     /// </summary>
-    /// <param name="input">The input bytes to hash.</param>
-    /// <returns>The SHA-256 hash as a lowercase hex string.</returns>
-    public static string ComputeSha256Hash(byte[] input)
+    /// <param name="input">String to hash</param>
+    /// <returns>Lowercase hexadecimal representation of the SHA-256 hash</returns>
+    /// <exception cref="ArgumentNullException">if input is null</exception>
+    public static string Sha256Hex(string input)
     {
         if (input == null)
-            throw new ArgumentNullException(nameof(input));
+        {
+            throw new ArgumentNullException(nameof(input), "Input string cannot be null");
+        }
 
-        var hashBytes = SHA256.HashData(input);
-        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+        try
+        {
+            var inputBytes = Encoding.UTF8.GetBytes(input);
+            var hashBytes = SHA256.HashData(inputBytes);
+            string hash = BytesToHex(hashBytes);
+            _logger?.LogDebug("SHA-256 hash generated: {HashPrefix}...", hash.Substring(0, Math.Min(8, hash.Length)));
+            return hash;
+        }
+        catch (Exception e)
+        {
+            _logger?.LogError(e, "SHA-256 algorithm error");
+            throw new InvalidOperationException("SHA-256 algorithm not available", e);
+        }
     }
 
     /// <summary>
-    /// Computes the SHA-256 hash of a string and returns it as Base64.
+    /// Generates a SHA-256 hash of the input byte array.
     /// </summary>
-    /// <param name="input">The input string to hash.</param>
-    /// <returns>The SHA-256 hash as a Base64 string.</returns>
-    public static string ComputeSha256HashBase64(string input)
+    /// <param name="input">Byte array to hash</param>
+    /// <returns>Lowercase hexadecimal representation of the SHA-256 hash</returns>
+    /// <exception cref="ArgumentNullException">if input is null</exception>
+    public static string Sha256Hex(byte[] input)
     {
         if (input == null)
-            throw new ArgumentNullException(nameof(input));
+        {
+            throw new ArgumentNullException(nameof(input), "Input byte array cannot be null");
+        }
 
-        var inputBytes = Encoding.UTF8.GetBytes(input);
-        var hashBytes = SHA256.HashData(inputBytes);
-        return Convert.ToBase64String(hashBytes);
+        try
+        {
+            var hashBytes = SHA256.HashData(input);
+            string hash = BytesToHex(hashBytes);
+            _logger?.LogDebug("SHA-256 hash generated for {Length} bytes", input.Length);
+            return hash;
+        }
+        catch (Exception e)
+        {
+            _logger?.LogError(e, "SHA-256 algorithm error");
+            throw new InvalidOperationException("SHA-256 algorithm not available", e);
+        }
     }
 
     /// <summary>
-    /// Computes the HMAC-SHA256 of a message with a key.
+    /// Converts a byte array to a lowercase hexadecimal string.
     /// </summary>
-    /// <param name="message">The message to authenticate.</param>
-    /// <param name="key">The secret key.</param>
-    /// <returns>The HMAC-SHA256 as a lowercase hex string.</returns>
-    public static string ComputeHmacSha256(string message, byte[] key)
+    /// <param name="bytes">Byte array to convert</param>
+    /// <returns>Lowercase hexadecimal string representation</returns>
+    private static string BytesToHex(byte[] bytes)
     {
-        if (message == null)
-            throw new ArgumentNullException(nameof(message));
-        if (key == null)
-            throw new ArgumentNullException(nameof(key));
-
-        var messageBytes = Encoding.UTF8.GetBytes(message);
-        var hashBytes = HMACSHA256.HashData(key, messageBytes);
-        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+        var result = new StringBuilder(bytes.Length * 2);
+        foreach (byte b in bytes)
+        {
+            result.Append($"{b:x2}");
+        }
+        return result.ToString();
     }
 }

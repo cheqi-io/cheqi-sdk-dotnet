@@ -22,6 +22,18 @@ public interface ICheqiApiClient : IDisposable
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Matches a customer based on identification details (alias for ResolveRecipientsAsync).
+    /// </summary>
+    /// <param name="identificationDetails">The identification details for matching.</param>
+    /// <param name="accessToken">Optional OAuth access token.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The recipient resolution response.</returns>
+    Task<RecipientResolutionResponse> MatchCustomerAsync(
+        IdentificationDetails identificationDetails,
+        string? accessToken = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Generates a receipt template from the provided request.
     /// </summary>
     /// <param name="request">The receipt template request.</param>
@@ -65,7 +77,7 @@ public interface ICheqiApiClient : IDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The credit note creation response.</returns>
     Task<CreditNoteCreatedResponse> SubmitEncryptedCreditNotesAsync(
-        EncryptedCreditNoteRequestDto request,
+        EncryptedCreditNotesRequest request,
         string? accessToken = null,
         CancellationToken cancellationToken = default);
 
@@ -184,4 +196,17 @@ public interface ICheqiApiClient : IDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The access token.</returns>
     Task<string> GetAccessTokenAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a receipt via email to a customer.
+    /// </summary>
+    /// <param name="customerEmail">Customer email address.</param>
+    /// <param name="purchaseReceipt">The purchase receipt to send.</param>
+    /// <param name="accessToken">Optional OAuth access token.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task SendReceiptViaEmailAsync(
+        string customerEmail,
+        Models.Ubl.PurchaseReceipt purchaseReceipt,
+        string? accessToken = null,
+        CancellationToken cancellationToken = default);
 }

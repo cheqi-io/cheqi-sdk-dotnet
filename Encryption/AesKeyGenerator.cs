@@ -1,40 +1,35 @@
 using System.Security.Cryptography;
-using Cheqi.Sdk.Config;
 
 namespace Cheqi.Sdk.Encryption;
 
 /// <summary>
-/// Generates cryptographically secure AES keys.
+/// Generates AES-256 keys for receipt encryption.
 /// </summary>
-public sealed class AesKeyGenerator
+public class AesKeyGenerator
 {
-    private readonly EncryptionConfig _config;
+    private const int AES_KEY_LENGTH = 256;
 
-    public AesKeyGenerator(EncryptionConfig? config = null)
+    private readonly RandomNumberGenerator _secureRandom;
+
+    public AesKeyGenerator(RandomNumberGenerator secureRandom)
     {
-        _config = config ?? EncryptionConfig.Default;
+        _secureRandom = secureRandom;
     }
 
     /// <summary>
-    /// Generates a new random AES key.
+    /// Generates a new random AES-256 key.
     /// </summary>
-    /// <returns>A cryptographically secure random key.</returns>
     public byte[] GenerateKey()
     {
-        var keySize = _config.AesKeySize / 8; // Convert bits to bytes
-        var key = new byte[keySize];
-        RandomNumberGenerator.Fill(key);
-        return key;
-    }
-
-    /// <summary>
-    /// Generates a new random initialization vector (nonce) for AES-GCM.
-    /// </summary>
-    /// <returns>A cryptographically secure random IV.</returns>
-    public byte[] GenerateIv()
-    {
-        var iv = new byte[_config.AesIvSize];
-        RandomNumberGenerator.Fill(iv);
-        return iv;
+        try
+        {
+            byte[] key = new byte[AES_KEY_LENGTH / 8]; // 32 bytes for AES-256
+            _secureRandom.GetBytes(key);
+            return key;
+        }
+        catch (Exception e)
+        {
+            throw new EncryptionException("Failed to generate AES key", e);
+        }
     }
 }
