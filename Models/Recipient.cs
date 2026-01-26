@@ -57,18 +57,19 @@ public sealed class Recipient
 
     // ===== CONSTRUCTOR =====
 
-    private Recipient(
+    [JsonConstructor]
+    public Recipient(
         Guid id,
         ReceiverType receiverType,
         string publicKey,
         string keyAlgorithm,
         DateTimeOffset? keyCreatedAt)
     {
-        id = id;
-        receiverType = receiverType;
-        publicKey = publicKey;
-        keyAlgorithm = keyAlgorithm;
-        keyCreatedAt = keyCreatedAt;
+        this.id = id;
+        this.receiverType = receiverType;
+        this.publicKey = publicKey;
+        this.keyAlgorithm = keyAlgorithm;
+        this.keyCreatedAt = keyCreatedAt;
     }
 
     // ===== BUILDER =====

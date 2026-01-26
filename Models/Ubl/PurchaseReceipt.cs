@@ -10,53 +10,81 @@ namespace Cheqi.Sdk.Models.Ubl;
 public sealed class PurchaseReceipt
 {
     /// <summary>
-    /// UBL version identifier.
-    /// </summary>
-    [JsonPropertyName("ublVersionId")]
-    [XmlElement("UBLVersionID", Namespace = UblNamespaces.Cbc)]
-    public string UblVersionId { get; set; } = "2.1";
-
-    /// <summary>
     /// Customization identifier.
     /// </summary>
     [JsonPropertyName("customizationId")]
     [XmlElement("CustomizationID", Namespace = UblNamespaces.Cbc)]
-    public string? CustomizationId { get; set; }
+    public Identifier? CustomizationId { get; set; }
 
     /// <summary>
     /// Profile identifier.
     /// </summary>
     [JsonPropertyName("profileId")]
     [XmlElement("ProfileID", Namespace = UblNamespaces.Cbc)]
-    public string? ProfileId { get; set; }
+    public Identifier? ProfileId { get; set; }
+
+    /// <summary>
+    /// Profile execution identifier.
+    /// </summary>
+    [JsonPropertyName("profileExecutionId")]
+    [XmlElement("ProfileExecutionID", Namespace = UblNamespaces.Cbc)]
+    public Identifier? ProfileExecutionId { get; set; }
 
     /// <summary>
     /// Unique receipt identifier.
     /// </summary>
     [JsonPropertyName("id")]
     [XmlElement("ID", Namespace = UblNamespaces.Cbc)]
-    public string Id { get; set; } = string.Empty;
+    public Identifier? Id { get; set; }
+
+    /// <summary>
+    /// UUID identifier.
+    /// </summary>
+    [JsonPropertyName("uuid")]
+    [XmlElement("UUID", Namespace = UblNamespaces.Cbc)]
+    public Identifier? Uuid { get; set; }
 
     /// <summary>
     /// Issue date of the receipt.
     /// </summary>
     [JsonPropertyName("issueDate")]
     [XmlElement("IssueDate", Namespace = UblNamespaces.Cbc)]
-    public DateTimeOffset IssueDate { get; set; }
+    public string? IssueDate { get; set; }
 
     /// <summary>
     /// Issue time of the receipt.
     /// </summary>
     [JsonPropertyName("issueTime")]
     [XmlElement("IssueTime", Namespace = UblNamespaces.Cbc)]
-    public TimeSpan? IssueTime { get; set; }
+    public string? IssueTime { get; set; }
 
     /// <summary>
-    /// Receipt type code.
+    /// Transaction date.
     /// </summary>
-    [JsonPropertyName("receiptTypeCode")]
-    [XmlElement("ReceiptTypeCode", Namespace = UblNamespaces.Cbc)]
-    public string? ReceiptTypeCode { get; set; }
+    [JsonPropertyName("transactionDate")]
+    [XmlElement("TransactionDate", Namespace = UblNamespaces.Cbc)]
+    public string? TransactionDate { get; set; }
+
+    /// <summary>
+    /// Transaction time.
+    /// </summary>
+    [JsonPropertyName("transactionTime")]
+    [XmlElement("TransactionTime", Namespace = UblNamespaces.Cbc)]
+    public string? TransactionTime { get; set; }
+
+    /// <summary>
+    /// Purchase date.
+    /// </summary>
+    [JsonPropertyName("purchaseDate")]
+    [XmlElement("PurchaseDate", Namespace = UblNamespaces.Cbc)]
+    public string? PurchaseDate { get; set; }
+
+    /// <summary>
+    /// Purchase time.
+    /// </summary>
+    [JsonPropertyName("purchaseTime")]
+    [XmlElement("PurchaseTime", Namespace = UblNamespaces.Cbc)]
+    public string? PurchaseTime { get; set; }
 
     /// <summary>
     /// Note or additional text.
@@ -70,63 +98,35 @@ public sealed class PurchaseReceipt
     /// </summary>
     [JsonPropertyName("documentCurrencyCode")]
     [XmlElement("DocumentCurrencyCode", Namespace = UblNamespaces.Cbc)]
-    public string DocumentCurrencyCode { get; set; } = "EUR";
+    public string? DocumentCurrencyCode { get; set; }
 
     /// <summary>
-    /// Tax currency code (if different from document currency).
+    /// Purchase reference.
     /// </summary>
-    [JsonPropertyName("taxCurrencyCode")]
-    [XmlElement("TaxCurrencyCode", Namespace = UblNamespaces.Cbc)]
-    public string? TaxCurrencyCode { get; set; }
+    [JsonPropertyName("purchaseReference")]
+    [XmlElement("PurchaseReference", Namespace = UblNamespaces.Cac)]
+    public PurchaseReference? PurchaseReference { get; set; }
 
     /// <summary>
-    /// Accounting cost code.
+    /// Sales document reference.
     /// </summary>
-    [JsonPropertyName("accountingCost")]
-    [XmlElement("AccountingCost", Namespace = UblNamespaces.Cbc)]
-    public string? AccountingCost { get; set; }
+    [JsonPropertyName("salesDocumentReference")]
+    [XmlElement("SalesDocumentReference", Namespace = UblNamespaces.Cac)]
+    public DocumentReference? SalesDocumentReference { get; set; }
 
     /// <summary>
-    /// Buyer reference.
+    /// Additional document reference.
     /// </summary>
-    [JsonPropertyName("buyerReference")]
-    [XmlElement("BuyerReference", Namespace = UblNamespaces.Cbc)]
-    public string? BuyerReference { get; set; }
-
-    /// <summary>
-    /// Billing period start date.
-    /// </summary>
-    [JsonPropertyName("invoicePeriodStartDate")]
-    [XmlElement("InvoicePeriodStartDate", Namespace = UblNamespaces.Cbc)]
-    public DateTimeOffset? InvoicePeriodStartDate { get; set; }
-
-    /// <summary>
-    /// Billing period end date.
-    /// </summary>
-    [JsonPropertyName("invoicePeriodEndDate")]
-    [XmlElement("InvoicePeriodEndDate", Namespace = UblNamespaces.Cbc)]
-    public DateTimeOffset? InvoicePeriodEndDate { get; set; }
-
-    /// <summary>
-    /// Order reference.
-    /// </summary>
-    [JsonPropertyName("orderReference")]
-    [XmlElement("OrderReference", Namespace = UblNamespaces.Cbc)]
-    public string? OrderReference { get; set; }
-
-    /// <summary>
-    /// Contract reference.
-    /// </summary>
-    [JsonPropertyName("contractDocumentReference")]
-    [XmlElement("ContractDocumentReference", Namespace = UblNamespaces.Cbc)]
-    public string? ContractDocumentReference { get; set; }
-
-    /// <summary>
-    /// Additional document references.
-    /// </summary>
-    [JsonPropertyName("additionalDocumentReferences")]
+    [JsonPropertyName("additionalDocumentReference")]
     [XmlElement("AdditionalDocumentReference", Namespace = UblNamespaces.Cac)]
-    public List<DocumentReference>? AdditionalDocumentReferences { get; set; }
+    public DocumentReference? AdditionalDocumentReference { get; set; }
+
+    /// <summary>
+    /// Digital signature.
+    /// </summary>
+    [JsonPropertyName("signature")]
+    [XmlElement("Signature", Namespace = UblNamespaces.Cac)]
+    public Signature? Signature { get; set; }
 
     /// <summary>
     /// Supplier (seller) party.
@@ -143,18 +143,39 @@ public sealed class PurchaseReceipt
     public Party? AccountingCustomerParty { get; set; }
 
     /// <summary>
-    /// Payee party (if different from supplier).
+    /// Cashier contact information.
     /// </summary>
-    [JsonPropertyName("payeeParty")]
-    [XmlElement("PayeeParty", Namespace = UblNamespaces.Cac)]
-    public Party? PayeeParty { get; set; }
+    [JsonPropertyName("cashierContact")]
+    [XmlElement("CashierContact", Namespace = UblNamespaces.Cac)]
+    public Contact? CashierContact { get; set; }
 
     /// <summary>
-    /// Delivery information.
+    /// Cash register information.
     /// </summary>
-    [JsonPropertyName("delivery")]
-    [XmlElement("Delivery", Namespace = UblNamespaces.Cac)]
-    public Delivery? Delivery { get; set; }
+    [JsonPropertyName("cashRegister")]
+    [XmlElement("ShopperContact", Namespace = UblNamespaces.Cac)]
+    public CashRegister? CashRegister { get; set; }
+
+    /// <summary>
+    /// Point of sale location.
+    /// </summary>
+    [JsonPropertyName("pointOfSaleLocation")]
+    [XmlElement("PointOfSaleLocation", Namespace = UblNamespaces.Cac)]
+    public Location? PointOfSaleLocation { get; set; }
+
+    /// <summary>
+    /// Point of sale contact.
+    /// </summary>
+    [JsonPropertyName("pointOfSaleContact")]
+    [XmlElement("PointOfSaleContact", Namespace = UblNamespaces.Cac)]
+    public Contact? PointOfSaleContact { get; set; }
+
+    /// <summary>
+    /// Payment information.
+    /// </summary>
+    [JsonPropertyName("payment")]
+    [XmlElement("Payment", Namespace = UblNamespaces.Cac)]
+    public Payment? Payment { get; set; }
 
     /// <summary>
     /// Payment means information.
@@ -164,23 +185,16 @@ public sealed class PurchaseReceipt
     public List<PaymentMeans>? PaymentMeans { get; set; }
 
     /// <summary>
-    /// Payment terms.
-    /// </summary>
-    [JsonPropertyName("paymentTerms")]
-    [XmlElement("PaymentTerms", Namespace = UblNamespaces.Cac)]
-    public PaymentTerms? PaymentTerms { get; set; }
-
-    /// <summary>
     /// Document-level allowances and charges.
     /// </summary>
-    [JsonPropertyName("allowanceCharges")]
+    [JsonPropertyName("allowanceCharge")]
     [XmlElement("AllowanceCharge", Namespace = UblNamespaces.Cac)]
-    public List<AllowanceCharge>? AllowanceCharges { get; set; }
+    public List<AllowanceCharge>? AllowanceCharge { get; set; }
 
     /// <summary>
     /// Tax totals.
     /// </summary>
-    [JsonPropertyName("taxTotal")]
+    [JsonPropertyName("taxTotals")]
     [XmlElement("TaxTotal", Namespace = UblNamespaces.Cac)]
     public List<TaxTotal>? TaxTotal { get; set; }
 
@@ -192,11 +206,18 @@ public sealed class PurchaseReceipt
     public MonetaryTotal? LegalMonetaryTotal { get; set; }
 
     /// <summary>
-    /// Invoice/receipt lines.
+    /// Receipt lines.
     /// </summary>
-    [JsonPropertyName("invoiceLines")]
-    [XmlElement("InvoiceLine", Namespace = UblNamespaces.Cac)]
-    public List<InvoiceLine> InvoiceLines { get; set; } = new();
+    [JsonPropertyName("purchaseReceiptLines")]
+    [XmlElement("PurchaseReceiptLine", Namespace = UblNamespaces.Cac)]
+    public List<PurchaseReceiptLine>? PurchaseReceiptLine { get; set; }
+
+    /// <summary>
+    /// Verification nonce for receipt validation.
+    /// </summary>
+    [JsonPropertyName("verificationNonce")]
+    [XmlElement("VerificationNonce", Namespace = UblNamespaces.Cbc)]
+    public string? VerificationNonce { get; set; }
 }
 
 /// <summary>
@@ -210,14 +231,14 @@ public sealed class DocumentReference
     /// </summary>
     [JsonPropertyName("id")]
     [XmlElement("ID", Namespace = UblNamespaces.Cbc)]
-    public string? Id { get; set; }
+    public Identifier? Id { get; set; }
 
     /// <summary>
     /// Document type code.
     /// </summary>
     [JsonPropertyName("documentTypeCode")]
     [XmlElement("DocumentTypeCode", Namespace = UblNamespaces.Cbc)]
-    public string? DocumentTypeCode { get; set; }
+    public Code? DocumentTypeCode { get; set; }
 
     /// <summary>
     /// Document description.
@@ -266,75 +287,5 @@ public sealed class Attachment
     /// </summary>
     [JsonPropertyName("externalReference")]
     [XmlElement("ExternalReference", Namespace = UblNamespaces.Cac)]
-    public string? ExternalReference { get; set; }
-}
-
-/// <summary>
-/// UBL Delivery information.
-/// </summary>
-[XmlType(Namespace = UblNamespaces.Cac)]
-public sealed class Delivery
-{
-    /// <summary>
-    /// Actual delivery date.
-    /// </summary>
-    [JsonPropertyName("actualDeliveryDate")]
-    [XmlElement("ActualDeliveryDate", Namespace = UblNamespaces.Cbc)]
-    public DateTimeOffset? ActualDeliveryDate { get; set; }
-
-    /// <summary>
-    /// Delivery location.
-    /// </summary>
-    [JsonPropertyName("deliveryLocation")]
-    [XmlElement("DeliveryLocation", Namespace = UblNamespaces.Cac)]
-    public DeliveryLocation? DeliveryLocation { get; set; }
-
-    /// <summary>
-    /// Delivery party.
-    /// </summary>
-    [JsonPropertyName("deliveryParty")]
-    [XmlElement("DeliveryParty", Namespace = UblNamespaces.Cac)]
-    public Party? DeliveryParty { get; set; }
-}
-
-/// <summary>
-/// UBL Delivery Location.
-/// </summary>
-[XmlType(Namespace = UblNamespaces.Cac)]
-public sealed class DeliveryLocation
-{
-    /// <summary>
-    /// Location ID.
-    /// </summary>
-    [JsonPropertyName("id")]
-    [XmlElement("ID", Namespace = UblNamespaces.Cbc)]
-    public string? Id { get; set; }
-
-    /// <summary>
-    /// Location description.
-    /// </summary>
-    [JsonPropertyName("description")]
-    [XmlElement("Description", Namespace = UblNamespaces.Cbc)]
-    public string? Description { get; set; }
-
-    /// <summary>
-    /// Address.
-    /// </summary>
-    [JsonPropertyName("address")]
-    [XmlElement("Address", Namespace = UblNamespaces.Cac)]
-    public Cheqi.Sdk.Models.Company.Address? Address { get; set; }
-}
-
-/// <summary>
-/// UBL Payment Terms.
-/// </summary>
-[XmlType(Namespace = UblNamespaces.Cac)]
-public sealed class PaymentTerms
-{
-    /// <summary>
-    /// Payment terms note.
-    /// </summary>
-    [JsonPropertyName("note")]
-    [XmlElement("Note", Namespace = UblNamespaces.Cbc)]
-    public string? Note { get; set; }
+    public ExternalReference? ExternalReference { get; set; }
 }

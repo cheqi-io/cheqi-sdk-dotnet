@@ -11,25 +11,25 @@ namespace Cheqi.Sdk.Models.Ubl;
 public sealed class Party
 {
     /// <summary>
-    /// Party name.
+    /// Endpoint ID.
     /// </summary>
-    [JsonPropertyName("partyName")]
-    [XmlElement("PartyName", Namespace = UblNamespaces.Cac)]
-    public string? PartyName { get; set; }
+    [JsonPropertyName("endpointID")]
+    [XmlElement("EndpointID", Namespace = UblNamespaces.Cbc)]
+    public Identifier? EndpointId { get; set; }
 
     /// <summary>
     /// Party identification (e.g., VAT number).
     /// </summary>
     [JsonPropertyName("partyIdentification")]
     [XmlElement("PartyIdentification", Namespace = UblNamespaces.Cac)]
-    public string? PartyIdentification { get; set; }
+    public List<PartyIdentification>? PartyIdentification { get; set; }
 
     /// <summary>
-    /// Identification scheme (e.g., "VAT", "GLN").
+    /// Party name.
     /// </summary>
-    [JsonPropertyName("partyIdentificationScheme")]
-    [XmlIgnore]
-    public string? PartyIdentificationScheme { get; set; }
+    [JsonPropertyName("partyName")]
+    [XmlElement("PartyName", Namespace = UblNamespaces.Cac)]
+    public PartyName? PartyName { get; set; }
 
     /// <summary>
     /// Party postal address.
@@ -39,11 +39,11 @@ public sealed class Party
     public Address? PostalAddress { get; set; }
 
     /// <summary>
-    /// Party tax scheme.
+    /// Party tax schemes.
     /// </summary>
     [JsonPropertyName("partyTaxScheme")]
     [XmlElement("PartyTaxScheme", Namespace = UblNamespaces.Cac)]
-    public PartyTaxScheme? PartyTaxScheme { get; set; }
+    public List<PartyTaxScheme>? PartyTaxScheme { get; set; }
 
     /// <summary>
     /// Party legal entity information.
@@ -69,16 +69,16 @@ public sealed class PartyTaxScheme
     /// <summary>
     /// Company ID (VAT number).
     /// </summary>
-    [JsonPropertyName("companyId")]
+    [JsonPropertyName("companyID")]
     [XmlElement("CompanyID", Namespace = UblNamespaces.Cbc)]
     public string? CompanyId { get; set; }
 
     /// <summary>
-    /// Tax scheme ID (e.g., "VAT").
+    /// Tax scheme.
     /// </summary>
-    [JsonPropertyName("taxSchemeId")]
+    [JsonPropertyName("taxScheme")]
     [XmlElement("TaxScheme", Namespace = UblNamespaces.Cac)]
-    public string? TaxSchemeId { get; set; }
+    public TaxScheme? TaxScheme { get; set; }
 }
 
 /// <summary>
@@ -97,16 +97,9 @@ public sealed class PartyLegalEntity
     /// <summary>
     /// Company ID (registration number).
     /// </summary>
-    [JsonPropertyName("companyId")]
+    [JsonPropertyName("companyID")]
     [XmlElement("CompanyID", Namespace = UblNamespaces.Cbc)]
-    public string? CompanyId { get; set; }
-
-    /// <summary>
-    /// Company ID scheme.
-    /// </summary>
-    [JsonPropertyName("companyIdScheme")]
-    [XmlIgnore]
-    public string? CompanyIdScheme { get; set; }
+    public Identifier? CompanyId { get; set; }
 }
 
 /// <summary>

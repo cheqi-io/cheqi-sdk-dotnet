@@ -71,8 +71,9 @@ public sealed class CheqiSdk
         var receiptProcessorLogger = _loggerFactory.CreateLogger<ReceiptProcessor>();
         _receiptProcessor = new ReceiptProcessor(_decryptionService, receiptProcessorLogger);
 
-        // Create encryption service (no logger needed for now)
-        _encryptionService = new EncryptionService();
+        // Create encryption service with logger
+        var encryptionLogger = _loggerFactory.CreateLogger<EncryptionService>();
+        _encryptionService = new EncryptionService(encryptionLogger);
 
         // Create API client with logger
         var apiClientLogger = _loggerFactory.CreateLogger<CheqiApiClient>();

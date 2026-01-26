@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
+using Cheqi.Sdk.Utils;
 
 namespace Cheqi.Sdk.Models.Ubl;
 
@@ -12,7 +13,7 @@ public sealed class Amount
     /// <summary>
     /// The currency ID (e.g., "EUR", "USD").
     /// </summary>
-    [JsonPropertyName("currencyId")]
+    [JsonPropertyName("currencyID")]
     [XmlAttribute("currencyID")]
     public string? CurrencyId { get; set; }
 
@@ -20,6 +21,7 @@ public sealed class Amount
     /// The amount value.
     /// </summary>
     [JsonPropertyName("value")]
+    [JsonConverter(typeof(NullableDecimalJsonConverter))]
     [XmlText]
     public decimal? Value { get; set; }
 }

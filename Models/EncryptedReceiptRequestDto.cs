@@ -15,10 +15,10 @@ public sealed class EncryptedReceiptRequestDto
     public Guid recipientId { get; }
 
     /// <summary>
-    /// The receipt ID.
+    /// The receipt ID (optional - set by backend after processing).
     /// </summary>
     [JsonPropertyName("receiptId")]
-    public string receiptId { get; }
+    public string? receiptId { get; }
 
     /// <summary>
     /// The receiver type (DEVICE or WEBHOOK).
@@ -39,10 +39,10 @@ public sealed class EncryptedReceiptRequestDto
     public string encryptedSymmetricKey { get; }
 
     /// <summary>
-    /// Final hash of the receipt.
+    /// Final hash of the receipt (optional - only set when receiving party completes the receipt).
     /// </summary>
     [JsonPropertyName("finalHash")]
-    public string FinalHash { get; }
+    public string? FinalHash { get; }
 
     /// <summary>
     /// Public key used to encrypt the symmetric key.
@@ -60,11 +60,11 @@ public sealed class EncryptedReceiptRequestDto
 
     private EncryptedReceiptRequestDto(
         Guid recipientId,
-        string receiptId,
+        string? receiptId,
         ReceiverType receiverType,
         string encryptedReceipt,
         string encryptedSymmetricKey,
-        string finalHash,
+        string? finalHash,
         string publicKey,
         Guid? supplierPartyId)
     {
@@ -160,16 +160,12 @@ public sealed class EncryptedReceiptRequestDto
         {
             if (_recipientId == null)
                 throw new InvalidOperationException("RecipientId is required");
-            if (_receiptId == null)
-                throw new InvalidOperationException("ReceiptId is required");
             if (_receiverType == null)
                 throw new InvalidOperationException("ReceiverType is required");
             if (_encryptedReceipt == null)
                 throw new InvalidOperationException("EncryptedReceipt is required");
             if (_encryptedSymmetricKey == null)
                 throw new InvalidOperationException("EncryptedSymmetricKey is required");
-            if (_finalHash == null)
-                throw new InvalidOperationException("FinalHash is required");
             if (_publicKey == null)
                 throw new InvalidOperationException("PublicKey is required");
 

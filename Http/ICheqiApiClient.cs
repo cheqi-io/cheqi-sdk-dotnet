@@ -53,7 +53,7 @@ public interface ICheqiApiClient : IDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The receipt creation response.</returns>
     Task<ReceiptCreatedResponse> SubmitEncryptedReceiptsAsync(
-        EncryptedReceiptRequestDto request,
+        EncryptedReceiptsRequest request,
         string? accessToken = null,
         CancellationToken cancellationToken = default);
 

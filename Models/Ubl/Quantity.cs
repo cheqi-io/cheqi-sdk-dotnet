@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
+using Cheqi.Sdk.Utils;
 
 namespace Cheqi.Sdk.Models.Ubl;
 
@@ -13,6 +14,7 @@ public sealed class Quantity
     /// The quantity value.
     /// </summary>
     [JsonPropertyName("value")]
+    [JsonConverter(typeof(NullableDecimalJsonConverter))]
     [XmlText]
     public decimal? Value { get; set; }
 

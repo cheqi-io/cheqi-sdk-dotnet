@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
+using Cheqi.Sdk.Utils;
 
 namespace Cheqi.Sdk.Models.Ubl;
 
@@ -14,14 +15,7 @@ public sealed class TaxTotal
     /// </summary>
     [JsonPropertyName("taxAmount")]
     [XmlElement("TaxAmount", Namespace = UblNamespaces.Cbc)]
-    public decimal TaxAmount { get; set; }
-
-    /// <summary>
-    /// Currency code.
-    /// </summary>
-    [JsonPropertyName("currencyId")]
-    [XmlIgnore]
-    public string? CurrencyId { get; set; }
+    public Amount? TaxAmount { get; set; }
 
     /// <summary>
     /// Tax subtotals by category.
@@ -42,14 +36,14 @@ public sealed class TaxSubtotal
     /// </summary>
     [JsonPropertyName("taxableAmount")]
     [XmlElement("TaxableAmount", Namespace = UblNamespaces.Cbc)]
-    public decimal TaxableAmount { get; set; }
+    public Amount? TaxableAmount { get; set; }
 
     /// <summary>
     /// Tax amount for this category.
     /// </summary>
     [JsonPropertyName("taxAmount")]
     [XmlElement("TaxAmount", Namespace = UblNamespaces.Cbc)]
-    public decimal TaxAmount { get; set; }
+    public Amount? TaxAmount { get; set; }
 
     /// <summary>
     /// Tax category details.
@@ -57,13 +51,6 @@ public sealed class TaxSubtotal
     [JsonPropertyName("taxCategory")]
     [XmlElement("TaxCategory", Namespace = UblNamespaces.Cac)]
     public TaxCategory? TaxCategory { get; set; }
-
-    /// <summary>
-    /// Currency code.
-    /// </summary>
-    [JsonPropertyName("currencyId")]
-    [XmlIgnore]
-    public string? CurrencyId { get; set; }
 }
 
 /// <summary>
@@ -77,12 +64,13 @@ public sealed class TaxCategory
     /// </summary>
     [JsonPropertyName("id")]
     [XmlElement("ID", Namespace = UblNamespaces.Cbc)]
-    public string? Id { get; set; }
+    public Identifier? Id { get; set; }
 
     /// <summary>
     /// Tax percentage.
     /// </summary>
     [JsonPropertyName("percent")]
+    [JsonConverter(typeof(NullableDecimalJsonConverter))]
     [XmlElement("Percent", Namespace = UblNamespaces.Cbc)]
     public decimal? Percent { get; set; }
 
@@ -119,12 +107,12 @@ public sealed class TaxScheme
     /// </summary>
     [JsonPropertyName("id")]
     [XmlElement("ID", Namespace = UblNamespaces.Cbc)]
-    public string? Id { get; set; }
+    public Identifier? Id { get; set; }
 
     /// <summary>
     /// Tax scheme name.
     /// </summary>
     [JsonPropertyName("name")]
     [XmlElement("Name", Namespace = UblNamespaces.Cbc)]
-    public string? Name { get; set; }
+    public Name? Name { get; set; }
 }

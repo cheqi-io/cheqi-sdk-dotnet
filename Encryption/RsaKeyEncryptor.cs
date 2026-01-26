@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Cheqi.Sdk.Encryption;
 
@@ -8,10 +10,12 @@ namespace Cheqi.Sdk.Encryption;
 public class RsaKeyEncryptor
 {
     private readonly RsaPublicKeyParser _keyParser;
+    private readonly ILogger<RsaKeyEncryptor> _logger;
 
-    public RsaKeyEncryptor()
+    public RsaKeyEncryptor(ILogger<RsaKeyEncryptor>? logger = null)
     {
         _keyParser = new RsaPublicKeyParser();
+        _logger = logger ?? NullLogger<RsaKeyEncryptor>.Instance;
     }
 
     /// <summary>
@@ -21,15 +25,33 @@ public class RsaKeyEncryptor
     {
         try
         {
+            _logger.LogDebug("[RSA] Starting RSA key encryption");
+            _logger.LogDebug("[RSA] AES key length: {Length} bytes", aesKey?.Length ?? 0);
+            _logger.LogDebug("[RSA] Public key Base64 length: {Length} characters", publicKeyBase64?.Length ?? 0);
+            
+            if (string.IsNullOrEmpty(publicKeyBase64))
+            {
+                _logger.LogError("[RSA] Public key is null or empty");
+                throw new ArgumentException("Public key cannot be null or empty", nameof(publicKeyBase64));
+            }
+            
+            _logger.LogDebug("[RSA] Parsing public key...");
             using var publicKey = _keyParser.Parse(publicKeyBase64);
+            _logger.LogDebug("[RSA] Public key parsed successfully, key size: {KeySize} bits", publicKey.KeySize);
 
             // Encrypt with RSA-OAEP (SHA-256, MGF1)
+            _logger.LogDebug("[RSA] Encrypting AES key with RSA-OAEP (SHA-256)...");
             byte[] encryptedKey = publicKey.Encrypt(aesKey, RSAEncryptionPadding.OaepSHA256);
+            _logger.LogDebug("[RSA] Encrypted key length: {Length} bytes", encryptedKey.Length);
 
-            return Convert.ToBase64String(encryptedKey);
+            var result = Convert.ToBase64String(encryptedKey);
+            _logger.LogDebug("[RSA] RSA encryption successful, Base64 result length: {Length}", result.Length);
+            return result;
         }
         catch (Exception e)
         {
+            _logger.LogError(e, "[RSA] Failed to encrypt AES key with RSA: {Message}. Type: {ExceptionType}", 
+                e.Message, e.GetType().Name);
             throw new EncryptionException("Failed to encrypt AES key with RSA", e);
         }
     }

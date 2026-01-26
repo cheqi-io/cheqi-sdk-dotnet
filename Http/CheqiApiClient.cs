@@ -90,7 +90,7 @@ public sealed class CheqiApiClient : ICheqiApiClient
     }
 
     public async Task<ReceiptCreatedResponse> SubmitEncryptedReceiptsAsync(
-        EncryptedReceiptRequestDto encryptedRequest,
+        EncryptedReceiptsRequest encryptedRequest,
         string? accessToken = null,
         CancellationToken cancellationToken = default)
     {
