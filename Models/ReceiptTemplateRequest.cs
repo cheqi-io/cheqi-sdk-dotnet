@@ -19,7 +19,7 @@ namespace Cheqi.Sdk.Models;
 ///     .Currency("EUR")
 ///     
 ///     // Totals (POS-calculated)
-///     .InvoiceSubtotal(250.00m)
+///     .receiptSubtotal(250.00m)
 ///     .TotalBeforeTax(245.00m)  // After receipt-level discount
 ///     .TotalTaxAmount(51.45m)   // Total tax
 ///     .TotalAmount(296.45m)     // Final amount
@@ -60,7 +60,7 @@ namespace Cheqi.Sdk.Models;
 ///   <item><b>documentNumber</b>: Unique receipt/invoice identifier</item>
 ///   <item><b>issueDate</b>: Receipt issue date</item>
 ///   <item><b>currency</b>: ISO 4217 currency code (e.g., "EUR", "USD")</item>
-///   <item><b>invoiceSubtotal</b>: Sum of all product line totals</item>
+///   <item><b>receiptSubtotal</b>: Sum of all product line totals</item>
 ///   <item><b>totalBeforeTax</b>: Total excluding taxes (after receipt-level adjustments)</item>
 ///   <item><b>totalTaxAmount</b>: Total tax amount (POS-calculated)</item>
 ///   <item><b>totalAmount</b>: Final amount charged to customer</item>
@@ -79,11 +79,11 @@ namespace Cheqi.Sdk.Models;
 ///   <item><b>note</b>: Additional seller notes</item>
 /// </list>
 ///
-/// <para><b>Key Differences from invoiceSubtotal and totalBeforeTax:</b></para>
+/// <para><b>Key Differences from receiptSubtotal and totalBeforeTax:</b></para>
 /// <list type="bullet">
-///   <item><b>invoiceSubtotal</b>: Sum of all product line totals (before receipt-level adjustments)</item>
-///   <item><b>totalBeforeTax</b>: invoiceSubtotal ± receipt-level discounts/charges</item>
-///   <item>Example: invoiceSubtotal = $100, discount = $5, charge = $3 → totalBeforeTax = $98</item>
+///   <item><b>receiptSubtotal</b>: Sum of all product line totals (before receipt-level adjustments)</item>
+///   <item><b>totalBeforeTax</b>: receiptSubtotal ± receipt-level discounts/charges</item>
+///   <item>Example: receiptSubtotal = $100, discount = $5, charge = $3 → totalBeforeTax = $98</item>
 /// </list>
 ///
 /// <para><b>Validation Rules:</b></para>
@@ -129,12 +129,12 @@ public class ReceiptTemplateRequest
     /// invoice-level adjustments or taxes.
     /// This amount represents the total value of goods or services listed on the invoice.
     /// </summary>
-    [JsonPropertyName("invoiceSubtotal")]
-    public decimal invoiceSubtotal { get; }
+    [JsonPropertyName("receiptSubtotal")]
+    public decimal receiptSubtotal { get; }
 
     /// <summary>
     /// The total amount of the invoice excluding taxes, but including any overall discounts or charges.
-    /// This amount may differ from the invoiceSubtotal if there are invoice-level adjustments.
+    /// This amount may differ from the receiptSubtotal if there are invoice-level adjustments.
     /// </summary>
     [JsonPropertyName("totalBeforeTax")]
     public decimal totalBeforeTax { get; }
@@ -229,7 +229,7 @@ public class ReceiptTemplateRequest
         List<Identifier>? identifiers,
         DateTimeOffset issueDate,
         string currency,
-        decimal invoiceSubtotal,
+        decimal receiptSubtotal,
         decimal totalBeforeTax,
         decimal totalTaxAmount,
         decimal totalAmount,
@@ -246,7 +246,7 @@ public class ReceiptTemplateRequest
         this.identifiers = identifiers?.AsReadOnly() ?? new List<Identifier>().AsReadOnly();
         this.issueDate = issueDate;
         this.currency = currency;
-        this.invoiceSubtotal = invoiceSubtotal;
+        this.receiptSubtotal = receiptSubtotal;
         this.totalBeforeTax = totalBeforeTax;
         this.totalTaxAmount = totalTaxAmount;
         this.totalAmount = totalAmount;
@@ -270,7 +270,7 @@ public class ReceiptTemplateRequest
         private List<Identifier>? _identifiers;
         private DateTimeOffset? _issueDate;
         private string? _currency;
-        private decimal? _invoiceSubtotal;
+        private decimal? _receiptSubtotal;
         private decimal? _totalBeforeTax;
         private decimal? _totalTaxAmount;
         private decimal? _totalAmount;
@@ -291,7 +291,7 @@ public class ReceiptTemplateRequest
             _identifiers = other.identifiers.ToList();
             _issueDate = other.issueDate;
             _currency = other.currency;
-            _invoiceSubtotal = other.invoiceSubtotal;
+            _receiptSubtotal = other.receiptSubtotal;
             _totalBeforeTax = other.totalBeforeTax;
             _totalTaxAmount = other.totalTaxAmount;
             _totalAmount = other.totalAmount;
@@ -356,9 +356,9 @@ public class ReceiptTemplateRequest
             return this;
         }
 
-        public ReceiptTemplateRequestBuilder InvoiceSubtotal(decimal invoiceSubtotal)
+        public ReceiptTemplateRequestBuilder receiptSubtotal(decimal receiptSubtotal)
         {
-            _invoiceSubtotal = invoiceSubtotal;
+            _receiptSubtotal = receiptSubtotal;
             return this;
         }
 
@@ -616,8 +616,8 @@ public class ReceiptTemplateRequest
                 throw new InvalidOperationException("IssueDate is required");
             if (_currency == null)
                 throw new InvalidOperationException("Currency is required");
-            if (_invoiceSubtotal == null)
-                throw new InvalidOperationException("InvoiceSubtotal is required");
+            if (_receiptSubtotal == null)
+                throw new InvalidOperationException("receiptSubtotal is required");
             if (_totalBeforeTax == null)
                 throw new InvalidOperationException("TotalBeforeTax is required");
             if (_totalTaxAmount == null)
@@ -630,7 +630,7 @@ public class ReceiptTemplateRequest
                 _identifiers,
                 _issueDate.Value,
                 _currency,
-                _invoiceSubtotal.Value,
+                _receiptSubtotal.Value,
                 _totalBeforeTax.Value,
                 _totalTaxAmount.Value,
                 _totalAmount.Value,
@@ -655,7 +655,7 @@ public class ReceiptTemplateRequest
             && identifiers.SequenceEqual(other.identifiers)
             && issueDate == other.issueDate
             && currency == other.currency
-            && invoiceSubtotal == other.invoiceSubtotal
+            && receiptSubtotal == other.receiptSubtotal
             && totalBeforeTax == other.totalBeforeTax
             && totalTaxAmount == other.totalTaxAmount
             && totalAmount == other.totalAmount
@@ -675,7 +675,7 @@ public class ReceiptTemplateRequest
         hash.Add(documentNumber);
         hash.Add(issueDate);
         hash.Add(currency);
-        hash.Add(invoiceSubtotal);
+        hash.Add(receiptSubtotal);
         hash.Add(totalBeforeTax);
         hash.Add(totalTaxAmount);
         hash.Add(totalAmount);
@@ -693,7 +693,7 @@ public class ReceiptTemplateRequest
                $"identifiers={identifiers.Count} items, " +
                $"issueDate={issueDate}, " +
                $"currency='{currency}', " +
-               $"invoiceSubtotal={invoiceSubtotal}, " +
+               $"receiptSubtotal={receiptSubtotal}, " +
                $"totalBeforeTax={totalBeforeTax}, " +
                $"totalTaxAmount={totalTaxAmount}, " +
                $"totalAmount={totalAmount}, " +
