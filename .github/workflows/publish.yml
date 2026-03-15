@@ -5,7 +5,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   publish:
@@ -32,11 +31,5 @@ jobs:
       - name: Pack SDK
         run: dotnet pack cheqi-sdk.csproj --no-build --configuration Release --output ./artifacts
 
-      - name: NuGet login
-        id: login
-        uses: NuGet/login@v1
-        with:
-          user: cheqi-policy
-
       - name: Publish package to NuGet
-        run: dotnet nuget push "./artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push "./artifacts/*.nupkg" --api-key "${{ secrets.NU_GET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
