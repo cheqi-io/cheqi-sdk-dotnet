@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
 using Cheqi.Sdk.Models;
+using Cheqi.Sdk.Models.Enums;
 
 namespace Cheqi.Sdk.CreditNote;
 
@@ -72,11 +73,20 @@ public sealed class CreditNoteTemplateRequest
     [JsonPropertyName("documentNumber")]
     public string documentNumber { get; }
 
+    [JsonIgnore]
+    public string CreditNoteId => documentNumber;
+
+    [JsonIgnore]
+    public string DocumentNumber => documentNumber;
+
     /// <summary>
     /// Reference to the original receipt/document.
     /// </summary>
     [JsonPropertyName("originatorDocumentReference")]
     public string originatorDocumentReference { get; }
+
+    [JsonIgnore]
+    public string OriginatorDocumentReference => originatorDocumentReference;
 
     /// <summary>
     /// Additional identifiers for the credit note.

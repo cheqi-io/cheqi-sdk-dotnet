@@ -56,13 +56,13 @@ public sealed class PaymentAccountDetails
 
     // ===== CONSTRUCTOR =====
 
-    private PaymentAccountDetails(
+    public PaymentAccountDetails(
         string identifier,
         AccountIdentifierType type,
-        string? bic,
-        string? bankName,
-        string? accountHolderName,
-        string? institutionName)
+        string? bic = null,
+        string? bankName = null,
+        string? accountHolderName = null,
+        string? institutionName = null)
     {
         this.identifier = identifier;
         this.type = type;
@@ -71,6 +71,18 @@ public sealed class PaymentAccountDetails
         this.accountHolderName = accountHolderName;
         this.institutionName = institutionName;
     }
+
+    public string Identifier => identifier;
+
+    public AccountIdentifierType AccountIdentifierType => type;
+
+    public string? Bic => bic;
+
+    public string? BankName => bankName;
+
+    public string? AccountHolderName => accountHolderName;
+
+    public string? InstitutionName => institutionName;
 
     // ===== BUILDER =====
 

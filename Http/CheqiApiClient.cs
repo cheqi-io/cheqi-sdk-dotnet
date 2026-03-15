@@ -51,7 +51,15 @@ public sealed class CheqiApiClient : ICheqiApiClient
             };
         }
 
-        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        if (_httpClient.BaseAddress == null)
+        {
+            _httpClient.BaseAddress = new Uri(_config.ApiEndpoint);
+        }
+
+        if (!_httpClient.DefaultRequestHeaders.Accept.Any(h => h.MediaType == "application/json"))
+        {
+            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        }
     }
 
     public async Task<RecipientResolutionResponse> ResolveRecipientsAsync(

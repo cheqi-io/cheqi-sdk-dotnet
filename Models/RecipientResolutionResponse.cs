@@ -72,13 +72,55 @@ public class RecipientResolutionResponse
         string? instructions,
         Dictionary<string, object>? additionalProperties)
     {
-        customerFound = customerFound;
+        this.customerFound = customerFound;
         this.matchId = matchId;
         this.recipients = recipients;
         this.paymentMeans = paymentMeans;
         this.expiresAt = expiresAt;
         this.instructions = instructions ?? "Use this anonymous identifier when submitting encrypted receipts. Encrypt receipts using the provided device public keys.";
         this.additionalProperties = additionalProperties ?? new Dictionary<string, object>();
+    }
+
+    [JsonIgnore]
+    public bool IsCustomerFound
+    {
+        get => customerFound;
+        set => customerFound = value;
+    }
+
+    [JsonIgnore]
+    public string? MatchId
+    {
+        get => matchId;
+        set => matchId = value;
+    }
+
+    [JsonIgnore]
+    public List<Recipient>? Recipients
+    {
+        get => recipients;
+        set => recipients = value;
+    }
+
+    [JsonIgnore]
+    public List<PaymentMeans>? PaymentMeans
+    {
+        get => paymentMeans;
+        set => paymentMeans = value;
+    }
+
+    [JsonIgnore]
+    public DateTimeOffset? ExpiresAt
+    {
+        get => expiresAt;
+        set => expiresAt = value;
+    }
+
+    [JsonIgnore]
+    public string Instructions
+    {
+        get => instructions;
+        set => instructions = value;
     }
 
     // ===== BUILDER =====

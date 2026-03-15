@@ -100,6 +100,14 @@ public class ReceiptTemplateRequest
     // ===== MANDATORY FIELDS =====
 
     /// <summary>
+    /// The UUID of the child company (franchisee location or branch store) issuing this receipt.
+    /// Required for franchise organizations managing multiple locations.
+    /// If not provided, the receipt will be issued under the parent company.
+    /// </summary>
+    [JsonPropertyName("childCompanyId")]
+    public Guid? childCompanyId { get; }
+
+    /// <summary>
     /// A unique document identifier provided by the seller (for example invoice number).
     /// </summary>
     [JsonPropertyName("documentNumber")]
@@ -224,41 +232,100 @@ public class ReceiptTemplateRequest
 
     // ===== CONSTRUCTOR =====
 
-    private ReceiptTemplateRequest(
+    public ReceiptTemplateRequest(
+        Guid? childCompanyId,
         string documentNumber,
-        List<Identifier>? identifiers,
+        IEnumerable<Identifier>? identifiers,
         DateTimeOffset issueDate,
         string currency,
         decimal receiptSubtotal,
         decimal totalBeforeTax,
         decimal totalTaxAmount,
         decimal totalAmount,
-        List<Product>? products,
-        List<Discount>? discounts,
-        List<Charge>? charges,
-        List<Tax>? taxes,
+        IEnumerable<Product>? products,
+        IEnumerable<Discount>? discounts,
+        IEnumerable<Charge>? charges,
+        IEnumerable<Tax>? taxes,
         DateTimeOffset? transactionDate,
         DateTimeOffset? purchaseDate,
         Period? period,
         string? note)
     {
+        this.childCompanyId = childCompanyId;
         this.documentNumber = documentNumber;
-        this.identifiers = identifiers?.AsReadOnly() ?? new List<Identifier>().AsReadOnly();
+        this.identifiers = identifiers?.ToList().AsReadOnly() ?? new List<Identifier>().AsReadOnly();
         this.issueDate = issueDate;
         this.currency = currency;
         this.receiptSubtotal = receiptSubtotal;
         this.totalBeforeTax = totalBeforeTax;
         this.totalTaxAmount = totalTaxAmount;
         this.totalAmount = totalAmount;
-        this.products = products?.AsReadOnly() ?? new List<Product>().AsReadOnly();
-        this.discounts = discounts?.AsReadOnly() ?? new List<Discount>().AsReadOnly();
-        this.charges = charges?.AsReadOnly() ?? new List<Charge>().AsReadOnly();
-        this.taxes = taxes?.AsReadOnly() ?? new List<Tax>().AsReadOnly();
+        this.products = products?.ToList().AsReadOnly() ?? new List<Product>().AsReadOnly();
+        this.discounts = discounts?.ToList().AsReadOnly() ?? new List<Discount>().AsReadOnly();
+        this.charges = charges?.ToList().AsReadOnly() ?? new List<Charge>().AsReadOnly();
+        this.taxes = taxes?.ToList().AsReadOnly() ?? new List<Tax>().AsReadOnly();
         this.transactionDate = transactionDate;
         this.purchaseDate = purchaseDate;
         this.period = period;
         this.note = note;
     }
+
+    public ReceiptTemplateRequest(
+        string documentNumber,
+        DateTimeOffset issueDate,
+        string currency,
+        decimal receiptSubtotal,
+        decimal totalBeforeTax,
+        decimal totalTaxAmount,
+        decimal totalAmount,
+        IEnumerable<Product> products,
+        IEnumerable<Tax> taxes,
+        Guid? childCompanyId = null,
+        IEnumerable<Identifier>? identifiers = null,
+        IEnumerable<Discount>? discounts = null,
+        IEnumerable<Charge>? charges = null,
+        DateTimeOffset? transactionDate = null,
+        DateTimeOffset? purchaseDate = null,
+        Period? period = null,
+        string? note = null)
+        : this(
+            childCompanyId,
+            documentNumber,
+            identifiers,
+            issueDate,
+            currency,
+            receiptSubtotal,
+            totalBeforeTax,
+            totalTaxAmount,
+            totalAmount,
+            products,
+            discounts,
+            charges,
+            taxes,
+            transactionDate,
+            purchaseDate,
+            period,
+            note)
+    {
+    }
+
+    public Guid? ChildCompanyId => childCompanyId;
+    public string DocumentNumber => documentNumber;
+    public IReadOnlyList<Identifier> Identifiers => identifiers;
+    public DateTimeOffset IssueDate => issueDate;
+    public string Currency => currency;
+    public decimal ReceiptSubtotal => receiptSubtotal;
+    public decimal TotalBeforeTax => totalBeforeTax;
+    public decimal TotalTaxAmount => totalTaxAmount;
+    public decimal TotalAmount => totalAmount;
+    public IReadOnlyList<Product> Products => products;
+    public IReadOnlyList<Discount> Discounts => discounts;
+    public IReadOnlyList<Charge> Charges => charges;
+    public IReadOnlyList<Tax> Taxes => taxes;
+    public DateTimeOffset? TransactionDate => transactionDate;
+    public DateTimeOffset? PurchaseDate => purchaseDate;
+    public Period? Period => period;
+    public string? Note => note;
 
     // ===== BUILDER =====
 
@@ -266,6 +333,7 @@ public class ReceiptTemplateRequest
 
     public sealed class ReceiptTemplateRequestBuilder
     {
+        private Guid? _childCompanyId;
         private string? _documentNumber;
         private List<Identifier>? _identifiers;
         private DateTimeOffset? _issueDate;
@@ -285,8 +353,15 @@ public class ReceiptTemplateRequest
 
         internal ReceiptTemplateRequestBuilder() { }
 
+        public ReceiptTemplateRequestBuilder ChildCompanyId(Guid? childCompanyId)
+        {
+            _childCompanyId = childCompanyId;
+            return this;
+        }
+
         public ReceiptTemplateRequestBuilder From(ReceiptTemplateRequest other)
         {
+            _childCompanyId = other.childCompanyId;
             _documentNumber = other.documentNumber;
             _identifiers = other.identifiers.ToList();
             _issueDate = other.issueDate;
@@ -626,6 +701,7 @@ public class ReceiptTemplateRequest
                 throw new InvalidOperationException("TotalAmount is required");
 
             return new ReceiptTemplateRequest(
+                _childCompanyId,
                 _documentNumber,
                 _identifiers,
                 _issueDate.Value,
@@ -651,7 +727,8 @@ public class ReceiptTemplateRequest
     public override bool Equals(object? obj)
     {
         if (obj is not ReceiptTemplateRequest other) return false;
-        return documentNumber == other.documentNumber
+        return childCompanyId == other.childCompanyId
+            && documentNumber == other.documentNumber
             && identifiers.SequenceEqual(other.identifiers)
             && issueDate == other.issueDate
             && currency == other.currency
@@ -672,6 +749,7 @@ public class ReceiptTemplateRequest
     public override int GetHashCode()
     {
         var hash = new HashCode();
+        hash.Add(childCompanyId);
         hash.Add(documentNumber);
         hash.Add(issueDate);
         hash.Add(currency);
@@ -689,6 +767,7 @@ public class ReceiptTemplateRequest
     public override string ToString()
     {
         return $"ReceiptTemplateRequest{{" +
+               $"childCompanyId='{childCompanyId}', " +
                $"documentNumber='{documentNumber}', " +
                $"identifiers={identifiers.Count} items, " +
                $"issueDate={issueDate}, " +

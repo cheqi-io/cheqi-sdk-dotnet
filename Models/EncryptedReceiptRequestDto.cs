@@ -9,10 +9,10 @@ namespace Cheqi.Sdk.Models;
 public sealed class EncryptedReceiptRequestDto
 {
     /// <summary>
-    /// The UUID of the target recipient for this encrypted receipt.
+    /// The ID of the target recipient for this encrypted receipt.
     /// </summary>
     [JsonPropertyName("recipientId")]
-    public Guid recipientId { get; }
+    public string recipientId { get; }
 
     /// <summary>
     /// The receipt ID (optional - set by backend after processing).
@@ -59,7 +59,7 @@ public sealed class EncryptedReceiptRequestDto
     // ===== CONSTRUCTOR =====
 
     private EncryptedReceiptRequestDto(
-        Guid recipientId,
+        string recipientId,
         string? receiptId,
         ReceiverType receiverType,
         string encryptedReceipt,
@@ -84,7 +84,7 @@ public sealed class EncryptedReceiptRequestDto
 
     public sealed class EncryptedReceiptRequestDtoBuilder
     {
-        private Guid? _recipientId;
+        private string? _recipientId;
         private string? _receiptId;
         private ReceiverType? _receiverType;
         private string? _encryptedReceipt;
@@ -108,7 +108,7 @@ public sealed class EncryptedReceiptRequestDto
             return this;
         }
 
-        public EncryptedReceiptRequestDtoBuilder RecipientId(Guid recipientId)
+        public EncryptedReceiptRequestDtoBuilder RecipientId(string recipientId)
         {
             _recipientId = recipientId;
             return this;
@@ -170,7 +170,7 @@ public sealed class EncryptedReceiptRequestDto
                 throw new InvalidOperationException("PublicKey is required");
 
             return new EncryptedReceiptRequestDto(
-                _recipientId.Value,
+                _recipientId,
                 _receiptId,
                 _receiverType.Value,
                 _encryptedReceipt,

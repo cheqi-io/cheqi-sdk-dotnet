@@ -27,7 +27,7 @@ public sealed class Recipient
     /// Unique identifier for the recipient.
     /// </summary>
     [JsonPropertyName("id")]
-    public Guid id { get; }
+    public string id { get; }
 
     /// <summary>
     /// Type of receiver (DEVICE or WEBHOOK).
@@ -59,7 +59,7 @@ public sealed class Recipient
 
     [JsonConstructor]
     public Recipient(
-        Guid id,
+        string id,
         ReceiverType receiverType,
         string publicKey,
         string keyAlgorithm,
@@ -78,7 +78,7 @@ public sealed class Recipient
 
     public sealed class RecipientBuilder
     {
-        private Guid? _id;
+        private string? _id;
         private ReceiverType? _receiverType;
         private string? _publicKey;
         private string? _keyAlgorithm;
@@ -96,7 +96,7 @@ public sealed class Recipient
             return this;
         }
 
-        public RecipientBuilder Id(Guid id)
+        public RecipientBuilder Id(string id)
         {
             _id = id;
             return this;
@@ -138,7 +138,7 @@ public sealed class Recipient
                 throw new InvalidOperationException("KeyAlgorithm is required");
 
             return new Recipient(
-                _id.Value,
+                _id,
                 _receiverType.Value,
                 _publicKey,
                 _keyAlgorithm,

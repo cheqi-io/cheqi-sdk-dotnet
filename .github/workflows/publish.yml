@@ -1,0 +1,40 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: Restore SDK
+        run: dotnet restore cheqi-sdk.csproj
+
+      - name: Build SDK
+        run: dotnet build cheqi-sdk.csproj --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj --no-build --configuration Release --logger "console;verbosity=normal"
+
+      - name: Pack SDK
+        run: dotnet pack cheqi-sdk.csproj --no-build --configuration Release --output ./artifacts
+
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: cheqi
+
+      - name: Publish package to NuGet
+        run: dotnet nuget push "./artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

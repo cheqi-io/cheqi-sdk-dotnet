@@ -9,6 +9,7 @@ using Cheqi.Sdk.Models;
 using Cheqi.Sdk.Models.Ubl;
 using Cheqi.Sdk.Receipt;
 using Cheqi.Sdk.Utils;
+using Cheqi.Sdk.Verification;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -39,7 +40,7 @@ namespace Cheqi.Sdk;
 ///     .Build();
 /// </code>
 /// </summary>
-public sealed class CheqiSdk
+public sealed class CheqiSdk : IDisposable
 {
     private readonly CheqiSdkConfig _config;
     private readonly ILoggerFactory _loggerFactory;
@@ -51,17 +52,24 @@ public sealed class CheqiSdk
     private readonly ReceiptProcessor _receiptProcessor;
     private readonly CompanyService _companyService;
     private readonly StoreService _storeService;
-    private readonly RFC8785Canonicalizer _canonicalizer;
+    private readonly VerificationService _verificationService;
     private readonly CreditNoteService _creditNoteService;
+    private bool _disposed;
 
-    internal CheqiSdk(CheqiSdkConfig config, ILoggerFactory? loggerFactory = null)
+    public CheqiSdk(CheqiSdkOptions options, ILoggerFactory? loggerFactory = null, HttpClient? httpClient = null)
+        : this(
+            CheqiSdkConfig.FromOptions(options, loggerFactory?.CreateLogger<CheqiSdkConfig>()),
+            loggerFactory ?? options.LoggerFactory,
+            httpClient ?? options.HttpClient)
+    {
+    }
+
+    internal CheqiSdk(CheqiSdkConfig config, ILoggerFactory? loggerFactory = null, HttpClient? httpClient = null)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
 
-        // Create logger for RFC8785Canonicalizer
-        var canonicalizerLogger = _loggerFactory.CreateLogger<RFC8785Canonicalizer>();
-        _canonicalizer = new RFC8785Canonicalizer(canonicalizerLogger);
+        _verificationService = new VerificationService();
 
         // Create decryption service with logger
         var decryptionLogger = _loggerFactory.CreateLogger<DecryptionService>();
@@ -77,7 +85,7 @@ public sealed class CheqiSdk
 
         // Create API client with logger
         var apiClientLogger = _loggerFactory.CreateLogger<CheqiApiClient>();
-        _apiClient = new CheqiApiClient(config, apiClientLogger);
+        _apiClient = new CheqiApiClient(config, apiClientLogger, httpClient);
 
         // Create matching service with logger
         var matchingLogger = _loggerFactory.CreateLogger<MatchingService>();
@@ -106,6 +114,11 @@ public sealed class CheqiSdk
     public static CheqiSdkBuilder Builder()
     {
         return new CheqiSdkBuilder();
+    }
+
+    public static CheqiSdk Create(CheqiSdkOptions options)
+    {
+        return new CheqiSdk(options);
     }
 
     // ============================================
@@ -138,9 +151,9 @@ public sealed class CheqiSdk
     public ICheqiApiClient ApiClient => _apiClient;
 
     /// <summary>
-    /// Gets the RFC 8785 canonicalizer for JSON canonicalization.
+    /// Gets the verification service for receipt integrity verification.
     /// </summary>
-    public RFC8785Canonicalizer Canonicalizer => _canonicalizer;
+    public VerificationService VerificationService => _verificationService;
 
     /// <summary>
     /// Gets the current SDK configuration.
@@ -228,12 +241,12 @@ public sealed class CheqiSdk
     }
 
     /// <summary>
-    /// Gets the RFC 8785 canonicalizer for JSON canonicalization.
+    /// Gets the verification service for receipt integrity verification.
     /// </summary>
-    /// <returns>RFC8785Canonicalizer instance</returns>
-    public RFC8785Canonicalizer GetCanonicalizer()
+    /// <returns>VerificationService instance</returns>
+    public VerificationService GetVerificationService()
     {
-        return _canonicalizer;
+        return _verificationService;
     }
 
     /// <summary>
@@ -278,5 +291,25 @@ public sealed class CheqiSdk
                 "Example: CheqiSdk.Builder().PrivateKey(\"your-base64-key\").Build()");
         }
         return _creditNoteService;
+    }
+
+    [Obsolete("Use VerificationService or GetVerificationService() instead.")]
+    public RFC8785Canonicalizer GetCanonicalizer()
+    {
+        return new RFC8785Canonicalizer(_loggerFactory.CreateLogger<RFC8785Canonicalizer>());
+    }
+
+    [Obsolete("Use VerificationService or GetVerificationService() instead.")]
+    public RFC8785Canonicalizer Canonicalizer => GetCanonicalizer();
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _apiClient.Dispose();
     }
 }
