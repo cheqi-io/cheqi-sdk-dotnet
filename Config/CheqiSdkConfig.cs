@@ -44,6 +44,49 @@ public sealed class CheqiSdkConfig
 
     public static Builder BuilderInstance() => new Builder();
 
+    public static CheqiSdkConfig FromOptions(CheqiSdkOptions options, ILogger? logger = null)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        var builder = new Builder(logger);
+
+        if (options.Environment.HasValue)
+        {
+            builder.CustomApiEndpoint(options.Environment.Value.GetBaseUrl());
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.CustomApiEndpoint))
+        {
+            builder.CustomApiEndpoint(options.CustomApiEndpoint);
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.ApiKey))
+        {
+            builder.ApiKey(options.ApiKey);
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.SupplierClientId) ||
+            !string.IsNullOrWhiteSpace(options.SupplierClientSecret))
+        {
+            builder.SupplierCredentials(options.SupplierClientId ?? string.Empty, options.SupplierClientSecret ?? string.Empty);
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.PrivateKey))
+        {
+            builder.PrivateKey(options.PrivateKey);
+        }
+
+        if (options.EncryptionConfig != null)
+        {
+            builder.EncryptionConfig(options.EncryptionConfig);
+        }
+
+        builder.TimeoutSeconds(options.TimeoutSeconds);
+        builder.MaxRetries(options.MaxRetries);
+
+        return builder.Build();
+    }
+
     public sealed class Builder
     {
         internal string? _apiEndpoint;

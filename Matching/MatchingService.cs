@@ -163,6 +163,7 @@ public class MatchingService
         return HasCardDetails(identificationDetails) ||
                HasPaymentAccountDetails(identificationDetails) ||
                HasCheqiReceiptId(identificationDetails) ||
+               HasPairingCode(identificationDetails) ||
                HasEmail(identificationDetails);
     }
 
@@ -187,6 +188,14 @@ public class MatchingService
     private bool HasCheqiReceiptId(IdentificationDetails identificationDetails)
     {
         return !string.IsNullOrWhiteSpace(identificationDetails.cheqiReceiptId);
+    }
+
+    /// <summary>
+    /// Checks if pairing code is present.
+    /// </summary>
+    private bool HasPairingCode(IdentificationDetails identificationDetails)
+    {
+        return !string.IsNullOrWhiteSpace(identificationDetails.pairingCode);
     }
 
     /// <summary>
@@ -233,6 +242,10 @@ public class MatchingService
         if (HasCheqiReceiptId(identificationDetails))
         {
             identifiers.Append("[CheqiReceiptId] ");
+        }
+        if (HasPairingCode(identificationDetails))
+        {
+            identifiers.Append("[PairingCode] ");
         }
 
         _logger.LogDebug(identifiers.ToString().Trim());

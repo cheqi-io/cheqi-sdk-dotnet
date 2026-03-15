@@ -43,15 +43,21 @@ public sealed class CardDetails
 
     // ===== CONSTRUCTOR =====
 
-    private CardDetails(
+    public CardDetails(
         CardProvider cardProvider,
-        string? paymentAccountNumber,
-        string? paymentAccountReference)
+        string? paymentAccountNumber = null,
+        string? paymentAccountReference = null)
     {
         this.cardProvider = cardProvider;
         this.paymentAccountNumber = paymentAccountNumber;
         this.paymentAccountReference = paymentAccountReference;
     }
+
+    public CardProvider CardProvider => cardProvider;
+
+    public string? PaymentAccountNumber => paymentAccountNumber;
+
+    public string? PaymentAccountReference => paymentAccountReference;
 
     // ===== BUILDER =====
 

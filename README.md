@@ -1,7 +1,7 @@
 # Cheqi .NET SDK
 
 [![.NET](https://img.shields.io/badge/.NET-6.0+-purple.svg)](https://dotnet.microsoft.com/)
-[![NuGet](https://img.shields.io/badge/NuGet-1.0.0-blue.svg)](https://www.nuget.org/)
+[![NuGet](https://img.shields.io/badge/NuGet-1.1.0-blue.svg)](https://www.nuget.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 The Cheqi .NET SDK provides end-to-end encrypted receipt and credit note processing capabilities for suppliers, enabling secure digital receipt delivery to customers through the Cheqi platform.
@@ -19,19 +19,20 @@ The Cheqi .NET SDK provides end-to-end encrypted receipt and credit note process
 - **Multi-Environment Support**: Sandbox, Test, and Production environments
 - **Automatic Retry Logic**: Built-in retry with exponential backoff
 - **Async/Await**: Modern asynchronous programming throughout
+- **.NET-Friendly Entry Points**: Options-based construction and DI registration support
 
 ## Installation
 
 ### NuGet Package Manager
 
 ```bash
-Install-Package cheqi-sdk -Version 1.0.0
+Install-Package cheqi-sdk -Version 1.1.0
 ```
 
 ### .NET CLI
 
 ```bash
-dotnet add package cheqi-sdk --version 1.0.0
+dotnet add package cheqi-sdk --version 1.1.0
 ```
 
 ### PackageReference
@@ -39,7 +40,7 @@ dotnet add package cheqi-sdk --version 1.0.0
 Add to your `.csproj` file:
 
 ```xml
-<PackageReference Include="cheqi-sdk" Version="1.0.0" />
+<PackageReference Include="cheqi-sdk" Version="1.1.0" />
 ```
 
 ## Quick Start
@@ -51,42 +52,47 @@ using Cheqi.Sdk.Models;
 using Cheqi.Sdk.Models.Enums;
 
 // 1. Initialize the SDK
-var sdk = CheqiSdk.Builder()
-    .ApiEndpoint(Environment.Sandbox)
-    .ApiKey("your-api-key")
-    .Build();
+using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+{
+    Environment = CheqiApiEnvironment.Sandbox,
+    ApiKey = "your-api-key"
+});
 
 // 2. Create customer identification details
-var customer = new IdentificationDetails
-{
-    CardDetails = new CardDetails
-    {
-        Par = "PAR123456789",
-        CardProvider = CardProvider.VISA
-    }
-};
+var customer = IdentificationDetails.ForCard(
+    PaymentType.CARD_PAYMENT,
+    new CardDetails(CardProvider.VISA, paymentAccountReference: "PAR123456789"));
 
 // 3. Build the receipt request
-var receipt = new ReceiptTemplateRequest
-{
-    ReceiptId = "INV-001",
-    TransactionDateTime = DateTimeOffset.UtcNow,
-    CurrencyCode = "EUR",
-    TotalAmount = 12.10m,
-    TotalTaxAmount = 2.10m,
-    PaymentType = PaymentType.CARD_PAYMENT,
-    Products = new List<Product>
+var receipt = new ReceiptTemplateRequest(
+    documentNumber: "INV-001",
+    issueDate: DateTimeOffset.UtcNow,
+    currency: "EUR",
+    receiptSubtotal: 10.00m,
+    totalBeforeTax: 10.00m,
+    totalTaxAmount: 2.10m,
+    totalAmount: 12.10m,
+    products: new[]
     {
-        new Product
-        {
-            Name = "Coffee",
-            Quantity = 1,
-            UnitCode = UnitCode.EA,
-            UnitPrice = 10.00m,
-            Tax = new Tax { Percent = 21.0m, TaxAmount = 2.10m }
-        }
-    }
-};
+        Product.Builder()
+            .Name("Coffee")
+            .Quantity(1)
+            .BaseQuantity(1)
+            .UnitCode(UnitCode.ONE)
+            .UnitPrice(10.00m)
+            .Subtotal(10.00m)
+            .Total(12.10m)
+            .AddTax(21.0, "VAT", 2.10m)
+            .Build()
+    },
+    taxes: new[]
+    {
+        Tax.Builder()
+            .Rate(21.0)
+            .Type("VAT")
+            .Amount(2.10m)
+            .Build()
+    });
 
 // 4. Process the receipt (matches customer, encrypts, and delivers)
 var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, receipt);
@@ -109,9 +115,9 @@ else
 
 | Environment | URL | Description |
 |-------------|-----|-------------|
-| `Environment.Sandbox` | `https://sandbox.api.cheqi.io` | Development |
-| `Environment.Test` | `https://test.api.cheqi.io` | Testing |
-| `Environment.Production` | `https://api.cheqi.io` | Production |
+| `CheqiApiEnvironment.Sandbox` | `https://sandbox.api.cheqi.io` | Development |
+| `CheqiApiEnvironment.Test` | `https://test.api.cheqi.io` | Testing |
+| `CheqiApiEnvironment.Production` | `https://api.cheqi.io` | Production |
 
 ## Authentication
 
@@ -120,30 +126,34 @@ The SDK supports two authentication methods:
 ### API Key
 
 ```csharp
-var sdk = CheqiSdk.Builder()
-    .ApiEndpoint(Environment.Production)
-    .ApiKey("sk_live_your_api_key")
-    .Build();
+using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+{
+    Environment = CheqiApiEnvironment.Production,
+    ApiKey = "sk_live_your_api_key"
+});
 ```
 
 ### OAuth Client Credentials
 
 ```csharp
-var sdk = CheqiSdk.Builder()
-    .ApiEndpoint(Environment.Production)
-    .SupplierCredentials("client-id", "client-secret")
-    .Build();
+using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+{
+    Environment = CheqiApiEnvironment.Production,
+    SupplierClientId = "client-id",
+    SupplierClientSecret = "client-secret"
+});
 ```
 
 ## Configuration Options
 
 ```csharp
-var sdk = CheqiSdk.Builder()
-    .ApiEndpoint(Environment.Production)
-    .ApiKey("your-api-key")
-    .Timeout(TimeSpan.FromSeconds(60))
-    .MaxRetries(5)
-    .Build();
+using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+{
+    Environment = CheqiApiEnvironment.Production,
+    ApiKey = "your-api-key",
+    TimeoutSeconds = 60,
+    MaxRetries = 5
+});
 ```
 
 ## Customer Matching
@@ -151,42 +161,30 @@ var sdk = CheqiSdk.Builder()
 Match customers using various payment identifiers:
 
 ```csharp
-// By card details
-var customer = new IdentificationDetails
-{
-    CardDetails = new CardDetails
-    {
-        Par = "PAR123456789",
-        CardProvider = CardProvider.VISA
-    }
-};
+var byCard = IdentificationDetails.ForCard(
+    PaymentType.CARD_PAYMENT,
+    new CardDetails(CardProvider.VISA, paymentAccountReference: "PAR123456789"));
 
-// By IBAN
-var customer = new IdentificationDetails
-{
-    PaymentAccountDetails = new PaymentAccountDetails
-    {
-        Iban = "NL91ABNA0417164300"
-    }
-};
+var byIban = IdentificationDetails.ForPaymentAccount(
+    PaymentType.BANK_TRANSFER,
+    new PaymentAccountDetails("NL91ABNA0417164300", AccountIdentifierType.IBAN));
 
-// By email
-var customer = new IdentificationDetails
-{
-    Email = "customer@example.com"
-};
+var byEmail = IdentificationDetails.ForEmail(
+    PaymentType.CARD_PAYMENT,
+    "customer@example.com");
 
-// By Cheqi Receipt ID (for credit notes)
-var customer = new IdentificationDetails
-{
-    CheqiReceiptId = "original-receipt-id"
-};
+var byReceiptId = IdentificationDetails.ForReceiptId(
+    PaymentType.CARD_PAYMENT,
+    "original-receipt-id");
 
-// Match directly
-var matchResult = await sdk.MatchingService.MatchCustomerAsync(customer);
-if (matchResult.HasRecipients)
+var byPairingCode = IdentificationDetails.ForPairingCode(
+    PaymentType.CARD_PAYMENT,
+    "84739201");
+
+var matchResult = await sdk.MatchingService.MatchCustomerAsync(byCard);
+if (matchResult.IsCustomerFound)
 {
-    Console.WriteLine($"Found {matchResult.Recipients.Count} devices");
+    Console.WriteLine($"Found {matchResult.Recipients?.Count ?? 0} devices");
 }
 ```
 
@@ -218,53 +216,42 @@ var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
 ### Building Products
 
 ```csharp
-var product = new Product
-{
-    Name = "MacBook Pro 14\"",
-    Description = "Apple M3 Pro chip",
-    Sku = "MBP-14-2024",
-    Ean = "0195949185441",
-    Quantity = 1,
-    UnitCode = UnitCode.EA,
-    UnitPrice = 2499.00m,
-    LineTotal = 2499.00m,
-    LineTotalIncludingTax = 3023.79m,
-    Tax = new Tax
-    {
-        CategoryCode = "S",
-        Percent = 21.0m,
-        TaxAmount = 524.79m,
-        TaxableAmount = 2499.00m
-    },
-    DiscountAmount = 100.00m,
-    Category = "Electronics"
-};
+var product = Product.Builder()
+    .Name("MacBook Pro 14\"")
+    .Identifier("MBP-14-2024")
+    .Description("Apple M3 Pro chip")
+    .Quantity(1)
+    .BaseQuantity(1)
+    .UnitCode(UnitCode.ONE)
+    .UnitPrice(2499.00m)
+    .Subtotal(2499.00m)
+    .Total(3023.79m)
+    .AddTax(21.0, "VAT", 524.79m)
+    .Build();
 ```
 
 ### Receipt Request
 
 ```csharp
-var receipt = new ReceiptTemplateRequest
-{
-    ReceiptId = "INV-2024-001",
-    TransactionDateTime = DateTimeOffset.UtcNow,
-    CurrencyCode = "EUR",
-    TotalAmount = 121.00m,
-    TotalAmountExcludingTax = 100.00m,
-    TotalTaxAmount = 21.00m,
-    PaymentType = PaymentType.CARD_PAYMENT,
-    StoreId = "store-001",
-    StoreName = "Amsterdam Central",
-    StoreAddress = "Kalverstraat 1, Amsterdam",
-    TerminalId = "POS-001",
-    CashierId = "employee-123",
-    Products = products,
-    Taxes = new List<Tax>
+var receipt = new ReceiptTemplateRequest(
+    documentNumber: "INV-2024-001",
+    issueDate: DateTimeOffset.UtcNow,
+    currency: "EUR",
+    receiptSubtotal: 100.00m,
+    totalBeforeTax: 100.00m,
+    totalTaxAmount: 21.00m,
+    totalAmount: 121.00m,
+    products: products,
+    taxes: new[]
     {
-        new Tax { CategoryCode = "S", Percent = 21.0m, TaxAmount = 21.00m, TaxableAmount = 100.00m }
+        Tax.Builder()
+            .Rate(21.0)
+            .Type("VAT")
+            .TaxableAmount(100.00m)
+            .Amount(21.00m)
+            .Build()
     },
-    Notes = "Thank you for your purchase!"
-};
+    note: "Thank you for your purchase!");
 ```
 
 ## Credit Note Processing
@@ -274,17 +261,19 @@ Process returns and refunds with the same encryption:
 ```csharp
 using Cheqi.Sdk.CreditNote;
 
-var creditNote = new CreditNoteTemplateRequest
-{
-    CreditNoteId = "CN-2024-001",
-    OriginalReceiptId = "INV-2024-001",
-    IssueDateTime = DateTimeOffset.UtcNow,
-    CurrencyCode = "EUR",
-    TotalAmount = 121.00m,
-    TotalTaxAmount = 21.00m,
-    Reason = "Product return - defective item",
-    Products = returnedProducts
-};
+var creditNote = CreditNoteTemplateRequest.Builder()
+    .DocumentNumber("CN-2024-001")
+    .OriginatorDocumentReference("INV-2024-001")
+    .IssueDate(DateTimeOffset.UtcNow)
+    .Currency("EUR")
+    .CreditNoteSubTotal(-100.00m)
+    .TotalBeforeTax(-100.00m)
+    .TotalTaxAmount(-21.00m)
+    .TotalAmount(-121.00m)
+    .Products(returnedProducts)
+    .AddTax(21.0, "VAT", "-21.00")
+    .Note("Product return - defective item")
+    .Build();
 
 var result = await sdk.CreditNoteService.ProcessCompleteCreditNoteAsync(
     identificationDetails,
@@ -452,14 +441,14 @@ var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, rece
 ### Decryption (for receiving encrypted data)
 
 ```csharp
-var sdk = CheqiSdk.Builder()
-    .ApiEndpoint(Environment.Production)
-    .ApiKey("your-api-key")
-    .PrivateKey(privateKeyPem)  // Your RSA private key
-    .Build();
+using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+{
+    Environment = CheqiApiEnvironment.Production,
+    ApiKey = "your-api-key",
+    PrivateKey = privateKeyPem
+});
 
-// Decrypt received data
-var decryptedJson = sdk.DecryptionService.DecryptReceipt(encryptedData);
+var decryptedReceipt = sdk.ProcessEncryptedReceipt(encryptedData, privateKeyPem);
 ```
 
 ## Technical Details
@@ -508,9 +497,9 @@ Custom `DecimalJsonConverter` ensures consistent number formatting:
 git clone https://github.com/cheqi/cheqi-sdk-dotnet.git
 cd cheqi-sdk-dotnet
 
-dotnet restore
-dotnet build
-dotnet test
+dotnet restore cheqi-sdk/cheqi-sdk.csproj
+dotnet build cheqi-sdk/cheqi-sdk.csproj
+dotnet test cheqi-sdk/tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj
 dotnet pack
 ```
 
@@ -549,13 +538,15 @@ Integrate the SDK with ASP.NET Core DI:
 services.AddSingleton<CheqiSdk>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    
-    return CheqiSdk.Builder()
-        .ApiEndpoint(Environment.Production)
-        .ApiKey(config["Cheqi:ApiKey"])
-        .TimeoutSeconds(60)
-        .MaxRetries(3)
-        .Build();
+
+    return CheqiSdk.Create(new CheqiSdkOptions
+    {
+        Environment = CheqiApiEnvironment.Production,
+        ApiKey = config["Cheqi:ApiKey"],
+        TimeoutSeconds = 60,
+        MaxRetries = 3,
+        LoggerFactory = sp.GetRequiredService<ILoggerFactory>()
+    });
 });
 
 // Use in controllers
@@ -629,10 +620,12 @@ var loggerFactory = LoggerFactory.Create(builder =>
         .SetMinimumLevel(LogLevel.Debug);
 });
 
-var sdk = CheqiSdk.Builder()
-    .ApiEndpoint(Environment.Production)
-    .ApiKey("your-api-key")
-    .Build();
+using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+{
+    Environment = CheqiApiEnvironment.Production,
+    ApiKey = "your-api-key",
+    LoggerFactory = loggerFactory
+});
 
 // SDK automatically uses ILogger<T> for all services
 ```
@@ -666,11 +659,11 @@ For advanced scenarios, control each step manually:
 // Step 1: Match customer
 var matchResponse = await sdk.MatchingService.MatchCustomerAsync(customer);
 
-if (!matchResponse.CustomerFound)
+if (!matchResponse.IsCustomerFound)
 {
     // Fallback to email
     return await sdk.ReceiptService.SendReceiptViaEmailAsync(
-        customer.Email,
+        customer.RecipientEmail!,
         receipt
     );
 }
@@ -680,8 +673,8 @@ var template = await sdk.ReceiptService.GenerateReceiptTemplateAsync(receiptRequ
 
 // Step 3: Parse and canonicalize
 var purchaseReceipt = JsonSerializer.Deserialize<PurchaseReceipt>(template);
-var canonicalJson = sdk.EncryptionService.CanonicalizeJson(template);
-var templateHash = HashUtils.Sha256Hex(canonicalJson);
+var canonicalJson = sdk.VerificationService.CanonicalizeCheqiReceipt(template);
+var templateHash = sdk.VerificationService.CalculateCheqiReceiptHash(template);
 
 // Step 4: Create encrypted receipts
 var encryptedReceipts = sdk.ReceiptService.CreateEncryptedReceipts(
@@ -701,39 +694,16 @@ Console.WriteLine($"Delivered to {response.RecipientCount} devices");
 
 ## Testing
 
-### Unit Testing
+The SDK test project lives inside the repository:
 
-Mock the SDK services for unit tests:
+```text
+cheqi-sdk/tests/cheqi-sdk.Tests
+```
 
-```csharp
-using Moq;
-using Xunit;
+Run the SDK tests with:
 
-public class ReceiptProcessorTests
-{
-    [Fact]
-    public async Task ProcessReceipt_Success_ReturnsResult()
-    {
-        // Arrange
-        var mockSdk = new Mock<CheqiSdk>();
-        var mockReceiptService = new Mock<IReceiptService>();
-        
-        mockReceiptService
-            .Setup(x => x.ProcessCompleteReceiptAsync(
-                It.IsAny<IdentificationDetails>(),
-                It.IsAny<ReceiptTemplateRequest>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ReceiptResult.Success("receipt-123", 1));
-        
-        // Act
-        var processor = new ReceiptProcessor(mockSdk.Object);
-        var result = await processor.ProcessAsync(customer, receipt);
-        
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(1, result.ReceiptCount);
-    }
-}
+```bash
+dotnet test cheqi-sdk/tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj
 ```
 
 ### Integration Testing
@@ -744,15 +714,15 @@ Test against sandbox environment:
 [Fact]
 public async Task IntegrationTest_ProcessReceipt()
 {
-    var sdk = CheqiSdk.Builder()
-        .ApiEndpoint(Environment.Sandbox)
-        .ApiKey(Environment.GetEnvironmentVariable("CHEQI_TEST_API_KEY"))
-        .Build();
-    
-    var customer = new IdentificationDetails
+    using var sdk = CheqiSdk.Create(new CheqiSdkOptions
     {
-        Email = "test@example.com"
-    };
+        Environment = CheqiApiEnvironment.Sandbox,
+        ApiKey = System.Environment.GetEnvironmentVariable("CHEQI_TEST_API_KEY")
+    });
+
+    var customer = IdentificationDetails.ForEmail(
+        PaymentType.CARD_PAYMENT,
+        "test@example.com");
     
     var receipt = CreateTestReceipt();
     
@@ -775,16 +745,21 @@ Create one SDK instance and reuse it throughout your application:
 // ✅ Good - Singleton pattern
 public class ReceiptService
 {
-    private static readonly CheqiSdk _sdk = CheqiSdk.Builder()
-        .ApiEndpoint(Environment.Production)
-        .ApiKey("your-api-key")
-        .Build();
+    private static readonly CheqiSdk _sdk = CheqiSdk.Create(new CheqiSdkOptions
+    {
+        Environment = CheqiApiEnvironment.Production,
+        ApiKey = "your-api-key"
+    });
 }
 
 // ❌ Bad - Creating new instances
 public async Task ProcessReceipt()
 {
-    var sdk = CheqiSdk.Builder().Build(); // Don't do this repeatedly
+    using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+    {
+        Environment = CheqiApiEnvironment.Production,
+        ApiKey = "your-api-key"
+    }); // Don't do this repeatedly
 }
 ```
 
@@ -798,12 +773,12 @@ var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, rece
 if (result.IsSuccess)
 {
     // Receipt delivered successfully
-    await UpdateDatabase(result.ReceiptId, "delivered");
+    await UpdateDatabase(receipt.DocumentNumber, "delivered");
 }
 else if (!result.RecipientsFound)
 {
     // No Cheqi users found - consider email fallback
-    await SendEmailReceipt(customer.Email, receipt);
+    await SendEmailReceipt(customer.RecipientEmail, receipt);
 }
 else if (result.HasError)
 {
@@ -819,25 +794,19 @@ Choose the most reliable identifier available:
 
 ```csharp
 // Priority order (most to least reliable):
-// 1. PAR (Payment Account Reference) - most stable
-// 2. IBAN - good for bank transfers
-// 3. PAN (Primary Account Number) - can change with card replacement
-// 4. Email - fallback option
+// 1. Pairing code - best for e-commerce handoff
+// 2. PAR (Payment Account Reference) - strongest card identifier
+// 3. IBAN - good for bank transfers
+// 4. PAN - weaker fallback when PAR is unavailable
+// 5. Email - last resort
 
-var customer = new IdentificationDetails
-{
-    CardDetails = new CardDetails
-    {
-        Par = transaction.Par,           // Best option
-        Pan = transaction.Pan,           // Fallback if PAR unavailable
-        CardProvider = CardProvider.VISA
-    },
-    PaymentAccountDetails = new PaymentAccountDetails
-    {
-        Iban = transaction.Iban          // For bank transfers
-    },
-    Email = transaction.CustomerEmail    // Last resort
-};
+var customer = IdentificationDetails.ForCard(
+    PaymentType.CARD_PAYMENT,
+    new CardDetails(
+        CardProvider.VISA,
+        paymentAccountNumber: transaction.Pan,
+        paymentAccountReference: transaction.Par),
+    transaction.CustomerEmail);
 ```
 
 ### 4. Implement Retry Logic
@@ -885,7 +854,7 @@ public async Task<ReceiptResult> ProcessReceipt(
     ReceiptTemplateRequest receipt)
 {
     // Validate customer has at least one identifier
-    if (string.IsNullOrWhiteSpace(customer.Email) &&
+    if (string.IsNullOrWhiteSpace(customer.RecipientEmail) &&
         customer.CardDetails == null &&
         customer.PaymentAccountDetails == null)
     {
@@ -922,7 +891,7 @@ Never hardcode API keys:
 ```csharp
 // ✅ Good - Use configuration
 var apiKey = configuration["Cheqi:ApiKey"];
-var apiKey = Environment.GetEnvironmentVariable("CHEQI_API_KEY");
+var apiKey = System.Environment.GetEnvironmentVariable("CHEQI_API_KEY");
 
 // ❌ Bad - Hardcoded
 var apiKey = "sk_live_abc123"; // Never do this!
@@ -962,7 +931,7 @@ public async Task<ReceiptResult> ProcessReceipt(
     var sw = Stopwatch.StartNew();
     
     _logger.LogInformation("Processing receipt {ReceiptId} for customer", 
-        receipt.ReceiptId);
+        receipt.DocumentNumber);
     
     try
     {
@@ -976,7 +945,7 @@ public async Task<ReceiptResult> ProcessReceipt(
         _logger.LogInformation(
             "Receipt {ReceiptId} processed successfully in {Duration}ms. " +
             "Delivered to {Count} devices",
-            receipt.ReceiptId,
+            receipt.DocumentNumber,
             sw.ElapsedMilliseconds,
             result.ReceiptCount
         );
@@ -989,7 +958,7 @@ public async Task<ReceiptResult> ProcessReceipt(
         
         _logger.LogError(ex,
             "Failed to process receipt {ReceiptId} after {Duration}ms",
-            receipt.ReceiptId,
+            receipt.DocumentNumber,
             sw.ElapsedMilliseconds
         );
         
@@ -1027,10 +996,10 @@ Result: RecipientsFound = false
 **Solution**: Customer doesn't have Cheqi app. Use email fallback:
 
 ```csharp
-if (!result.RecipientsFound && !string.IsNullOrEmpty(customer.Email))
+if (!result.RecipientsFound && !string.IsNullOrEmpty(customer.RecipientEmail))
 {
     return await sdk.ReceiptService.SendReceiptViaEmailAsync(
-        customer.Email,
+        customer.RecipientEmail,
         receipt
     );
 }
@@ -1045,11 +1014,12 @@ Error: The operation was canceled
 **Solution**: Increase timeout or check network connectivity:
 
 ```csharp
-var sdk = CheqiSdk.Builder()
-    .ApiEndpoint(Environment.Production)
-    .ApiKey("your-api-key")
-    .TimeoutSeconds(120) // Increase from default 30s
-    .Build();
+using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+{
+    Environment = CheqiApiEnvironment.Production,
+    ApiKey = "your-api-key",
+    TimeoutSeconds = 120
+});
 ```
 
 #### 4. Validation Errors
@@ -1105,14 +1075,15 @@ Error: Hash verification failed
 If issues persist, check that:
 
 ```csharp
-// Verify SDK is using correct JSON options
-var sdk = CheqiSdk.Builder()
-    .ApiEndpoint(Environment.Production)
-    .ApiKey("your-api-key")
-    .Build();
+using var sdk = CheqiSdk.Create(new CheqiSdkOptions
+{
+    Environment = CheqiApiEnvironment.Production,
+    ApiKey = "your-api-key"
+});
 
-// The SDK automatically handles canonicalization
-// No manual configuration needed
+var verification = sdk.VerificationService;
+var jsonHash = verification.CalculateCheqiReceiptHash(receiptJson);
+var xmlHash = verification.CalculateUblXmlHash(ublXml);
 ```
 
 ### Debug Mode

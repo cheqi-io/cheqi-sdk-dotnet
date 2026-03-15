@@ -11,10 +11,10 @@ public sealed class EncryptedReceipt
     // ===== MANDATORY FIELDS =====
 
     /// <summary>
-    /// The UUID of the target device for this encrypted receipt.
+    /// The ID of the target recipient for this encrypted receipt.
     /// </summary>
     [JsonPropertyName("recipientId")]
-    public Guid recipientId { get; }
+    public string recipientId { get; }
 
     /// <summary>
     /// The receipt ID.
@@ -75,7 +75,7 @@ public sealed class EncryptedReceipt
     // ===== CONSTRUCTOR =====
 
     private EncryptedReceipt(
-        Guid recipientId,
+        string recipientId,
         string receiptId,
         ReceiverType receiverType,
         string encryptedReceipt,
@@ -104,7 +104,7 @@ public sealed class EncryptedReceipt
 
     public sealed class EncryptedReceiptBuilder
     {
-        private Guid? _recipientId;
+        private string? _recipientId;
         private string? _receiptId;
         private ReceiverType? _receiverType;
         private string? _encryptedReceipt;
@@ -132,7 +132,7 @@ public sealed class EncryptedReceipt
             return this;
         }
 
-        public EncryptedReceiptBuilder RecipientId(Guid recipientId)
+        public EncryptedReceiptBuilder RecipientId(string recipientId)
         {
             _recipientId = recipientId;
             return this;
@@ -214,7 +214,7 @@ public sealed class EncryptedReceipt
                 throw new InvalidOperationException("PublicKey is required");
 
             return new EncryptedReceipt(
-                _recipientId.Value,
+                _recipientId,
                 _receiptId,
                 _receiverType.Value,
                 _encryptedReceipt,
@@ -244,8 +244,8 @@ public sealed class EncryptedReceipt
     {
         var errors = new List<string>();
 
-        if (recipientId == Guid.Empty)
-            errors.Add("Device ID is required");
+        if (string.IsNullOrWhiteSpace(recipientId))
+            errors.Add("Recipient ID is required");
 
         if (receiverType == default)
             errors.Add("Receiver type is required");

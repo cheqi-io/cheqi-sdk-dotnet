@@ -6,7 +6,7 @@ namespace Cheqi.Sdk.CreditNote;
 public class EncryptedCreditNote
 {
     [JsonPropertyName("recipientId")]
-    public Guid recipientId { get; set; }
+    public string recipientId { get; set; }
 
     [JsonPropertyName("creditNoteId")]
     public string? creditNoteId { get; set; }
@@ -57,7 +57,7 @@ public class EncryptedCreditNote
     }
 
     public EncryptedCreditNote(
-        Guid recipientId,
+        string recipientId,
         string? creditNoteId,
         string? originalReceiptId,
         ReceiverType receiverType,
@@ -88,7 +88,7 @@ public class EncryptedCreditNote
 
     public class Builder
     {
-        private Guid _recipientId;
+        private string? _recipientId;
         private string? _creditNoteId;
         private string? _originalReceiptId;
         private ReceiverType _receiverType;
@@ -101,7 +101,7 @@ public class EncryptedCreditNote
         private Guid? _supplierPartyId;
         private Dictionary<string, object>? _additionalProperties;
 
-        public Builder RecipientId(Guid recipientId)
+        public Builder RecipientId(string recipientId)
         {
             _recipientId = recipientId;
             return this;
