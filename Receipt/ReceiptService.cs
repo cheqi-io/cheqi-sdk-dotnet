@@ -9,6 +9,7 @@ using Cheqi.Sdk.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -81,6 +82,21 @@ public class ReceiptService
         string accessToken,
         CancellationToken cancellationToken = default)
     {
+        return await ProcessCompleteReceiptAsync(
+            identificationDetails,
+            receiptRequest,
+            accessToken,
+            null,
+            cancellationToken);
+    }
+
+    public async Task<ReceiptResult> ProcessCompleteReceiptAsync(
+        IdentificationDetails identificationDetails,
+        ReceiptTemplateRequest receiptRequest,
+        string accessToken,
+        NotificationDisplayCode? notificationDisplayCode,
+        CancellationToken cancellationToken = default)
+    {
         if (identificationDetails == null)
             throw new CheqiSDKException("PaymentDetails cannot be null",
                 CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
@@ -144,7 +160,8 @@ public class ReceiptService
                 _logger.LogDebug("Creating encrypted receipts for {Count} recipients", matchResponse.recipients?.Count ?? 0);
                 var encryptedReceipts = CreateEncryptedReceipts(
                     canonicalReceiptJson,
-                    matchResponse.recipients ?? new List<Recipient>()
+                    matchResponse.recipients ?? new List<Recipient>(),
+                    notificationDisplayCode
                 );
 
                 _logger.LogDebug("Sending {Count} encrypted receipts to backend", encryptedReceipts.Count);
@@ -177,6 +194,19 @@ public class ReceiptService
     public async Task<ReceiptResult> ProcessCompleteReceiptAsync(
         IdentificationDetails identificationDetails,
         ReceiptTemplateRequest receiptRequest,
+        CancellationToken cancellationToken = default)
+    {
+        return await ProcessCompleteReceiptAsync(
+            identificationDetails,
+            receiptRequest,
+            (NotificationDisplayCode?)null,
+            cancellationToken);
+    }
+
+    public async Task<ReceiptResult> ProcessCompleteReceiptAsync(
+        IdentificationDetails identificationDetails,
+        ReceiptTemplateRequest receiptRequest,
+        NotificationDisplayCode? notificationDisplayCode,
         CancellationToken cancellationToken = default)
     {
         if (identificationDetails == null)
@@ -238,7 +268,8 @@ public class ReceiptService
                 _logger.LogDebug("Creating encrypted receipts for {Count} recipients", matchResponse.recipients?.Count ?? 0);
                 var encryptedReceipts = CreateEncryptedReceipts(
                     canonicalReceiptJson,
-                    matchResponse.recipients ?? new List<Recipient>());
+                    matchResponse.recipients ?? new List<Recipient>(),
+                    notificationDisplayCode);
 
                 _logger.LogDebug("Sending {Count} encrypted receipts to backend with API key", encryptedReceipts.Count);
                 var receiptCreatedResponse = await SendEncryptedReceiptsAsync(encryptedReceipts, templateHash, matchResponse, cancellationToken);
@@ -325,7 +356,8 @@ public class ReceiptService
     /// </summary>
     public HashSet<EncryptedReceiptRequestDto> CreateEncryptedReceipts(
         string purchaseReceipt,
-        List<Recipient> recipients)
+        List<Recipient> recipients,
+        NotificationDisplayCode? notificationDisplayCode = null)
     {
         _logger.LogInformation("[RECEIPT] CreateEncryptedReceipts called with {Count} recipients", recipients?.Count ?? 0);
         _logger.LogDebug("[RECEIPT] Purchase receipt length: {Length} characters", purchaseReceipt?.Length ?? 0);
@@ -363,6 +395,15 @@ public class ReceiptService
                 purchaseReceipt,
                 recipients
             );
+            if (notificationDisplayCode is not null)
+            {
+                encryptedReceipts = encryptedReceipts
+                    .Select(receipt => EncryptedReceiptRequestDto.Builder()
+                        .From(receipt)
+                        .NotificationDisplayCode(notificationDisplayCode)
+                        .Build())
+                    .ToHashSet();
+            }
             _logger.LogInformation("[RECEIPT] Successfully created {Count} encrypted receipts", encryptedReceipts.Count);
             return encryptedReceipts;
         }

@@ -1,7 +1,7 @@
 # Cheqi .NET SDK
 
 [![.NET](https://img.shields.io/badge/.NET-6.0+-purple.svg)](https://dotnet.microsoft.com/)
-[![NuGet](https://img.shields.io/badge/NuGet-1.1.0-blue.svg)](https://www.nuget.org/)
+[![NuGet](https://img.shields.io/badge/NuGet-1.2.0-blue.svg)](https://www.nuget.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 The Cheqi .NET SDK provides end-to-end encrypted receipt and credit note processing capabilities for suppliers, enabling secure digital receipt delivery to customers through the Cheqi platform.
@@ -26,13 +26,13 @@ The Cheqi .NET SDK provides end-to-end encrypted receipt and credit note process
 ### NuGet Package Manager
 
 ```bash
-Install-Package cheqi-sdk -Version 1.1.0
+Install-Package cheqi-sdk -Version 1.2.0
 ```
 
 ### .NET CLI
 
 ```bash
-dotnet add package cheqi-sdk --version 1.1.0
+dotnet add package cheqi-sdk --version 1.2.0
 ```
 
 ### PackageReference
@@ -40,7 +40,7 @@ dotnet add package cheqi-sdk --version 1.1.0
 Add to your `.csproj` file:
 
 ```xml
-<PackageReference Include="cheqi-sdk" Version="1.1.0" />
+<PackageReference Include="cheqi-sdk" Version="1.2.0" />
 ```
 
 ## Quick Start
@@ -212,6 +212,25 @@ var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
     accessToken
 );
 ```
+
+### Notification Display Code
+
+If the merchant has notification-code rendering enabled, you can attach a QR code or barcode to the high-level receipt flow. The code is sent as request metadata and rendered by supported mobile clients directly from the push notification.
+
+```csharp
+var notificationDisplayCode = new NotificationDisplayCode(
+    BarcodeType.QR_CODE,
+    "https://example.com/receipt/INV-001");
+
+var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
+    identificationDetails,
+    receiptRequest,
+    accessToken,
+    notificationDisplayCode
+);
+```
+
+If the merchant is not enabled for this feature, or you omit `notificationDisplayCode`, the normal receipt push is sent.
 
 ### Building Products
 

@@ -8,7 +8,7 @@
 
     <!-- Package Info -->
     <PackageId>cheqi-sdk</PackageId>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Authors>Cheqi</Authors>
     <Company>Cheqi</Company>
     <Description>Official .NET SDK for Cheqi - End-to-end encrypted digital receipt processing</Description>

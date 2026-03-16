@@ -56,6 +56,12 @@ public sealed class EncryptedReceiptRequestDto
     [JsonPropertyName("supplierPartyId")]
     public Guid? supplierPartyId { get; }
 
+    /// <summary>
+    /// Optional code to render directly in the push notification.
+    /// </summary>
+    [JsonPropertyName("notificationDisplayCode")]
+    public NotificationDisplayCode? notificationDisplayCode { get; }
+
     // ===== CONSTRUCTOR =====
 
     private EncryptedReceiptRequestDto(
@@ -66,7 +72,8 @@ public sealed class EncryptedReceiptRequestDto
         string encryptedSymmetricKey,
         string? finalHash,
         string publicKey,
-        Guid? supplierPartyId)
+        Guid? supplierPartyId,
+        NotificationDisplayCode? notificationDisplayCode)
     {
         this.recipientId = recipientId;
         this.receiptId = receiptId;
@@ -76,6 +83,7 @@ public sealed class EncryptedReceiptRequestDto
         FinalHash = finalHash;
         this.publicKey = publicKey;
         this.supplierPartyId = supplierPartyId;
+        this.notificationDisplayCode = notificationDisplayCode;
     }
 
     // ===== BUILDER =====
@@ -92,6 +100,7 @@ public sealed class EncryptedReceiptRequestDto
         private string? _finalHash;
         private string? _publicKey;
         private Guid? _supplierPartyId;
+        private NotificationDisplayCode? _notificationDisplayCode;
 
         internal EncryptedReceiptRequestDtoBuilder() { }
 
@@ -105,6 +114,7 @@ public sealed class EncryptedReceiptRequestDto
             _finalHash = other.FinalHash;
             _publicKey = other.publicKey;
             _supplierPartyId = other.supplierPartyId;
+            _notificationDisplayCode = other.notificationDisplayCode;
             return this;
         }
 
@@ -156,6 +166,12 @@ public sealed class EncryptedReceiptRequestDto
             return this;
         }
 
+        public EncryptedReceiptRequestDtoBuilder NotificationDisplayCode(NotificationDisplayCode? notificationDisplayCode)
+        {
+            _notificationDisplayCode = notificationDisplayCode;
+            return this;
+        }
+
         public EncryptedReceiptRequestDto Build()
         {
             if (_recipientId == null)
@@ -177,7 +193,8 @@ public sealed class EncryptedReceiptRequestDto
                 _encryptedSymmetricKey,
                 _finalHash,
                 _publicKey,
-                _supplierPartyId
+                _supplierPartyId,
+                _notificationDisplayCode
             );
         }
     }
@@ -194,20 +211,25 @@ public sealed class EncryptedReceiptRequestDto
             && encryptedSymmetricKey == other.encryptedSymmetricKey
             && FinalHash == other.FinalHash
             && publicKey == other.publicKey
-            && supplierPartyId == other.supplierPartyId;
+            && supplierPartyId == other.supplierPartyId
+            && Equals(notificationDisplayCode, other.notificationDisplayCode);
     }
 
     public override int GetHashCode()
     {
         return HashCode.Combine(
-            recipientId,
-            receiptId,
-            receiverType,
-            encryptedReceipt,
-            encryptedSymmetricKey,
-            FinalHash,
-            publicKey,
-            supplierPartyId);
+            HashCode.Combine(
+                recipientId,
+                receiptId,
+                receiverType,
+                encryptedReceipt,
+                encryptedSymmetricKey,
+                FinalHash,
+                publicKey,
+                supplierPartyId
+            ),
+            notificationDisplayCode
+        );
     }
 
     public override string ToString()
@@ -220,6 +242,7 @@ public sealed class EncryptedReceiptRequestDto
                $"encryptedSymmetricKey='{encryptedSymmetricKey}', " +
                $"finalHash='{FinalHash}', " +
                $"publicKey='{publicKey}', " +
-               $"supplierPartyId={supplierPartyId}}}";
+               $"supplierPartyId={supplierPartyId}, " +
+               $"notificationDisplayCode={notificationDisplayCode}}}";
     }
 }
