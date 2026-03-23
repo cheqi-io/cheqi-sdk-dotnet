@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,5 +22,11 @@ jobs:
       - name: Check OpenAPI spec drift
         run: make spec-check
 
+      - name: Build SDK
+        run: make build
+
       - name: Run tests
         run: make test
+
+      - name: Validate NuGet package
+        run: make pack

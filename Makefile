@@ -1,7 +1,7 @@
 SPEC_URL := https://test.api.cheqi.io/v3/api-docs.yaml
 GENERATED_DIR := Models/Generated
 
-.PHONY: fetch-spec generate build test spec-check
+.PHONY: fetch-spec generate build test pack spec-check
 
 fetch-spec:
 	curl -fsSL $(SPEC_URL) -o openapi.yaml
@@ -39,7 +39,10 @@ build:
 	dotnet build cheqi-sdk.csproj --configuration Release
 
 test:
-	dotnet test tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj
+	dotnet test tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj --configuration Release
+
+pack:
+	dotnet pack cheqi-sdk.csproj --configuration Release --no-build
 
 spec-check:
 	@curl -fsSL $(SPEC_URL) -o openapi.yaml.tmp
