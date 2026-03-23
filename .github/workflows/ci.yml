@@ -6,27 +6,21 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
-
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up .NET
+      - name: Set up .NET 6
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "6.0.x"
 
-      - name: Restore SDK
-        run: dotnet restore cheqi-sdk.csproj
-
-      - name: Build SDK
-        run: dotnet build cheqi-sdk.csproj --no-restore --configuration Release
+      - name: Check OpenAPI spec drift
+        run: make spec-check
 
       - name: Run tests
-        run: dotnet test tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj --configuration Release --logger "console;verbosity=normal"
+        run: make test
