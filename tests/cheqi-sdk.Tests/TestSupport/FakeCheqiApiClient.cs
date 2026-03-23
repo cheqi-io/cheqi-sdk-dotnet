@@ -2,13 +2,17 @@ using Cheqi.Sdk.CreditNote;
 using Cheqi.Sdk.Http;
 using Cheqi.Sdk.Models;
 using Cheqi.Sdk.Models.Company;
+using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsRequest;
+using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
+using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
+using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
 
 namespace Cheqi.Sdk.Tests.TestSupport;
 
 internal sealed class FakeCheqiApiClient : ICheqiApiClient
 {
     public Func<IdentificationDetails, string?, CancellationToken, Task<RecipientResolutionResponse>> MatchCustomerAsyncHandler { get; set; } =
-        (_, _, _) => Task.FromResult(RecipientResolutionResponse.CustomerNotFound());
+        (_, _, _) => Task.FromResult(new RecipientResolutionResponse { CustomerFound = false });
 
     public Func<ReceiptTemplateRequest, string?, CancellationToken, Task<string>> GenerateReceiptTemplateAsyncHandler { get; set; } =
         (_, _, _) => Task.FromResult("{}");

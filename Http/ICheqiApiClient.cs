@@ -1,6 +1,10 @@
 using Cheqi.Sdk.CreditNote;
 using Cheqi.Sdk.Models;
 using Cheqi.Sdk.Models.Company;
+using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsRequest;
+using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
+using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
+using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
 
 namespace Cheqi.Sdk.Http;
 

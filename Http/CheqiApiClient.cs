@@ -8,6 +8,10 @@ using Cheqi.Sdk.Http.Exceptions;
 using Cheqi.Sdk.Models;
 using Cheqi.Sdk.Models.Company;
 using Microsoft.Extensions.Logging;
+using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsRequest;
+using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
+using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
+using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
 
 namespace Cheqi.Sdk.Http;
 
@@ -20,6 +24,7 @@ public sealed class CheqiApiClient : ICheqiApiClient
     private readonly CheqiSdkConfig _config;
     private readonly ILogger? _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly bool _ownsHttpClient;
     private string? _cachedAccessToken;
     private DateTimeOffset _tokenExpiry = DateTimeOffset.MinValue;
     private readonly SemaphoreSlim _tokenLock = new(1, 1);
@@ -40,6 +45,7 @@ public sealed class CheqiApiClient : ICheqiApiClient
         if (httpClient != null)
         {
             _httpClient = httpClient;
+            _ownsHttpClient = false;
         }
         else
         {
@@ -49,6 +55,7 @@ public sealed class CheqiApiClient : ICheqiApiClient
                 BaseAddress = new Uri(_config.ApiEndpoint),
                 Timeout = _config.Timeout
             };
+            _ownsHttpClient = true;
         }
 
         if (_httpClient.BaseAddress == null)
@@ -343,7 +350,8 @@ public sealed class CheqiApiClient : ICheqiApiClient
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger?.LogError("Request failed: {StatusCode} - {Content}", response.StatusCode, content);
+            _logger?.LogError("Request failed: {Method} {Url} returned status {StatusCode}",
+                request.Method, request.RequestUri, response.StatusCode);
             throw new CheqiApiException(
                 $"Request failed with status {response.StatusCode}",
                 (int)response.StatusCode,
@@ -361,7 +369,8 @@ public sealed class CheqiApiClient : ICheqiApiClient
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger?.LogError("Request failed: {StatusCode} - {Content}", response.StatusCode, content);
+            _logger?.LogError("Request failed: {Method} {Url} returned status {StatusCode}",
+                request.Method, request.RequestUri, response.StatusCode);
             throw new CheqiApiException(
                 $"Request failed with status {response.StatusCode}",
                 (int)response.StatusCode,
@@ -391,7 +400,10 @@ public sealed class CheqiApiClient : ICheqiApiClient
     {
         if (_disposed) return;
         _disposed = true;
-        _httpClient.Dispose();
+        if (_ownsHttpClient)
+        {
+            _httpClient.Dispose();
+        }
         _tokenLock.Dispose();
     }
 

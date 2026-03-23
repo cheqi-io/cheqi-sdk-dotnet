@@ -12,6 +12,12 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using EncryptedReceiptRequestDto = Cheqi.Sdk.Models.Generated.EncryptedReceiptRequest;
+using Recipient = Cheqi.Sdk.Models.Generated.MatchedRecipient;
+using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsRequest;
+using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
+using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
+using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
 
 namespace Cheqi.Sdk.Receipt;
 
@@ -98,7 +104,7 @@ public class ReceiptService
             _logger.LogDebug("Matching customer using payment details");
             var matchResponse = await _matchingService.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken);
 
-            if (!matchResponse.customerFound && string.IsNullOrEmpty(identificationDetails.recipientEmail))
+            if (!matchResponse.CustomerFound == true && string.IsNullOrEmpty(identificationDetails.RecipientEmail))
             {
                 _logger.LogInformation("Customer not found and no email provided - skipping template generation");
                 return ReceiptResult.CustomerNotFound();
@@ -107,44 +113,17 @@ public class ReceiptService
             _logger.LogDebug("Generating receipt template");
             string receiptTemplate = await GenerateReceiptTemplateAsync(receiptRequest, accessToken, cancellationToken);
 
-            // Use the original JSON from backend and inject paymentMeans to avoid serialization differences
             string receiptTemplateJson = receiptTemplate;
-            if (matchResponse.paymentMeans != null && matchResponse.paymentMeans.Count > 0)
-            {
-                // Parse the original JSON, inject paymentMeans, and serialize back
-                using var doc = JsonDocument.Parse(receiptTemplate);
-                using var stream = new MemoryStream();
-                using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false }))
-                {
-                    writer.WriteStartObject();
-                    
-                    // Copy all properties from original JSON
-                    foreach (var property in doc.RootElement.EnumerateObject())
-                    {
-                        if (property.Name != "paymentMeans")
-                        {
-                            property.WriteTo(writer);
-                        }
-                    }
-                    
-                    // Add paymentMeans
-                    writer.WritePropertyName("paymentMeans");
-                    JsonSerializer.Serialize(writer, matchResponse.paymentMeans, _jsonOptions);
-                    
-                    writer.WriteEndObject();
-                }
-                receiptTemplateJson = Encoding.UTF8.GetString(stream.ToArray());
-            }
 
-            if (matchResponse.customerFound)
+            if (matchResponse.CustomerFound == true)
             {
                 string canonicalReceiptJson = _canonicalizer.Canonicalize(receiptTemplateJson);
                 string templateHash = HashUtils.Sha256Hex(canonicalReceiptJson);
 
-                _logger.LogDebug("Creating encrypted receipts for {Count} recipients", matchResponse.recipients?.Count ?? 0);
+                _logger.LogDebug("Creating encrypted receipts for {Count} recipients", matchResponse.Recipients?.Count ?? 0);
                 var encryptedReceipts = CreateEncryptedReceipts(
                     canonicalReceiptJson,
-                    matchResponse.recipients ?? new List<Recipient>()
+                    matchResponse.Recipients ?? new List<Recipient>()
                 );
 
                 _logger.LogDebug("Sending {Count} encrypted receipts to backend", encryptedReceipts.Count);
@@ -156,7 +135,7 @@ public class ReceiptService
 
             _logger.LogInformation("Customer not found, sending receipt via email");
             var receipt = JsonSerializer.Deserialize<PurchaseReceipt>(receiptTemplateJson, _jsonOptions);
-            return await SendReceiptViaEmailAsync(identificationDetails.recipientEmail!, receipt!, accessToken, cancellationToken);
+            return await SendReceiptViaEmailAsync(identificationDetails.RecipientEmail!, receipt!, accessToken, cancellationToken);
         }
         catch (CheqiSDKException)
         {
@@ -192,7 +171,7 @@ public class ReceiptService
             _logger.LogDebug("Matching customer using payment details with API key");
             var matchResponse = await _matchingService.MatchCustomerAsync(identificationDetails, cancellationToken);
 
-            if (!matchResponse.customerFound && string.IsNullOrEmpty(identificationDetails.recipientEmail))
+            if (!matchResponse.CustomerFound == true && string.IsNullOrEmpty(identificationDetails.RecipientEmail))
             {
                 _logger.LogInformation("Customer not found and no email provided - skipping template generation");
                 return ReceiptResult.CustomerNotFound();
@@ -201,44 +180,17 @@ public class ReceiptService
             _logger.LogDebug("Generating receipt template with API key");
             string receiptTemplate = await GenerateReceiptTemplateAsync(receiptRequest, cancellationToken);
 
-            // Use the original JSON from backend and inject paymentMeans to avoid serialization differences
             string receiptTemplateJson = receiptTemplate;
-            if (matchResponse.paymentMeans != null && matchResponse.paymentMeans.Count > 0)
-            {
-                // Parse the original JSON, inject paymentMeans, and serialize back
-                using var doc = JsonDocument.Parse(receiptTemplate);
-                using var stream = new MemoryStream();
-                using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false }))
-                {
-                    writer.WriteStartObject();
-                    
-                    // Copy all properties from original JSON
-                    foreach (var property in doc.RootElement.EnumerateObject())
-                    {
-                        if (property.Name != "paymentMeans")
-                        {
-                            property.WriteTo(writer);
-                        }
-                    }
-                    
-                    // Add paymentMeans
-                    writer.WritePropertyName("paymentMeans");
-                    JsonSerializer.Serialize(writer, matchResponse.paymentMeans, _jsonOptions);
-                    
-                    writer.WriteEndObject();
-                }
-                receiptTemplateJson = Encoding.UTF8.GetString(stream.ToArray());
-            }
 
-            if (matchResponse.customerFound)
+            if (matchResponse.CustomerFound == true)
             {
                 string canonicalReceiptJson = _canonicalizer.Canonicalize(receiptTemplateJson);
                 string templateHash = HashUtils.Sha256Hex(canonicalReceiptJson);
 
-                _logger.LogDebug("Creating encrypted receipts for {Count} recipients", matchResponse.recipients?.Count ?? 0);
+                _logger.LogDebug("Creating encrypted receipts for {Count} recipients", matchResponse.Recipients?.Count ?? 0);
                 var encryptedReceipts = CreateEncryptedReceipts(
                     canonicalReceiptJson,
-                    matchResponse.recipients ?? new List<Recipient>());
+                    matchResponse.Recipients ?? new List<Recipient>());
 
                 _logger.LogDebug("Sending {Count} encrypted receipts to backend with API key", encryptedReceipts.Count);
                 var receiptCreatedResponse = await SendEncryptedReceiptsAsync(encryptedReceipts, templateHash, matchResponse, cancellationToken);
@@ -250,7 +202,7 @@ public class ReceiptService
             _logger.LogInformation("Customer not found, sending receipt via email");
             var receipt = JsonSerializer.Deserialize<PurchaseReceipt>(receiptTemplateJson, _jsonOptions);
 
-            return await SendReceiptViaEmailAsync(identificationDetails.recipientEmail!, receipt!, cancellationToken);
+            return await SendReceiptViaEmailAsync(identificationDetails.RecipientEmail!, receipt!, cancellationToken);
         }
         catch (CheqiSDKException)
         {
@@ -279,7 +231,7 @@ public class ReceiptService
             throw new CheqiSDKException("Access token is required for receipt template generation",
                 CheqiSDKException.ErrorCodes.AUTHENTICATION_FAILED, 401, null);
 
-        _logger.LogDebug("Generating receipt template for receiptId: {DocumentNumber}", request.documentNumber);
+        _logger.LogDebug("Generating receipt template for receiptId: {DocumentNumber}", request.DocumentNumber);
 
         try
         {
@@ -305,7 +257,7 @@ public class ReceiptService
             throw new CheqiSDKException("Receipt template request cannot be null",
                 CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
 
-        _logger.LogDebug("Generating receipt template with API key for receiptId: {DocumentNumber}", request.documentNumber);
+        _logger.LogDebug("Generating receipt template with API key for receiptId: {DocumentNumber}", request.DocumentNumber);
 
         try
         {
@@ -350,10 +302,10 @@ public class ReceiptService
             var recipient = recipients[i];
             _logger.LogDebug("[RECEIPT] Recipient {Index}: ID={Id}, Type={Type}, HasPublicKey={HasKey}, PublicKeyLength={KeyLength}",
                 i + 1, 
-                recipient?.id, 
-                recipient?.receiverType,
-                !string.IsNullOrEmpty(recipient?.publicKey),
-                recipient?.publicKey?.Length ?? 0);
+                recipient?.Id, 
+                recipient?.Id,
+                !string.IsNullOrEmpty(recipient?.PublicKey),
+                recipient?.PublicKey?.Length ?? 0);
         }
 
         try
@@ -395,7 +347,7 @@ public class ReceiptService
             throw new CheqiSDKException("Customer match response cannot be null",
                 CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
 
-        if (!recipientResolutionResponse.customerFound)
+        if (!recipientResolutionResponse.CustomerFound == true)
             throw new CheqiSDKException("Cannot send receipts: customer was not found during matching",
                 CheqiSDKException.ErrorCodes.CUSTOMER_NOT_FOUND, 400, null);
 
@@ -403,11 +355,10 @@ public class ReceiptService
 
         try
         {
-            var request = EncryptedReceiptsRequest.Builder()
-                .EncryptedReceipts(encryptedReceipts)
-                .MatchId(recipientResolutionResponse.matchId ?? throw new CheqiSDKException("MatchId is required", CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null))
-                .TemplateHash(templateHash)
-                .Build();
+            var request = new EncryptedReceiptsRequest(
+                encryptedReceipts.ToList(),
+                recipientResolutionResponse.MatchId ?? throw new CheqiSDKException("MatchId is required", CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null),
+                templateHash);
 
             var response = await _apiClient.SubmitEncryptedReceiptsAsync(request, null, cancellationToken);
             _logger.LogInformation("Successfully sent {Count} encrypted receipts", encryptedReceipts.Count);
@@ -447,7 +398,7 @@ public class ReceiptService
             throw new CheqiSDKException("Customer match response cannot be null",
                 CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
 
-        if (!recipientResolutionResponse.customerFound)
+        if (!recipientResolutionResponse.CustomerFound == true)
             throw new CheqiSDKException("Cannot send receipts: customer was not found during matching",
                 CheqiSDKException.ErrorCodes.CUSTOMER_NOT_FOUND, 400, null);
 
@@ -459,11 +410,10 @@ public class ReceiptService
 
         try
         {
-            var request = EncryptedReceiptsRequest.Builder()
-                .EncryptedReceipts(encryptedReceipts)
-                .MatchId(recipientResolutionResponse.matchId ?? throw new CheqiSDKException("MatchId is required", CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null))
-                .TemplateHash(templateHash)
-                .Build();
+            var request = new EncryptedReceiptsRequest(
+                encryptedReceipts.ToList(),
+                recipientResolutionResponse.MatchId ?? throw new CheqiSDKException("MatchId is required", CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null),
+                templateHash);
 
             var response = await _apiClient.SubmitEncryptedReceiptsAsync(request, accessToken, cancellationToken);
             _logger.LogInformation("Successfully sent {Count} encrypted receipts", encryptedReceipts.Count);

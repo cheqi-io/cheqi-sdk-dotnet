@@ -7,7 +7,6 @@ namespace Cheqi.Sdk.Models.Enums;
 /// <summary>
 /// Unit of measure codes based on UN/ECE Recommendation 20.
 /// </summary>
-[JsonConverter(typeof(UnitCodeJsonConverter))]
 public enum UnitCode
 {
     /// <summary>One (piece, unit). UN/ECE Code: C62</summary>

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 using Cheqi.Sdk.Models;
 using Cheqi.Sdk.Models.Enums;
+using Identifier = Cheqi.Sdk.Models.Generated.Identifier;
 
 namespace Cheqi.Sdk.CreditNote;
 
@@ -355,7 +356,7 @@ public sealed class CreditNoteTemplateRequest
         public CreditNoteTemplateRequestBuilder AddProduct(string brand, string name, string unitPrice, string subtotal, double taxRate, string taxAmount, string total, double quantity)
         {
             return AddProduct(Product.Builder()
-                .Brand(brand)
+                .BrandName(brand)
                 .Name(name)
                 .Quantity(quantity)
                 .BaseQuantity(1.0)

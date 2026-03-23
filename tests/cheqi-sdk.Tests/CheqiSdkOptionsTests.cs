@@ -1,6 +1,6 @@
 using Cheqi.Sdk.Config;
-using Cheqi.Sdk.Models;
-using Cheqi.Sdk.Models.Enums;
+using Cheqi.Sdk.Tests.TestSupport;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace Cheqi.Sdk.Tests;
@@ -28,12 +28,34 @@ public sealed class CheqiSdkOptionsTests
     [Fact]
     public void CommonModelsCanBeCreatedWithoutBuilders()
     {
-        var card = new CardDetails(CardProvider.VISA, paymentAccountReference: "PAR123");
-        var identification = IdentificationDetails.ForCard(PaymentType.CARD_PAYMENT, card, "customer@example.com");
+        var card = new Cheqi.Sdk.Models.Generated.CardDetails();
+        card.CardProvider = Cheqi.Sdk.Models.Generated.CardDetails.CardProviderEnum.VISA;
+        card.PaymentAccountReference = "PAR123";
 
-        Assert.Equal(CardProvider.VISA, card.CardProvider);
+        var identification = new Cheqi.Sdk.Models.Generated.IdentificationDetails(
+            Cheqi.Sdk.Models.Generated.IdentificationDetails.PaymentTypeEnum.CARDPAYMENT);
+        identification.CardDetails = card;
+        identification.RecipientEmail = "customer@example.com";
+
+        Assert.Equal(Cheqi.Sdk.Models.Generated.CardDetails.CardProviderEnum.VISA, card.CardProvider);
         Assert.Equal("PAR123", card.PaymentAccountReference);
-        Assert.Equal(PaymentType.CARD_PAYMENT, identification.PaymentType);
+        Assert.Equal(Cheqi.Sdk.Models.Generated.IdentificationDetails.PaymentTypeEnum.CARDPAYMENT, identification.PaymentType);
         Assert.Equal("customer@example.com", identification.RecipientEmail);
+    }
+
+    [Fact]
+    public void InvalidApiKeyFormat_DoesNotEmitSdkWarning()
+    {
+        var loggerProvider = new ListLoggerProvider();
+        using var loggerFactory = LoggerFactory.Create(builder => builder.AddProvider(loggerProvider));
+
+        _ = CheqiSdkConfig.FromOptions(new CheqiSdkOptions
+        {
+            Environment = CheqiApiEnvironment.Sandbox,
+            ApiKey = "nonstandard-key"
+        }, loggerFactory.CreateLogger<CheqiSdkConfig>());
+
+        var combinedLogs = string.Join("\n", loggerProvider.Messages);
+        Assert.DoesNotContain("API key does not match expected format", combinedLogs);
     }
 }

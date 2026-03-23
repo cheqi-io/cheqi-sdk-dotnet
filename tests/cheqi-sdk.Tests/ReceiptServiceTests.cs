@@ -2,11 +2,15 @@ using Cheqi.Sdk.Encryption;
 using Cheqi.Sdk.Exceptions;
 using Cheqi.Sdk.Matching;
 using Cheqi.Sdk.Models;
-using Cheqi.Sdk.Models.Ubl;
 using Cheqi.Sdk.Receipt;
+using MatchedRecipient = Cheqi.Sdk.Models.Generated.MatchedRecipient;
+using EncryptedReceiptRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptRequest;
 using Cheqi.Sdk.Tests.TestSupport;
 using Cheqi.Sdk.Utils;
 using Xunit;
+using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsRequest;
+using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
+using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
 
 namespace Cheqi.Sdk.Tests;
 
@@ -48,7 +52,7 @@ public sealed class ReceiptServiceTests
             "token");
 
         Assert.True(result.IsSuccess());
-        Assert.Equal(DeliveryStatus.DELIVERED_EMAIL, result.DeliveryStatus);
+        Assert.Equal(Cheqi.Sdk.Receipt.DeliveryStatus.DELIVERED_EMAIL, result.DeliveryStatus);
         Assert.Equal("sdk@example.com", capturedEmail);
     }
 
@@ -58,39 +62,39 @@ public sealed class ReceiptServiceTests
         var apiClient = new FakeCheqiApiClient();
         EncryptedReceiptsRequest? capturedRequest = null;
         string? capturedToken = null;
-        apiClient.MatchCustomerAsyncHandler = (_, _, _) => Task.FromResult(
-            RecipientResolutionResponse.Builder()
-                .CustomerFound(true)
-                .MatchId("match-123")
-                .Recipients(new List<Recipient> { TestData.CreateRecipient() })
-                .PaymentMeans(new List<PaymentMeans>
-                {
-                    new() { PaymentMeansDescription = new List<string> { "Card payment" } }
-                })
-                .Build());
+
+        var matchResponse = new RecipientResolutionResponse();
+        matchResponse.CustomerFound = true;
+        matchResponse.MatchId = "match-123";
+        matchResponse.Recipients = new List<MatchedRecipient> { TestData.CreateRecipient() };
+
+        apiClient.MatchCustomerAsyncHandler = (_, _, _) => Task.FromResult(matchResponse);
         apiClient.GenerateReceiptTemplateAsyncHandler = (_, _, _) => Task.FromResult("{\"z\":2,\"a\":1}");
         apiClient.SubmitEncryptedReceiptsAsyncHandler = (request, token, _) =>
         {
             capturedRequest = request;
             capturedToken = token;
-            return Task.FromResult(new ReceiptCreatedResponse("receipt-123", DateTimeOffset.Parse("2026-03-15T10:00:00Z"), request.templateHash));
+            var resp = new ReceiptCreatedResponse();
+            resp.CheqiReceiptId = "receipt-123";
+            resp.CreatedAt = DateTimeOffset.Parse("2026-03-15T10:00:00Z");
+            resp.TemplateHash = request.TemplateHash;
+            return Task.FromResult(resp);
         };
 
         var service = CreateService(apiClient);
         var result = await service.ProcessCompleteReceiptAsync(TestData.PairingCodeIdentification(), TestData.CreateReceiptTemplateRequest(), "access-token");
 
-        var expectedCanonicalJson = new RFC8785Canonicalizer().Canonicalize(
-            "{\"z\":2,\"a\":1,\"paymentMeans\":[{\"paymentMeansDescription\":[\"Card payment\"]}]}");
+        var expectedCanonicalJson = new RFC8785Canonicalizer().Canonicalize("{\"z\":2,\"a\":1}");
         var expectedHash = HashUtils.Sha256Hex(expectedCanonicalJson);
 
         Assert.True(result.IsSuccess());
-        Assert.Equal(DeliveryStatus.DELIVERED_DIGITAL, result.DeliveryStatus);
+        Assert.Equal(Cheqi.Sdk.Receipt.DeliveryStatus.DELIVERED_DIGITAL, result.DeliveryStatus);
         Assert.Equal(expectedCanonicalJson, result.CanonicalJson);
         Assert.Equal(expectedHash, result.TemplateHash);
         Assert.NotNull(capturedRequest);
-        Assert.Equal("match-123", capturedRequest!.matchId);
-        Assert.Equal(expectedHash, capturedRequest.templateHash);
-        Assert.Single(capturedRequest.encryptedReceipts);
+        Assert.Equal("match-123", capturedRequest!.MatchId);
+        Assert.Equal(expectedHash, capturedRequest.TemplateHash);
+        Assert.Single(capturedRequest.EncryptedReceiptRequests);
         Assert.Equal("access-token", capturedToken);
     }
 
@@ -99,19 +103,19 @@ public sealed class ReceiptServiceTests
     {
         var service = CreateService(new FakeCheqiApiClient());
 
+        var dto = new EncryptedReceiptRequest();
+        dto.RecipientId = "recipient-1";
+        dto.PublicKey = "key";
+        dto.EncryptedReceipt = "cipher";
+        dto.EncryptedSymmetricKey = "wrapped";
+
+        var notFoundResponse = new RecipientResolutionResponse();
+        notFoundResponse.CustomerFound = false;
+
         var exception = await Assert.ThrowsAsync<CheqiSDKException>(() => service.SendEncryptedReceiptsAsync(
-            new HashSet<EncryptedReceiptRequestDto>
-            {
-                EncryptedReceiptRequestDto.Builder()
-                    .RecipientId("recipient-1")
-                    .ReceiverType(Models.Enums.ReceiverType.DEVICE)
-                    .PublicKey("key")
-                    .EncryptedReceipt("cipher")
-                    .EncryptedSymmetricKey("wrapped")
-                    .Build()
-            },
+            new HashSet<EncryptedReceiptRequest> { dto },
             "template-hash",
-            RecipientResolutionResponse.CustomerNotFound(),
+            notFoundResponse,
             "token"));
 
         Assert.Equal(CheqiSDKException.ErrorCodes.CUSTOMER_NOT_FOUND, exception.ErrorCode);

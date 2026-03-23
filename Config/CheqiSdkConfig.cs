@@ -190,11 +190,6 @@ public sealed class CheqiSdkConfig
                 logger.LogWarning("No authentication configured. API calls will fail unless access tokens are provided explicitly.");
             }
 
-            if (hasApiKey && !IsValidApiKeyFormat(_apiKey!))
-            {
-                logger.LogWarning("API key does not match expected format (sk_live_* or sk_test_*)");
-            }
-
             // Validate timeout
             if (_timeoutSeconds <= 0)
             {
@@ -228,11 +223,6 @@ public sealed class CheqiSdkConfig
                 _apiEndpoint, authMode, _timeoutSeconds, _maxRetries);
 
             return config;
-        }
-
-        private static bool IsValidApiKeyFormat(string key)
-        {
-            return key.StartsWith("sk_live_") || key.StartsWith("sk_test_");
         }
     }
 }

@@ -4,6 +4,8 @@ using Cheqi.Sdk.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Text;
+using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
+using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
 
 namespace Cheqi.Sdk.Matching;
 
@@ -62,9 +64,9 @@ public class MatchingService
         {
             var response = await _apiClient.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken);
 
-            if (response.customerFound)
+            if (response.CustomerFound == true)
             {
-                _logger.LogInformation("Customer matched successfully: {Count} recipients found", response.recipients?.Count ?? 0);
+                _logger.LogInformation("Customer matched successfully: {Count} recipients found", response.Recipients?.Count ?? 0);
             }
             else
             {
@@ -121,9 +123,9 @@ public class MatchingService
         {
             var response = await _apiClient.MatchCustomerAsync(identificationDetails, null, cancellationToken);
 
-            if (response.customerFound)
+            if (response.CustomerFound == true)
             {
-                _logger.LogInformation("Customer matched successfully: {Count} recipients found", response.recipients?.Count ?? 0);
+                _logger.LogInformation("Customer matched successfully: {Count} recipients found", response.Recipients?.Count ?? 0);
             }
             else
             {
@@ -172,14 +174,14 @@ public class MatchingService
     /// </summary>
     private bool HasCardDetails(IdentificationDetails identificationDetails)
     {
-        if (identificationDetails.cardDetails == null)
+        if (identificationDetails.CardDetails == null)
         {
             return false;
         }
 
-        var card = identificationDetails.cardDetails;
-        return (!string.IsNullOrWhiteSpace(card.paymentAccountNumber)) ||
-               (!string.IsNullOrWhiteSpace(card.paymentAccountReference));
+        var card = identificationDetails.CardDetails;
+        return (!string.IsNullOrWhiteSpace(card.PaymentAccountNumber)) ||
+               (!string.IsNullOrWhiteSpace(card.PaymentAccountReference));
     }
 
     /// <summary>
@@ -187,7 +189,7 @@ public class MatchingService
     /// </summary>
     private bool HasCheqiReceiptId(IdentificationDetails identificationDetails)
     {
-        return !string.IsNullOrWhiteSpace(identificationDetails.cheqiReceiptId);
+        return !string.IsNullOrWhiteSpace(identificationDetails.CheqiReceiptId);
     }
 
     /// <summary>
@@ -195,7 +197,7 @@ public class MatchingService
     /// </summary>
     private bool HasPairingCode(IdentificationDetails identificationDetails)
     {
-        return !string.IsNullOrWhiteSpace(identificationDetails.pairingCode);
+        return !string.IsNullOrWhiteSpace(identificationDetails.PairingCode);
     }
 
     /// <summary>
@@ -203,13 +205,13 @@ public class MatchingService
     /// </summary>
     private bool HasPaymentAccountDetails(IdentificationDetails identificationDetails)
     {
-        if (identificationDetails.paymentAccountDetails == null)
+        if (identificationDetails.PaymentAccountDetails == null)
         {
             return false;
         }
 
-        var details = identificationDetails.paymentAccountDetails;
-        return !string.IsNullOrWhiteSpace(details.identifier);
+        var details = identificationDetails.PaymentAccountDetails;
+        return !string.IsNullOrWhiteSpace(details.Identifier);
     }
 
     /// <summary>
@@ -217,7 +219,7 @@ public class MatchingService
     /// </summary>
     private bool HasEmail(IdentificationDetails identificationDetails)
     {
-        return !string.IsNullOrWhiteSpace(identificationDetails.recipientEmail);
+        return !string.IsNullOrWhiteSpace(identificationDetails.RecipientEmail);
     }
 
     /// <summary>

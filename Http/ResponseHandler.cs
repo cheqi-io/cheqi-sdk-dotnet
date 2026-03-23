@@ -147,8 +147,8 @@ public class ResponseHandler
 
     private CheqiApiException BuildApiException(int statusCode, string responseContent, string? correlationId, string operationName)
     {
-        _logger.LogError("{OperationName} failed. Status: {StatusCode}, Response: {Response}", 
-            operationName, statusCode, responseContent);
+        _logger.LogError("{OperationName} failed. Status: {StatusCode}",
+            operationName, statusCode);
 
         if (statusCode == 401)
         {

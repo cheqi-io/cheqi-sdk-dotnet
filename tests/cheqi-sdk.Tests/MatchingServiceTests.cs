@@ -1,7 +1,6 @@
 using Cheqi.Sdk.Http.Exceptions;
 using Cheqi.Sdk.Matching;
-using Cheqi.Sdk.Models;
-using Cheqi.Sdk.Models.Enums;
+using Cheqi.Sdk.Models.Generated;
 using Cheqi.Sdk.Tests.TestSupport;
 using Xunit;
 
@@ -14,7 +13,7 @@ public sealed class MatchingServiceTests
     {
         var apiClient = new FakeCheqiApiClient();
         var service = new MatchingService(apiClient);
-        var details = new IdentificationDetails(PaymentType.CARD_PAYMENT, null, null, null, null, null, null);
+        var details = new IdentificationDetails(IdentificationDetails.PaymentTypeEnum.CARDPAYMENT);
 
         await Assert.ThrowsAsync<ArgumentException>(() => service.MatchCustomerAsync(details, "token"));
     }
@@ -50,7 +49,7 @@ public sealed class MatchingServiceTests
         apiClient.MatchCustomerAsyncHandler = (_, token, _) =>
         {
             capturedToken = token;
-            return Task.FromResult(RecipientResolutionResponse.CustomerNotFound());
+            return Task.FromResult(new RecipientResolutionResponse { CustomerFound = false });
         };
 
         var service = new MatchingService(apiClient);

@@ -1,331 +1,44 @@
 using System.Globalization;
-using System.Text.Json.Serialization;
 using Cheqi.Sdk.Models.Enums;
+using GeneratedModels = Cheqi.Sdk.Models.Generated;
 
 namespace Cheqi.Sdk.Models;
 
 /// <summary>
 /// Request DTO for generating receipt templates.
-/// 
-/// <para>This class provides a simplified, POS-friendly API for creating digital receipts.
-/// The POS system provides all calculated values - no calculations are performed by the SDK.</para>
+/// Extends the generated base with a builder pattern and convenience methods.
 ///
-/// <para><b>Example Usage:</b></para>
+/// <para><b>Example:</b></para>
 /// <code>
 /// var receipt = ReceiptTemplateRequest.Builder()
-///     // Basic information
 ///     .DocumentNumber("INV-2024-001")
 ///     .IssueDate(DateTimeOffset.Now)
 ///     .Currency("EUR")
-///     
-///     // Totals (POS-calculated)
-///     .receiptSubtotal(250.00m)
-///     .TotalBeforeTax(245.00m)  // After receipt-level discount
-///     .TotalTaxAmount(51.45m)   // Total tax
-///     .TotalAmount(296.45m)     // Final amount
-///     
-///     // Simple product addition (POS provides all amounts)
-///     .AddProduct("SKU123", "Nike", "AirMax", "125.00", "250.00", 21.0, "52.50", "302.50", 2.0)
-///     
-///     // Or use full Product builder for complex cases
+///     .ReceiptSubtotal(250.00m)
+///     .TotalBeforeTax(245.00m)
+///     .TotalTaxAmount(51.45m)
+///     .TotalAmount(296.45m)
 ///     .AddProduct(Product.Builder()
 ///         .Name("Laptop")
 ///         .Quantity(1.0)
 ///         .UnitCode(UnitCode.ONE)
-///         .UnitPrice("100.00")
-///         .Subtotal("100.00")
-///         .Total("121.00")
+///         .UnitPrice(100.00m)
+///         .Subtotal(100.00m)
+///         .Total(121.00m)
 ///         .AddTax(21.0, "VAT", "21.00")
 ///         .Build())
-///     
-///     // Receipt-level adjustments
-///     .AddDiscount("5.00", "Loyalty discount")
-///     .AddCharge("3.00", "Service fee")
-///     
-///     // Tax breakdown
 ///     .AddTax(Tax.Builder()
 ///         .Rate(21.0)
 ///         .Type("VAT")
-///         .Amount("19.95")
-///         .Label("VAT 21%")
+///         .Amount(51.45m)
 ///         .Build())
-///     
-///     // Optional fields
-///     .Note("Thank you for your purchase!")
 ///     .Build();
 /// </code>
-///
-/// <para><b>Mandatory Fields:</b></para>
-/// <list type="bullet">
-///   <item><b>documentNumber</b>: Unique receipt/invoice identifier</item>
-///   <item><b>issueDate</b>: Receipt issue date</item>
-///   <item><b>currency</b>: ISO 4217 currency code (e.g., "EUR", "USD")</item>
-///   <item><b>receiptSubtotal</b>: Sum of all product line totals</item>
-///   <item><b>totalBeforeTax</b>: Total excluding taxes (after receipt-level adjustments)</item>
-///   <item><b>totalTaxAmount</b>: Total tax amount (POS-calculated)</item>
-///   <item><b>totalAmount</b>: Final amount charged to customer</item>
-///   <item><b>products</b>: List of products (minimum 1 required)</item>
-///   <item><b>taxes</b>: Tax breakdown by category/rate</item>
-/// </list>
-///
-/// <para><b>Optional Fields:</b></para>
-/// <list type="bullet">
-///   <item><b>identifiers</b>: Additional identifiers (order number, PO number, etc.)</item>
-///   <item><b>transactionDate</b>: When transaction was initiated</item>
-///   <item><b>purchaseDate</b>: When purchase was made</item>
-///   <item><b>discounts</b>: Receipt-level discounts</item>
-///   <item><b>charges</b>: Receipt-level charges (delivery, service fees, etc.)</item>
-///   <item><b>period</b>: Billing/service period (for subscriptions, rentals)</item>
-///   <item><b>note</b>: Additional seller notes</item>
-/// </list>
-///
-/// <para><b>Key Differences from receiptSubtotal and totalBeforeTax:</b></para>
-/// <list type="bullet">
-///   <item><b>receiptSubtotal</b>: Sum of all product line totals (before receipt-level adjustments)</item>
-///   <item><b>totalBeforeTax</b>: receiptSubtotal ± receipt-level discounts/charges</item>
-///   <item>Example: receiptSubtotal = $100, discount = $5, charge = $3 → totalBeforeTax = $98</item>
-/// </list>
-///
-/// <para><b>Validation Rules:</b></para>
-/// <list type="bullet">
-///   <item>All mandatory fields must be present</item>
-///   <item>At least one product is required</item>
-///   <item>Currency must be a valid ISO 4217 code</item>
-///   <item>All monetary amounts must be non-negative</item>
-///   <item>Products must have valid unit codes</item>
-/// </list>
 /// </summary>
-public class ReceiptTemplateRequest
+public class ReceiptTemplateRequest : GeneratedModels.ReceiptTemplateRequest
 {
-    // ===== MANDATORY FIELDS =====
-
-    /// <summary>
-    /// The UUID of the child company (franchisee location or branch store) issuing this receipt.
-    /// Required for franchise organizations managing multiple locations.
-    /// If not provided, the receipt will be issued under the parent company.
-    /// </summary>
-    [JsonPropertyName("childCompanyId")]
-    public Guid? childCompanyId { get; }
-
-    /// <summary>
-    /// A unique document identifier provided by the seller (for example invoice number).
-    /// </summary>
-    [JsonPropertyName("documentNumber")]
-    public string documentNumber { get; }
-
-    /// <summary>
-    /// A list of identifiers for the receipt. For example order number, purchase order number, etc.
-    /// </summary>
-    [JsonPropertyName("identifiers")]
-    public IReadOnlyList<Identifier> identifiers { get; }
-
-    /// <summary>
-    /// The date when the purchase receipt was issued.
-    /// </summary>
-    [JsonPropertyName("issueDate")]
-    public DateTimeOffset issueDate { get; }
-
-    /// <summary>
-    /// The currency in which the purchase receipt is issued.
-    /// Must be a valid ISO 4217 currency code (e.g., "EUR", "USD").
-    /// </summary>
-    [JsonPropertyName("currency")]
-    public string currency { get; }
-
-    /// <summary>
-    /// The subtotal of the invoice, calculated as the sum of all line items before any overall
-    /// invoice-level adjustments or taxes.
-    /// This amount represents the total value of goods or services listed on the invoice.
-    /// </summary>
-    [JsonPropertyName("receiptSubtotal")]
-    public decimal receiptSubtotal { get; }
-
-    /// <summary>
-    /// The total amount of the invoice excluding taxes, but including any overall discounts or charges.
-    /// This amount may differ from the receiptSubtotal if there are invoice-level adjustments.
-    /// </summary>
-    [JsonPropertyName("totalBeforeTax")]
-    public decimal totalBeforeTax { get; }
-
-    /// <summary>
-    /// The total tax amount for the receipt.
-    /// This should equal the sum of all tax amounts in the taxes list.
-    /// </summary>
-    [JsonPropertyName("totalTaxAmount")]
-    public decimal totalTaxAmount { get; }
-
-    /// <summary>
-    /// The total amount charged to the customer.
-    /// Should equal totalBeforeTax + totalTaxAmount.
-    /// </summary>
-    [JsonPropertyName("totalAmount")]
-    public decimal totalAmount { get; }
-
-    /// <summary>
-    /// The list of products included in the purchase receipt.
-    /// Must contain at least one product.
-    /// </summary>
-    [JsonPropertyName("products")]
-    public IReadOnlyList<Product> products { get; }
-
-    /// <summary>
-    /// Overall discounts applied at the receipt level (not product-specific).
-    /// Examples: "Loyalty discount", "Coupon code", "Volume discount"
-    /// </summary>
-    [JsonPropertyName("discounts")]
-    public IReadOnlyList<Discount> discounts { get; }
-
-    /// <summary>
-    /// Overall charges applied at the receipt level (not product-specific).
-    /// Examples: "Delivery fee", "Service charge", "Payment processing fee"
-    /// </summary>
-    [JsonPropertyName("charges")]
-    public IReadOnlyList<Charge> charges { get; }
-
-    /// <summary>
-    /// Tax breakdown for the receipt.
-    /// Each Tax entry represents a tax category applied to the receipt (e.g., VAT 21%, VAT 9%).
-    /// If no taxes are applied, then you need a tax category with 0% rate.
-    /// The total tax amount is the sum of all tax amounts in this list.
-    /// </summary>
-    [JsonPropertyName("taxes")]
-    public IReadOnlyList<Tax> taxes { get; }
-
-    // ===== OPTIONAL FIELDS =====
-
-    /// <summary>
-    /// The date when the purchase transaction was initiated.
-    /// Only needed when different from the issue date.
-    /// </summary>
-    [JsonPropertyName("transactionDate")]
-    public DateTimeOffset? transactionDate { get; }
-
-    /// <summary>
-    /// The date when the purchase was made.
-    /// Only needed when different from the issue date.
-    /// </summary>
-    [JsonPropertyName("purchaseDate")]
-    public DateTimeOffset? purchaseDate { get; }
-
-    /// <summary>
-    /// The billing or service period covered by this receipt.
-    /// Use this when the purchase covers a specific time range rather than a single point in time.
-    /// 
-    /// <para>Common use cases:</para>
-    /// <list type="bullet">
-    ///   <item>Subscription services (e.g., monthly SaaS subscription from Jan 1 - Jan 31)</item>
-    ///   <item>Rental periods (e.g., car rental from Dec 1 - Dec 7)</item>
-    ///   <item>Utility bills (e.g., electricity usage from Nov 1 - Nov 30)</item>
-    ///   <item>Service contracts (e.g., maintenance contract from Q1 2024)</item>
-    /// </list>
-    /// 
-    /// <para>Leave empty for one-time purchases or instant transactions.</para>
-    /// </summary>
-    [JsonPropertyName("period")]
-    public Period? period { get; }
-
-    /// <summary>
-    /// A note that the seller wants to include on the purchase receipt.
-    /// </summary>
-    [JsonPropertyName("note")]
-    public string? note { get; }
-
-    // ===== CONSTRUCTOR =====
-
-    public ReceiptTemplateRequest(
-        Guid? childCompanyId,
-        string documentNumber,
-        IEnumerable<Identifier>? identifiers,
-        DateTimeOffset issueDate,
-        string currency,
-        decimal receiptSubtotal,
-        decimal totalBeforeTax,
-        decimal totalTaxAmount,
-        decimal totalAmount,
-        IEnumerable<Product>? products,
-        IEnumerable<Discount>? discounts,
-        IEnumerable<Charge>? charges,
-        IEnumerable<Tax>? taxes,
-        DateTimeOffset? transactionDate,
-        DateTimeOffset? purchaseDate,
-        Period? period,
-        string? note)
-    {
-        this.childCompanyId = childCompanyId;
-        this.documentNumber = documentNumber;
-        this.identifiers = identifiers?.ToList().AsReadOnly() ?? new List<Identifier>().AsReadOnly();
-        this.issueDate = issueDate;
-        this.currency = currency;
-        this.receiptSubtotal = receiptSubtotal;
-        this.totalBeforeTax = totalBeforeTax;
-        this.totalTaxAmount = totalTaxAmount;
-        this.totalAmount = totalAmount;
-        this.products = products?.ToList().AsReadOnly() ?? new List<Product>().AsReadOnly();
-        this.discounts = discounts?.ToList().AsReadOnly() ?? new List<Discount>().AsReadOnly();
-        this.charges = charges?.ToList().AsReadOnly() ?? new List<Charge>().AsReadOnly();
-        this.taxes = taxes?.ToList().AsReadOnly() ?? new List<Tax>().AsReadOnly();
-        this.transactionDate = transactionDate;
-        this.purchaseDate = purchaseDate;
-        this.period = period;
-        this.note = note;
-    }
-
-    public ReceiptTemplateRequest(
-        string documentNumber,
-        DateTimeOffset issueDate,
-        string currency,
-        decimal receiptSubtotal,
-        decimal totalBeforeTax,
-        decimal totalTaxAmount,
-        decimal totalAmount,
-        IEnumerable<Product> products,
-        IEnumerable<Tax> taxes,
-        Guid? childCompanyId = null,
-        IEnumerable<Identifier>? identifiers = null,
-        IEnumerable<Discount>? discounts = null,
-        IEnumerable<Charge>? charges = null,
-        DateTimeOffset? transactionDate = null,
-        DateTimeOffset? purchaseDate = null,
-        Period? period = null,
-        string? note = null)
-        : this(
-            childCompanyId,
-            documentNumber,
-            identifiers,
-            issueDate,
-            currency,
-            receiptSubtotal,
-            totalBeforeTax,
-            totalTaxAmount,
-            totalAmount,
-            products,
-            discounts,
-            charges,
-            taxes,
-            transactionDate,
-            purchaseDate,
-            period,
-            note)
-    {
-    }
-
-    public Guid? ChildCompanyId => childCompanyId;
-    public string DocumentNumber => documentNumber;
-    public IReadOnlyList<Identifier> Identifiers => identifiers;
-    public DateTimeOffset IssueDate => issueDate;
-    public string Currency => currency;
-    public decimal ReceiptSubtotal => receiptSubtotal;
-    public decimal TotalBeforeTax => totalBeforeTax;
-    public decimal TotalTaxAmount => totalTaxAmount;
-    public decimal TotalAmount => totalAmount;
-    public IReadOnlyList<Product> Products => products;
-    public IReadOnlyList<Discount> Discounts => discounts;
-    public IReadOnlyList<Charge> Charges => charges;
-    public IReadOnlyList<Tax> Taxes => taxes;
-    public DateTimeOffset? TransactionDate => transactionDate;
-    public DateTimeOffset? PurchaseDate => purchaseDate;
-    public Period? Period => period;
-    public string? Note => note;
+    public ReceiptTemplateRequest()
+        : base("", default, "", 0, 0, 0, 0, new List<GeneratedModels.Product>()) { }
 
     // ===== BUILDER =====
 
@@ -335,49 +48,49 @@ public class ReceiptTemplateRequest
     {
         private Guid? _childCompanyId;
         private string? _documentNumber;
-        private List<Identifier>? _identifiers;
+        private List<GeneratedModels.Identifier>? _identifiers;
         private DateTimeOffset? _issueDate;
         private string? _currency;
         private decimal? _receiptSubtotal;
         private decimal? _totalBeforeTax;
         private decimal? _totalTaxAmount;
         private decimal? _totalAmount;
-        private List<Product>? _products;
-        private List<Discount>? _discounts;
-        private List<Charge>? _charges;
-        private List<Tax>? _taxes;
+        private List<GeneratedModels.Product>? _products;
+        private List<GeneratedModels.Discount>? _discounts;
+        private List<GeneratedModels.Charge>? _charges;
+        private List<GeneratedModels.Tax>? _taxes;
         private DateTimeOffset? _transactionDate;
         private DateTimeOffset? _purchaseDate;
-        private Period? _period;
+        private GeneratedModels.Period? _period;
         private string? _note;
 
         internal ReceiptTemplateRequestBuilder() { }
 
-        public ReceiptTemplateRequestBuilder ChildCompanyId(Guid? childCompanyId)
+        public ReceiptTemplateRequestBuilder From(GeneratedModels.ReceiptTemplateRequest other)
         {
-            _childCompanyId = childCompanyId;
+            _childCompanyId = other.ChildCompanyId;
+            _documentNumber = other.DocumentNumber;
+            _identifiers = other.Identifiers?.ToList();
+            _issueDate = other.IssueDate;
+            _currency = other.Currency;
+            _receiptSubtotal = other.ReceiptSubtotal;
+            _totalBeforeTax = other.TotalBeforeTax;
+            _totalTaxAmount = other.TotalTaxAmount;
+            _totalAmount = other.TotalAmount;
+            _products = other.Products?.ToList();
+            _discounts = other.Discounts?.ToList();
+            _charges = other.Charges?.ToList();
+            _taxes = other.Taxes?.ToList();
+            _transactionDate = other.TransactionDate;
+            _purchaseDate = other.PurchaseDate;
+            _period = other.Period;
+            _note = other.Note;
             return this;
         }
 
-        public ReceiptTemplateRequestBuilder From(ReceiptTemplateRequest other)
+        public ReceiptTemplateRequestBuilder ChildCompanyId(Guid? childCompanyId)
         {
-            _childCompanyId = other.childCompanyId;
-            _documentNumber = other.documentNumber;
-            _identifiers = other.identifiers.ToList();
-            _issueDate = other.issueDate;
-            _currency = other.currency;
-            _receiptSubtotal = other.receiptSubtotal;
-            _totalBeforeTax = other.totalBeforeTax;
-            _totalTaxAmount = other.totalTaxAmount;
-            _totalAmount = other.totalAmount;
-            _products = other.products.ToList();
-            _discounts = other.discounts.ToList();
-            _charges = other.charges.ToList();
-            _taxes = other.taxes.ToList();
-            _transactionDate = other.transactionDate;
-            _purchaseDate = other.purchaseDate;
-            _period = other.period;
-            _note = other.note;
+            _childCompanyId = childCompanyId;
             return this;
         }
 
@@ -387,7 +100,7 @@ public class ReceiptTemplateRequest
             return this;
         }
 
-        public ReceiptTemplateRequestBuilder Identifiers(List<Identifier> identifiers)
+        public ReceiptTemplateRequestBuilder Identifiers(List<GeneratedModels.Identifier> identifiers)
         {
             _identifiers = identifiers;
             return this;
@@ -399,39 +112,25 @@ public class ReceiptTemplateRequest
             return this;
         }
 
-        /// <summary>
-        /// Sets the currency code (ISO 4217).
-        /// </summary>
-        /// <param name="currency">ISO 4217 currency code (e.g., "EUR", "USD", "GBP")</param>
-        /// <returns>This builder</returns>
-        /// <exception cref="ArgumentException">if the currency code is invalid</exception>
         public ReceiptTemplateRequestBuilder Currency(string currency)
         {
             if (currency != null)
             {
-                try
+                var region = CultureInfo.GetCultures(CultureTypes.SpecificCultures)
+                    .Select(c => new RegionInfo(c.Name))
+                    .FirstOrDefault(r => r.ISOCurrencySymbol == currency);
+
+                if (region == null)
                 {
-                    // Validate using .NET's RegionInfo to check ISO 4217 codes
-                    var region = CultureInfo.GetCultures(CultureTypes.SpecificCultures)
-                        .Select(c => new RegionInfo(c.Name))
-                        .FirstOrDefault(r => r.ISOCurrencySymbol == currency);
-                    
-                    if (region == null)
-                    {
-                        throw new ArgumentException(
-                            $"Invalid currency code: '{currency}'. Must be a valid ISO 4217 code (e.g., EUR, USD, GBP)");
-                    }
-                }
-                catch (ArgumentException)
-                {
-                    throw;
+                    throw new ArgumentException(
+                        $"Invalid currency code: '{currency}'. Must be a valid ISO 4217 code (e.g., EUR, USD, GBP)");
                 }
             }
             _currency = currency;
             return this;
         }
 
-        public ReceiptTemplateRequestBuilder receiptSubtotal(decimal receiptSubtotal)
+        public ReceiptTemplateRequestBuilder ReceiptSubtotal(decimal receiptSubtotal)
         {
             _receiptSubtotal = receiptSubtotal;
             return this;
@@ -473,45 +172,29 @@ public class ReceiptTemplateRequest
             return this;
         }
 
-        public ReceiptTemplateRequestBuilder Products(List<Product> products)
+        public ReceiptTemplateRequestBuilder Products(List<GeneratedModels.Product> products)
         {
             _products = products;
             return this;
         }
 
-        /// <summary>
-        /// Convenience method to add a single product to the receipt.
-        /// </summary>
-        public ReceiptTemplateRequestBuilder AddProduct(Product product)
+        public ReceiptTemplateRequestBuilder AddProduct(GeneratedModels.Product product)
         {
-            _products ??= new List<Product>();
+            _products ??= new List<GeneratedModels.Product>();
             _products.Add(product);
             return this;
         }
 
-        /// <summary>
-        /// Convenience method to add a simple product with basic details.
-        /// All amounts must be pre-calculated by the POS system.
-        /// </summary>
-        /// <param name="identifier">Product identifier/SKU</param>
-        /// <param name="brand">Product brand/manufacturer</param>
-        /// <param name="name">Product name/model</param>
-        /// <param name="unitPrice">Price per unit</param>
-        /// <param name="subtotal">Subtotal (unitPrice × quantity, pre-calculated)</param>
-        /// <param name="taxRate">Tax rate as percentage (e.g., 21.0 for 21%)</param>
-        /// <param name="taxAmount">Tax amount (pre-calculated)</param>
-        /// <param name="total">Total amount including tax (pre-calculated)</param>
-        /// <param name="quantity">Number of units</param>
-        /// <returns>This builder</returns>
-        public ReceiptTemplateRequestBuilder AddProduct(string identifier, string brand, string name, string unitPrice, string subtotal, double taxRate, string taxAmount, string total, double quantity)
+        public ReceiptTemplateRequestBuilder AddProduct(string identifier, string brand, string name,
+            string unitPrice, string subtotal, double taxRate, string taxAmount, string total, double quantity)
         {
             return AddProduct(Product.Builder()
-                .Brand(brand)
+                .BrandName(brand)
                 .Name(name)
                 .Identifier(identifier)
                 .Quantity(quantity)
                 .BaseQuantity(1.0)
-                .UnitCode(UnitCode.ONE)
+                .UnitCode(GeneratedModels.UnitCode.C62)
                 .UnitPrice(unitPrice)
                 .Subtotal(subtotal)
                 .Total(total)
@@ -519,129 +202,92 @@ public class ReceiptTemplateRequest
                 .Build());
         }
 
-        /// <summary>
-        /// Convenience method with decimal amounts.
-        /// </summary>
-        public ReceiptTemplateRequestBuilder AddProduct(string identifier, string brand, string name, decimal unitPrice, decimal subtotal, double taxRate, decimal taxAmount, decimal total, double quantity)
+        public ReceiptTemplateRequestBuilder AddProduct(string identifier, string brand, string name,
+            decimal unitPrice, decimal subtotal, double taxRate, decimal taxAmount, decimal total, double quantity)
         {
-            return AddProduct(identifier, brand, name, unitPrice.ToString(), subtotal.ToString(), taxRate, taxAmount.ToString(), total.ToString(), quantity);
+            return AddProduct(identifier, brand, name, unitPrice.ToString(), subtotal.ToString(),
+                taxRate, taxAmount.ToString(), total.ToString(), quantity);
         }
 
-        public ReceiptTemplateRequestBuilder Discounts(List<Discount> discounts)
+        public ReceiptTemplateRequestBuilder Discounts(List<GeneratedModels.Discount> discounts)
         {
             _discounts = discounts;
             return this;
         }
 
-        /// <summary>
-        /// Convenience method to add a single discount to the receipt.
-        /// </summary>
-        public ReceiptTemplateRequestBuilder AddDiscount(Discount discount)
+        public ReceiptTemplateRequestBuilder AddDiscount(GeneratedModels.Discount discount)
         {
-            _discounts ??= new List<Discount>();
+            _discounts ??= new List<GeneratedModels.Discount>();
             _discounts.Add(discount);
             return this;
         }
 
-        /// <summary>
-        /// Convenience method to add a discount with amount and label.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddDiscount(decimal amount, string label)
         {
             return AddDiscount(Discount.Of(amount, label));
         }
 
-        /// <summary>
-        /// Convenience method to add a discount with amount (string) and label.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddDiscount(string amount, string label)
         {
             return AddDiscount(Discount.Of(decimal.Parse(amount), label));
         }
 
-        /// <summary>
-        /// Convenience method to add a discount with amount, percentage, and label.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddDiscount(decimal amount, double percentage, string label)
         {
             return AddDiscount(Discount.Of(amount, percentage, label));
         }
 
-        /// <summary>
-        /// Convenience method to add a discount with amount (string), percentage, and label.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddDiscount(string amount, double percentage, string label)
         {
             return AddDiscount(Discount.Of(decimal.Parse(amount), percentage, label));
         }
 
-        public ReceiptTemplateRequestBuilder Charges(List<Charge> charges)
+        public ReceiptTemplateRequestBuilder Charges(List<GeneratedModels.Charge> charges)
         {
             _charges = charges;
             return this;
         }
 
-        /// <summary>
-        /// Convenience method to add a single charge to the receipt.
-        /// </summary>
-        public ReceiptTemplateRequestBuilder AddCharge(Charge charge)
+        public ReceiptTemplateRequestBuilder AddCharge(GeneratedModels.Charge charge)
         {
-            _charges ??= new List<Charge>();
+            _charges ??= new List<GeneratedModels.Charge>();
             _charges.Add(charge);
             return this;
         }
 
-        /// <summary>
-        /// Convenience method to add a charge with amount and label.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddCharge(decimal amount, string label)
         {
             return AddCharge(Charge.Of(amount, label));
         }
 
-        /// <summary>
-        /// Convenience method to add a charge with amount (string) and label.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddCharge(string amount, string label)
         {
             return AddCharge(Charge.Of(decimal.Parse(amount), label));
         }
 
-        /// <summary>
-        /// Convenience method to add a charge with amount, percentage, and label.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddCharge(decimal amount, double percentage, string label)
         {
             return AddCharge(Charge.Of(amount, percentage, label));
         }
 
-        /// <summary>
-        /// Convenience method to add a charge with amount (string), percentage, and label.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddCharge(string amount, double percentage, string label)
         {
             return AddCharge(Charge.Of(decimal.Parse(amount), percentage, label));
         }
 
-        public ReceiptTemplateRequestBuilder Taxes(List<Tax> taxes)
+        public ReceiptTemplateRequestBuilder Taxes(List<GeneratedModels.Tax> taxes)
         {
             _taxes = taxes;
             return this;
         }
 
-        /// <summary>
-        /// Convenience method to add a single tax entry.
-        /// </summary>
-        public ReceiptTemplateRequestBuilder AddTax(Tax tax)
+        public ReceiptTemplateRequestBuilder AddTax(GeneratedModels.Tax tax)
         {
-            _taxes ??= new List<Tax>();
+            _taxes ??= new List<GeneratedModels.Tax>();
             _taxes.Add(tax);
             return this;
         }
 
-        /// <summary>
-        /// Convenience method to add a tax with rate, type, and amount.
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddTax(double rate, string type, decimal amount)
         {
             return AddTax(Tax.Builder()
@@ -651,9 +297,6 @@ public class ReceiptTemplateRequest
                 .Build());
         }
 
-        /// <summary>
-        /// Convenience method to add a tax with rate, type, and amount (string).
-        /// </summary>
         public ReceiptTemplateRequestBuilder AddTax(double rate, string type, string amount)
         {
             return AddTax(rate, type, decimal.Parse(amount));
@@ -671,7 +314,7 @@ public class ReceiptTemplateRequest
             return this;
         }
 
-        public ReceiptTemplateRequestBuilder Period(Period? period)
+        public ReceiptTemplateRequestBuilder Period(GeneratedModels.Period? period)
         {
             _period = period;
             return this;
@@ -692,7 +335,7 @@ public class ReceiptTemplateRequest
             if (_currency == null)
                 throw new InvalidOperationException("Currency is required");
             if (_receiptSubtotal == null)
-                throw new InvalidOperationException("receiptSubtotal is required");
+                throw new InvalidOperationException("ReceiptSubtotal is required");
             if (_totalBeforeTax == null)
                 throw new InvalidOperationException("TotalBeforeTax is required");
             if (_totalTaxAmount == null)
@@ -700,89 +343,25 @@ public class ReceiptTemplateRequest
             if (_totalAmount == null)
                 throw new InvalidOperationException("TotalAmount is required");
 
-            return new ReceiptTemplateRequest(
-                _childCompanyId,
-                _documentNumber,
-                _identifiers,
-                _issueDate.Value,
-                _currency,
-                _receiptSubtotal.Value,
-                _totalBeforeTax.Value,
-                _totalTaxAmount.Value,
-                _totalAmount.Value,
-                _products,
-                _discounts,
-                _charges,
-                _taxes,
-                _transactionDate,
-                _purchaseDate,
-                _period,
-                _note
-            );
+            var r = new ReceiptTemplateRequest();
+            r.ChildCompanyId = _childCompanyId;
+            r.DocumentNumber = _documentNumber;
+            r.Identifiers = _identifiers;
+            r.IssueDate = _issueDate.Value;
+            r.Currency = _currency;
+            r.ReceiptSubtotal = _receiptSubtotal.Value;
+            r.TotalBeforeTax = _totalBeforeTax.Value;
+            r.TotalTaxAmount = _totalTaxAmount.Value;
+            r.TotalAmount = _totalAmount.Value;
+            r.Products = _products ?? new List<GeneratedModels.Product>();
+            r.Discounts = _discounts;
+            r.Charges = _charges;
+            r.Taxes = _taxes;
+            r.TransactionDate = _transactionDate;
+            r.PurchaseDate = _purchaseDate;
+            r.Period = _period;
+            r.Note = _note;
+            return r;
         }
-    }
-
-    // ===== EQUALS, HASHCODE, TOSTRING =====
-
-    public override bool Equals(object? obj)
-    {
-        if (obj is not ReceiptTemplateRequest other) return false;
-        return childCompanyId == other.childCompanyId
-            && documentNumber == other.documentNumber
-            && identifiers.SequenceEqual(other.identifiers)
-            && issueDate == other.issueDate
-            && currency == other.currency
-            && receiptSubtotal == other.receiptSubtotal
-            && totalBeforeTax == other.totalBeforeTax
-            && totalTaxAmount == other.totalTaxAmount
-            && totalAmount == other.totalAmount
-            && products.SequenceEqual(other.products)
-            && discounts.SequenceEqual(other.discounts)
-            && charges.SequenceEqual(other.charges)
-            && taxes.SequenceEqual(other.taxes)
-            && transactionDate == other.transactionDate
-            && purchaseDate == other.purchaseDate
-            && Equals(period, other.period)
-            && note == other.note;
-    }
-
-    public override int GetHashCode()
-    {
-        var hash = new HashCode();
-        hash.Add(childCompanyId);
-        hash.Add(documentNumber);
-        hash.Add(issueDate);
-        hash.Add(currency);
-        hash.Add(receiptSubtotal);
-        hash.Add(totalBeforeTax);
-        hash.Add(totalTaxAmount);
-        hash.Add(totalAmount);
-        hash.Add(transactionDate);
-        hash.Add(purchaseDate);
-        hash.Add(period);
-        hash.Add(note);
-        return hash.ToHashCode();
-    }
-
-    public override string ToString()
-    {
-        return $"ReceiptTemplateRequest{{" +
-               $"childCompanyId='{childCompanyId}', " +
-               $"documentNumber='{documentNumber}', " +
-               $"identifiers={identifiers.Count} items, " +
-               $"issueDate={issueDate}, " +
-               $"currency='{currency}', " +
-               $"receiptSubtotal={receiptSubtotal}, " +
-               $"totalBeforeTax={totalBeforeTax}, " +
-               $"totalTaxAmount={totalTaxAmount}, " +
-               $"totalAmount={totalAmount}, " +
-               $"products={products.Count} items, " +
-               $"discounts={discounts.Count} items, " +
-               $"charges={charges.Count} items, " +
-               $"taxes={taxes.Count} items, " +
-               $"transactionDate={transactionDate}, " +
-               $"purchaseDate={purchaseDate}, " +
-               $"period={period}, " +
-               $"note={note}}}";
     }
 }

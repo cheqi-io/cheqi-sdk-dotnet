@@ -3,6 +3,8 @@ using Cheqi.Sdk.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Cryptography;
+using EncryptedReceiptRequestDto = Cheqi.Sdk.Models.Generated.EncryptedReceiptRequest;
+using Recipient = Cheqi.Sdk.Models.Generated.MatchedRecipient;
 
 namespace Cheqi.Sdk.Encryption;
 
@@ -44,39 +46,26 @@ public sealed class EncryptionService
     /// <exception cref="EncryptionException">if encryption fails for any recipient</exception>
     public HashSet<EncryptedReceiptRequestDto> EncryptReceiptForRecipients(string purchaseReceipt, List<Recipient> recipients)
     {
-        _logger.LogInformation("[ENCRYPTION] Starting encryption for {RecipientCount} recipients", recipients.Count);
-        _logger.LogDebug("[ENCRYPTION] Receipt data length: {Length} characters", purchaseReceipt?.Length ?? 0);
-        
         if (recipients == null || recipients.Count == 0)
         {
-            _logger.LogError("[ENCRYPTION] Recipients list is null or empty");
             throw new EncryptionException("Recipients list cannot be null or empty");
         }
 
         try
         {
-            _logger.LogDebug("[ENCRYPTION] Processing {Count} recipients", recipients.Count);
-            
             var encryptedReceipts = new HashSet<EncryptedReceiptRequestDto>();
             for (int i = 0; i < recipients.Count; i++)
             {
                 var recipient = recipients[i];
-                _logger.LogDebug("[ENCRYPTION] Processing recipient {Index}/{Total}: ID={RecipientId}", 
-                    i + 1, recipients.Count, recipient?.id);
-                
                 var encrypted = EncryptReceiptForRecipient(recipient, purchaseReceipt);
                 encryptedReceipts.Add(encrypted);
-                
-                _logger.LogDebug("[ENCRYPTION] Successfully processed recipient {Index}/{Total}", i + 1, recipients.Count);
             }
 
-            _logger.LogInformation("[ENCRYPTION] Successfully encrypted receipt for {RecipientCount} recipients", encryptedReceipts.Count);
             return encryptedReceipts;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "[ENCRYPTION] Failed to encrypt receipt for recipients: {Message}. InnerException: {Inner}", 
-                e.Message, e.InnerException?.Message ?? "none");
+            _logger.LogError(e, "Failed to encrypt receipt for recipients");
             throw new EncryptionException("Failed to encrypt receipt for recipients", e);
         }
     }
@@ -116,68 +105,42 @@ public sealed class EncryptionService
     {
         try
         {
-            _logger.LogInformation("[ENCRYPTION] Encrypting receipt for recipient: {RecipientId}", recipient?.id);
-            
             if (recipient == null)
             {
-                _logger.LogError("[ENCRYPTION] Recipient is null");
                 throw new ArgumentNullException(nameof(recipient), "Recipient cannot be null");
             }
-            
-            _logger.LogDebug("[ENCRYPTION] Recipient details - ID: {Id}, ReceiverType: {Type}, KeyAlgorithm: {Algorithm}, PublicKey length: {KeyLength}",
-                recipient.id, recipient.receiverType, recipient.keyAlgorithm, recipient.publicKey?.Length ?? 0);
-            
-            if (string.IsNullOrEmpty(recipient.publicKey))
+
+            if (string.IsNullOrEmpty(recipient.PublicKey))
             {
-                _logger.LogError("[ENCRYPTION] Recipient {RecipientId} has null or empty public key", recipient.id);
-                throw new EncryptionException($"Recipient {recipient.id} has no public key");
+                throw new EncryptionException($"Recipient {recipient.Id} has no public key");
             }
 
-            // Step 1: Generate unique AES-256 key for this receipt
-            _logger.LogDebug("[ENCRYPTION] Step 1: Generating AES-256 key");
             var aesKey = _keyGenerator.GenerateKey();
-            _logger.LogDebug("[ENCRYPTION] Generated AES key of length: {Length} bytes", aesKey.Length);
 
-            // Step 2: Encrypt receipt data with AES-GCM
-            _logger.LogDebug("[ENCRYPTION] Step 2: Encrypting receipt data with AES-GCM");
             var encryptedData = _aesEncryptor.Encrypt(purchaseReceipt, aesKey);
             var encryptedReceiptBase64 = encryptedData.ToBase64String();
-            _logger.LogDebug("[ENCRYPTION] Encrypted receipt Base64 length: {Length}", encryptedReceiptBase64.Length);
 
-            // Step 3: Encrypt AES key with recipient's RSA public key
-            _logger.LogDebug("[ENCRYPTION] Step 3: Encrypting AES key with RSA public key");
-            _logger.LogDebug("[ENCRYPTION] Public key (full): {PublicKey}", recipient.publicKey);
-            
             try
             {
-                var encryptedSymmetricKey = _rsaKeyEncryptor.EncryptKey(aesKey, recipient.publicKey);
-                _logger.LogDebug("[ENCRYPTION] Encrypted symmetric key length: {Length}", encryptedSymmetricKey.Length);
+                var encryptedSymmetricKey = _rsaKeyEncryptor.EncryptKey(aesKey, recipient.PublicKey);
 
-                // Step 4: Build encrypted receipt DTO
-                _logger.LogDebug("[ENCRYPTION] Step 4: Building encrypted receipt DTO");
-                var dto = EncryptedReceiptRequestDto.Builder()
-                    .RecipientId(recipient.id)
-                    .PublicKey(recipient.publicKey)
-                    .ReceiverType(recipient.receiverType)
-                    .EncryptedReceipt(encryptedReceiptBase64)
-                    .EncryptedSymmetricKey(encryptedSymmetricKey)
-                    .Build();
-                
-                _logger.LogInformation("[ENCRYPTION] Successfully encrypted receipt for recipient {RecipientId}", recipient.id);
+                var dto = new EncryptedReceiptRequestDto();
+                dto.RecipientId = recipient.Id;
+                dto.PublicKey = recipient.PublicKey;
+                dto.EncryptedReceipt = encryptedReceiptBase64;
+                dto.EncryptedSymmetricKey = encryptedSymmetricKey;
                 return dto;
             }
             catch (Exception rsaException)
             {
-                _logger.LogError(rsaException, "[ENCRYPTION] RSA encryption failed. Exception type: {Type}, Message: {Message}, InnerException: {Inner}", 
-                    rsaException.GetType().Name, rsaException.Message, rsaException.InnerException?.Message ?? "none");
+                _logger.LogError(rsaException, "RSA encryption failed for recipient {RecipientId}", recipient.Id);
                 throw;
             }
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "[ENCRYPTION] Failed to encrypt receipt for recipient {RecipientId}: {Message}. Type: {ExceptionType}, InnerException: {Inner}", 
-                recipient?.id, e.Message, e.GetType().Name, e.InnerException?.Message ?? "none");
-            throw new EncryptionException($"Failed to encrypt receipt for recipient: {recipient?.id}", e);
+            _logger.LogError(e, "Failed to encrypt receipt for recipient {RecipientId}", recipient?.Id);
+            throw new EncryptionException($"Failed to encrypt receipt for recipient: {recipient?.Id}", e);
         }
     }
 
@@ -188,7 +151,7 @@ public sealed class EncryptionService
     {
         try
         {
-            _logger.LogDebug("Encrypting credit note for recipient: {RecipientId}", recipient.id);
+            _logger.LogDebug("Encrypting credit note for recipient: {RecipientId}", recipient.Id);
 
             // Step 1: Generate unique AES-256 key for this credit note
             var aesKey = _keyGenerator.GenerateKey();
@@ -198,21 +161,20 @@ public sealed class EncryptionService
             var encryptedCreditNoteBase64 = encryptedData.ToBase64String();
 
             // Step 3: Encrypt AES key with recipient's RSA public key
-            var encryptedSymmetricKey = _rsaKeyEncryptor.EncryptKey(aesKey, recipient.publicKey);
+            var encryptedSymmetricKey = _rsaKeyEncryptor.EncryptKey(aesKey, recipient.PublicKey);
 
             // Step 4: Build encrypted credit note DTO
             return EncryptedCreditNote.CreateBuilder()
-                .RecipientId(recipient.id)
-                .ReceiverType(recipient.receiverType)
-                .PublicKey(recipient.publicKey)
+                .RecipientId(recipient.Id)
+                .PublicKey(recipient.PublicKey)
                 .EncryptedCreditNote(encryptedCreditNoteBase64)
                 .EncryptedSymmetricKey(encryptedSymmetricKey)
                 .Build();
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to encrypt credit note for recipient {RecipientId}: {Message}", recipient.id, e.Message);
-            throw new EncryptionException($"Failed to encrypt credit note for recipient: {recipient.id}", e);
+            _logger.LogError(e, "Failed to encrypt credit note for recipient {RecipientId}: {Message}", recipient.Id, e.Message);
+            throw new EncryptionException($"Failed to encrypt credit note for recipient: {recipient.Id}", e);
         }
     }
 }

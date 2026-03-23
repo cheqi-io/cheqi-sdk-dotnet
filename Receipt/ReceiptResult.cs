@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Cheqi.Sdk.Models;
+using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
 
 namespace Cheqi.Sdk.Receipt;
 
@@ -57,9 +58,9 @@ public class ReceiptResult
         return new ReceiptResult(
             true,
             DeliveryStatus.DELIVERED_DIGITAL,
-            response.cheqiReceiptId,
-            response.createdAt,
-            response.templateHash,
+            response.CheqiReceiptId,
+            response.CreatedAt,
+            response.TemplateHash,
             canonicalJson,
             null,
             "Receipt delivered to customer's Cheqi app"
