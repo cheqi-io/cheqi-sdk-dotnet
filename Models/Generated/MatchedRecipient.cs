@@ -35,7 +35,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="id">Temporary opaque recipient identifier for this match session.</param>
         /// <param name="publicKey">Public key for encrypting receipts for this recipient.</param>
         /// <param name="keyAlgorithm">Algorithm used for the public key (e.g., \&quot;RSA\&quot;, \&quot;RSA_2048\&quot;).</param>
-        /// <param name="acceptedFormats">Receipt formats this recipient accepts (e.g., CHEQI, UBL_XML).</param>
+        /// <param name="acceptedFormats">Receipt formats this recipient accepts (e.g., CHEQI, UBL_PURCHASE_RECEIPT).</param>
         [JsonConstructor]
         public MatchedRecipient(Option<string?> id = default, Option<string?> publicKey = default, Option<string?> keyAlgorithm = default, Option<List<ReceiptFormat>?> acceptedFormats = default)
         {
@@ -98,9 +98,9 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<List<ReceiptFormat>?> AcceptedFormatsOption { get; private set; }
 
         /// <summary>
-        /// Receipt formats this recipient accepts (e.g., CHEQI, UBL_XML).
+        /// Receipt formats this recipient accepts (e.g., CHEQI, UBL_PURCHASE_RECEIPT).
         /// </summary>
-        /// <value>Receipt formats this recipient accepts (e.g., CHEQI, UBL_XML).</value>
+        /// <value>Receipt formats this recipient accepts (e.g., CHEQI, UBL_PURCHASE_RECEIPT).</value>
         [JsonPropertyName("acceptedFormats")]
         public List<ReceiptFormat>? AcceptedFormats { get { return this.AcceptedFormatsOption; } set { this.AcceptedFormatsOption = new(value); } }
 

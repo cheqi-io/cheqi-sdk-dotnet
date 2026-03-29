@@ -36,12 +36,12 @@ public sealed class VerificationService
         return _jsonCanonicalizer.Canonicalize(cheqiReceipt);
     }
 
-    public string CalculateUblXmlHash(string ublXml)
+    public string CalculateUblHash(string ublXml)
     {
         return _xmlCanonicalizer.CalculateHash(ublXml);
     }
 
-    public string CanonicalizeUblXml(string ublXml)
+    public string CanonicalizeUbl(string ublXml)
     {
         return _xmlCanonicalizer.Canonicalize(ublXml);
     }

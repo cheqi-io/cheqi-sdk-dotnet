@@ -32,13 +32,15 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="ReceiptTemplateResponse" /> class.
         /// </summary>
-        /// <param name="ubl">UBL 2.4 XML receipt template as a serialized XML string following the PurchaseReceipt schema. See [UBL XML Receipt Format](https://docs.cheqi.io/receipts/ubl-format) for the full structure and field reference.</param>
+        /// <param name="ublPurchaseReceipt">UBL 2.4 XML receipt template as a serialized XML string following the PurchaseReceipt schema. See [UBL XML Receipt Format](https://docs.cheqi.io/receipts/ubl-format) for the full structure and field reference.</param>
+        /// <param name="ublInvoice">UBL 2.4 XML Invoice template as a serialized XML string following the Invoice schema. Widely supported by accounting systems.</param>
         /// <param name="cheqi">cheqi</param>
         /// <param name="vatMetadata">vatMetadata</param>
         [JsonConstructor]
-        public ReceiptTemplateResponse(Option<string?> ubl = default, Option<CheqiReceipt?> cheqi = default, Option<VatMetadata?> vatMetadata = default)
+        public ReceiptTemplateResponse(Option<string?> ublPurchaseReceipt = default, Option<string?> ublInvoice = default, Option<CheqiReceipt?> cheqi = default, Option<VatMetadata?> vatMetadata = default)
         {
-            UblOption = ubl;
+            UblPurchaseReceiptOption = ublPurchaseReceipt;
+            UblInvoiceOption = ublInvoice;
             CheqiOption = cheqi;
             VatMetadataOption = vatMetadata;
             OnCreated();
@@ -47,19 +49,34 @@ namespace Cheqi.Sdk.Models.Generated
         partial void OnCreated();
 
         /// <summary>
-        /// Used to track the state of Ubl
+        /// Used to track the state of UblPurchaseReceipt
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> UblOption { get; private set; }
+        public Option<string?> UblPurchaseReceiptOption { get; private set; }
 
         /// <summary>
         /// UBL 2.4 XML receipt template as a serialized XML string following the PurchaseReceipt schema. See [UBL XML Receipt Format](https://docs.cheqi.io/receipts/ubl-format) for the full structure and field reference.
         /// </summary>
         /// <value>UBL 2.4 XML receipt template as a serialized XML string following the PurchaseReceipt schema. See [UBL XML Receipt Format](https://docs.cheqi.io/receipts/ubl-format) for the full structure and field reference.</value>
         /* <example>&lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8&quot;?&gt;&lt;PurchaseReceipt xmlns&#x3D;&quot;urn:oasis:names:specification:ubl:schema:xsd:PurchaseReceipt-2&quot;&gt;...&lt;/PurchaseReceipt&gt;</example> */
-        [JsonPropertyName("ubl")]
-        public string? Ubl { get { return this.UblOption; } set { this.UblOption = new(value); } }
+        [JsonPropertyName("ublPurchaseReceipt")]
+        public string? UblPurchaseReceipt { get { return this.UblPurchaseReceiptOption; } set { this.UblPurchaseReceiptOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of UblInvoice
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> UblInvoiceOption { get; private set; }
+
+        /// <summary>
+        /// UBL 2.4 XML Invoice template as a serialized XML string following the Invoice schema. Widely supported by accounting systems.
+        /// </summary>
+        /// <value>UBL 2.4 XML Invoice template as a serialized XML string following the Invoice schema. Widely supported by accounting systems.</value>
+        /* <example>&lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8&quot;?&gt;&lt;Invoice xmlns&#x3D;&quot;urn:oasis:names:specification:ubl:schema:xsd:Invoice-2&quot;&gt;...&lt;/Invoice&gt;</example> */
+        [JsonPropertyName("ublInvoice")]
+        public string? UblInvoice { get { return this.UblInvoiceOption; } set { this.UblInvoiceOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Cheqi
@@ -95,7 +112,8 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class ReceiptTemplateResponse {\n");
-            sb.Append("  Ubl: ").Append(Ubl).Append("\n");
+            sb.Append("  UblPurchaseReceipt: ").Append(UblPurchaseReceipt).Append("\n");
+            sb.Append("  UblInvoice: ").Append(UblInvoice).Append("\n");
             sb.Append("  Cheqi: ").Append(Cheqi).Append("\n");
             sb.Append("  VatMetadata: ").Append(VatMetadata).Append("\n");
             sb.Append("}\n");
@@ -125,7 +143,8 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<string?> ubl = default;
+            Option<string?> ublPurchaseReceipt = default;
+            Option<string?> ublInvoice = default;
             Option<CheqiReceipt?> cheqi = default;
             Option<VatMetadata?> vatMetadata = default;
 
@@ -144,8 +163,11 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
-                        case "ubl":
-                            ubl = new Option<string?>(utf8JsonReader.GetString()!);
+                        case "ublPurchaseReceipt":
+                            ublPurchaseReceipt = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "ublInvoice":
+                            ublInvoice = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "cheqi":
                             if (utf8JsonReader.TokenType != JsonTokenType.Null)
@@ -161,8 +183,11 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
-            if (ubl.IsSet && ubl.Value == null)
-                throw new ArgumentNullException(nameof(ubl), "Property is not nullable for class ReceiptTemplateResponse.");
+            if (ublPurchaseReceipt.IsSet && ublPurchaseReceipt.Value == null)
+                throw new ArgumentNullException(nameof(ublPurchaseReceipt), "Property is not nullable for class ReceiptTemplateResponse.");
+
+            if (ublInvoice.IsSet && ublInvoice.Value == null)
+                throw new ArgumentNullException(nameof(ublInvoice), "Property is not nullable for class ReceiptTemplateResponse.");
 
             if (cheqi.IsSet && cheqi.Value == null)
                 throw new ArgumentNullException(nameof(cheqi), "Property is not nullable for class ReceiptTemplateResponse.");
@@ -170,7 +195,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (vatMetadata.IsSet && vatMetadata.Value == null)
                 throw new ArgumentNullException(nameof(vatMetadata), "Property is not nullable for class ReceiptTemplateResponse.");
 
-            return new ReceiptTemplateResponse(ubl, cheqi, vatMetadata);
+            return new ReceiptTemplateResponse(ublPurchaseReceipt, ublInvoice, cheqi, vatMetadata);
         }
 
         /// <summary>
@@ -197,8 +222,11 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, ReceiptTemplateResponse receiptTemplateResponse, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (receiptTemplateResponse.UblOption.IsSet && receiptTemplateResponse.Ubl == null)
-                throw new ArgumentNullException(nameof(receiptTemplateResponse.Ubl), "Property is required for class ReceiptTemplateResponse.");
+            if (receiptTemplateResponse.UblPurchaseReceiptOption.IsSet && receiptTemplateResponse.UblPurchaseReceipt == null)
+                throw new ArgumentNullException(nameof(receiptTemplateResponse.UblPurchaseReceipt), "Property is required for class ReceiptTemplateResponse.");
+
+            if (receiptTemplateResponse.UblInvoiceOption.IsSet && receiptTemplateResponse.UblInvoice == null)
+                throw new ArgumentNullException(nameof(receiptTemplateResponse.UblInvoice), "Property is required for class ReceiptTemplateResponse.");
 
             if (receiptTemplateResponse.CheqiOption.IsSet && receiptTemplateResponse.Cheqi == null)
                 throw new ArgumentNullException(nameof(receiptTemplateResponse.Cheqi), "Property is required for class ReceiptTemplateResponse.");
@@ -206,8 +234,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (receiptTemplateResponse.VatMetadataOption.IsSet && receiptTemplateResponse.VatMetadata == null)
                 throw new ArgumentNullException(nameof(receiptTemplateResponse.VatMetadata), "Property is required for class ReceiptTemplateResponse.");
 
-            if (receiptTemplateResponse.UblOption.IsSet)
-                writer.WriteString("ubl", receiptTemplateResponse.Ubl);
+            if (receiptTemplateResponse.UblPurchaseReceiptOption.IsSet)
+                writer.WriteString("ublPurchaseReceipt", receiptTemplateResponse.UblPurchaseReceipt);
+
+            if (receiptTemplateResponse.UblInvoiceOption.IsSet)
+                writer.WriteString("ublInvoice", receiptTemplateResponse.UblInvoice);
 
             if (receiptTemplateResponse.CheqiOption.IsSet)
             {

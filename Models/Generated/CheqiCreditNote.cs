@@ -50,9 +50,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="note">A note included on the credit note.</param>
         /// <param name="sellingParty">sellingParty</param>
         /// <param name="receivingParty">receivingParty</param>
-        /// <param name="verificationNonce">The verification nonce of the credit note</param>
+        /// <param name="receiptUuid">The verification nonce of the credit note</param>
         [JsonConstructor]
-        public CheqiCreditNote(Option<string?> cheqiCreditNoteId = default, Option<string?> documentNumber = default, Option<string?> originatorDocumentReference = default, Option<List<Identifier>?> identifiers = default, Option<DateTimeOffset?> issueDate = default, Option<string?> currency = default, Option<decimal?> creditNoteSubtotal = default, Option<decimal?> totalBeforeTax = default, Option<decimal?> totalTaxAmount = default, Option<decimal?> totalAmount = default, Option<List<Product>?> products = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Tax>?> taxes = default, Option<Period?> period = default, Option<string?> note = default, Option<SellingParty?> sellingParty = default, Option<ReceivingParty?> receivingParty = default, Option<string?> verificationNonce = default)
+        public CheqiCreditNote(Option<string?> cheqiCreditNoteId = default, Option<string?> documentNumber = default, Option<string?> originatorDocumentReference = default, Option<List<Identifier>?> identifiers = default, Option<DateTimeOffset?> issueDate = default, Option<string?> currency = default, Option<decimal?> creditNoteSubtotal = default, Option<decimal?> totalBeforeTax = default, Option<decimal?> totalTaxAmount = default, Option<decimal?> totalAmount = default, Option<List<Product>?> products = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Tax>?> taxes = default, Option<Period?> period = default, Option<string?> note = default, Option<SellingParty?> sellingParty = default, Option<ReceivingParty?> receivingParty = default, Option<string?> receiptUuid = default)
         {
             CheqiCreditNoteIdOption = cheqiCreditNoteId;
             DocumentNumberOption = documentNumber;
@@ -72,7 +72,7 @@ namespace Cheqi.Sdk.Models.Generated
             NoteOption = note;
             SellingPartyOption = sellingParty;
             ReceivingPartyOption = receivingParty;
-            VerificationNonceOption = verificationNonce;
+            ReceiptUuidOption = receiptUuid;
             OnCreated();
         }
 
@@ -338,18 +338,18 @@ namespace Cheqi.Sdk.Models.Generated
         public ReceivingParty? ReceivingParty { get { return this.ReceivingPartyOption; } set { this.ReceivingPartyOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of VerificationNonce
+        /// Used to track the state of ReceiptUuid
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> VerificationNonceOption { get; private set; }
+        public Option<string?> ReceiptUuidOption { get; private set; }
 
         /// <summary>
         /// The verification nonce of the credit note
         /// </summary>
         /// <value>The verification nonce of the credit note</value>
-        [JsonPropertyName("verificationNonce")]
-        public string? VerificationNonce { get { return this.VerificationNonceOption; } set { this.VerificationNonceOption = new(value); } }
+        [JsonPropertyName("receiptUuid")]
+        public string? ReceiptUuid { get { return this.ReceiptUuidOption; } set { this.ReceiptUuidOption = new(value); } }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -377,7 +377,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  Note: ").Append(Note).Append("\n");
             sb.Append("  SellingParty: ").Append(SellingParty).Append("\n");
             sb.Append("  ReceivingParty: ").Append(ReceivingParty).Append("\n");
-            sb.Append("  VerificationNonce: ").Append(VerificationNonce).Append("\n");
+            sb.Append("  ReceiptUuid: ").Append(ReceiptUuid).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -428,7 +428,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> note = default;
             Option<SellingParty?> sellingParty = default;
             Option<ReceivingParty?> receivingParty = default;
-            Option<string?> verificationNonce = default;
+            Option<string?> receiptUuid = default;
 
             while (utf8JsonReader.Read())
             {
@@ -512,8 +512,8 @@ namespace Cheqi.Sdk.Models.Generated
                             if (utf8JsonReader.TokenType != JsonTokenType.Null)
                                 receivingParty = new Option<ReceivingParty?>(JsonSerializer.Deserialize<ReceivingParty>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
-                        case "verificationNonce":
-                            verificationNonce = new Option<string?>(utf8JsonReader.GetString()!);
+                        case "receiptUuid":
+                            receiptUuid = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         default:
                             break;
@@ -575,10 +575,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (receivingParty.IsSet && receivingParty.Value == null)
                 throw new ArgumentNullException(nameof(receivingParty), "Property is not nullable for class CheqiCreditNote.");
 
-            if (verificationNonce.IsSet && verificationNonce.Value == null)
-                throw new ArgumentNullException(nameof(verificationNonce), "Property is not nullable for class CheqiCreditNote.");
+            if (receiptUuid.IsSet && receiptUuid.Value == null)
+                throw new ArgumentNullException(nameof(receiptUuid), "Property is not nullable for class CheqiCreditNote.");
 
-            return new CheqiCreditNote(cheqiCreditNoteId, documentNumber, originatorDocumentReference, identifiers, issueDate, currency, creditNoteSubtotal, totalBeforeTax, totalTaxAmount, totalAmount, products, discounts, charges, taxes, period, note, sellingParty, receivingParty, verificationNonce);
+            return new CheqiCreditNote(cheqiCreditNoteId, documentNumber, originatorDocumentReference, identifiers, issueDate, currency, creditNoteSubtotal, totalBeforeTax, totalTaxAmount, totalAmount, products, discounts, charges, taxes, period, note, sellingParty, receivingParty, receiptUuid);
         }
 
         /// <summary>
@@ -644,8 +644,8 @@ namespace Cheqi.Sdk.Models.Generated
             if (cheqiCreditNote.ReceivingPartyOption.IsSet && cheqiCreditNote.ReceivingParty == null)
                 throw new ArgumentNullException(nameof(cheqiCreditNote.ReceivingParty), "Property is required for class CheqiCreditNote.");
 
-            if (cheqiCreditNote.VerificationNonceOption.IsSet && cheqiCreditNote.VerificationNonce == null)
-                throw new ArgumentNullException(nameof(cheqiCreditNote.VerificationNonce), "Property is required for class CheqiCreditNote.");
+            if (cheqiCreditNote.ReceiptUuidOption.IsSet && cheqiCreditNote.ReceiptUuid == null)
+                throw new ArgumentNullException(nameof(cheqiCreditNote.ReceiptUuid), "Property is required for class CheqiCreditNote.");
 
             if (cheqiCreditNote.CheqiCreditNoteIdOption.IsSet)
                 writer.WriteString("cheqiCreditNoteId", cheqiCreditNote.CheqiCreditNoteId);
@@ -717,8 +717,8 @@ namespace Cheqi.Sdk.Models.Generated
                 writer.WritePropertyName("receivingParty");
                 JsonSerializer.Serialize(writer, cheqiCreditNote.ReceivingParty, jsonSerializerOptions);
             }
-            if (cheqiCreditNote.VerificationNonceOption.IsSet)
-                writer.WriteString("verificationNonce", cheqiCreditNote.VerificationNonce);
+            if (cheqiCreditNote.ReceiptUuidOption.IsSet)
+                writer.WriteString("receiptUuid", cheqiCreditNote.ReceiptUuid);
         }
     }
 }

@@ -8,7 +8,7 @@ public sealed class VerificationServiceTests
     private readonly VerificationService _service = new();
 
     [Fact]
-    public void CalculateUblXmlHash_IgnoresFormattingWhitespaceBetweenElements()
+    public void CalculateUblHash_IgnoresFormattingWhitespaceBetweenElements()
     {
         const string compactXml = "<Invoice><AccountingCustomerParty><Party><Name>Cheqi</Name></Party></AccountingCustomerParty></Invoice>";
         var formattedXml = "<Invoice>\n"
@@ -19,15 +19,15 @@ public sealed class VerificationServiceTests
             + "  </AccountingCustomerParty>\n"
             + "</Invoice>";
 
-        Assert.Equal(_service.CalculateUblXmlHash(compactXml), _service.CalculateUblXmlHash(formattedXml));
+        Assert.Equal(_service.CalculateUblHash(compactXml), _service.CalculateUblHash(formattedXml));
     }
 
     [Fact]
-    public void CalculateUblXmlHash_PreservesMeaningfulTextWhitespace()
+    public void CalculateUblHash_PreservesMeaningfulTextWhitespace()
     {
         const string singleSpaced = "<Invoice><Name>Cheqi BV</Name></Invoice>";
         const string doubleSpaced = "<Invoice><Name>Cheqi  BV</Name></Invoice>";
 
-        Assert.NotEqual(_service.CalculateUblXmlHash(singleSpaced), _service.CalculateUblXmlHash(doubleSpaced));
+        Assert.NotEqual(_service.CalculateUblHash(singleSpaced), _service.CalculateUblHash(doubleSpaced));
     }
 }

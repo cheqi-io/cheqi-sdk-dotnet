@@ -36,9 +36,19 @@ namespace Cheqi.Sdk.Models.Generated
         CHEQI = 1,
 
         /// <summary>
-        /// Enum UBLXML for value: UBL_XML
+        /// Enum UBLPURCHASERECEIPT for value: UBL_PURCHASE_RECEIPT
         /// </summary>
-        UBLXML = 2
+        UBLPURCHASERECEIPT = 2,
+
+        /// <summary>
+        /// Enum UBLINVOICE for value: UBL_INVOICE
+        /// </summary>
+        UBLINVOICE = 3,
+
+        /// <summary>
+        /// Enum UBLCREDITNOTE for value: UBL_CREDIT_NOTE
+        /// </summary>
+        UBLCREDITNOTE = 4
     }
 
     /// <summary>
@@ -56,8 +66,14 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("CHEQI"))
                 return ReceiptFormat.CHEQI;
 
-            if (value.Equals("UBL_XML"))
-                return ReceiptFormat.UBLXML;
+            if (value.Equals("UBL_PURCHASE_RECEIPT"))
+                return ReceiptFormat.UBLPURCHASERECEIPT;
+
+            if (value.Equals("UBL_INVOICE"))
+                return ReceiptFormat.UBLINVOICE;
+
+            if (value.Equals("UBL_CREDIT_NOTE"))
+                return ReceiptFormat.UBLCREDITNOTE;
 
             throw new NotImplementedException($"Could not convert value to type ReceiptFormat: '{value}'");
         }
@@ -72,8 +88,14 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("CHEQI"))
                 return ReceiptFormat.CHEQI;
 
-            if (value.Equals("UBL_XML"))
-                return ReceiptFormat.UBLXML;
+            if (value.Equals("UBL_PURCHASE_RECEIPT"))
+                return ReceiptFormat.UBLPURCHASERECEIPT;
+
+            if (value.Equals("UBL_INVOICE"))
+                return ReceiptFormat.UBLINVOICE;
+
+            if (value.Equals("UBL_CREDIT_NOTE"))
+                return ReceiptFormat.UBLCREDITNOTE;
 
             return null;
         }
@@ -89,8 +111,14 @@ namespace Cheqi.Sdk.Models.Generated
             if (value == ReceiptFormat.CHEQI)
                 return "CHEQI";
 
-            if (value == ReceiptFormat.UBLXML)
-                return "UBL_XML";
+            if (value == ReceiptFormat.UBLPURCHASERECEIPT)
+                return "UBL_PURCHASE_RECEIPT";
+
+            if (value == ReceiptFormat.UBLINVOICE)
+                return "UBL_INVOICE";
+
+            if (value == ReceiptFormat.UBLCREDITNOTE)
+                return "UBL_CREDIT_NOTE";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }

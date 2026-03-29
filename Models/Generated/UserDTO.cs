@@ -39,12 +39,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="phoneNumber">phoneNumber</param>
         /// <param name="gender">gender</param>
         /// <param name="hasCompletedOnboarding">hasCompletedOnboarding</param>
-        /// <param name="addressDto">addressDto</param>
+        /// <param name="address">address</param>
         /// <param name="profileImageId">profileImageId</param>
         /// <param name="roles">roles</param>
         /// <param name="devices">devices</param>
         [JsonConstructor]
-        public UserDTO(Option<Guid?> id = default, Option<string?> firstName = default, Option<string?> lastName = default, Option<List<EmailDto>?> email = default, Option<string?> phoneNumber = default, Option<GenderEnum?> gender = default, Option<bool?> hasCompletedOnboarding = default, Option<AddressDTO?> addressDto = default, Option<string?> profileImageId = default, Option<List<UserDTO.RolesEnum>?> roles = default, Option<List<DeviceDto>?> devices = default)
+        public UserDTO(Option<Guid?> id = default, Option<string?> firstName = default, Option<string?> lastName = default, Option<List<EmailDto>?> email = default, Option<string?> phoneNumber = default, Option<GenderEnum?> gender = default, Option<bool?> hasCompletedOnboarding = default, Option<AddressDTO?> address = default, Option<string?> profileImageId = default, Option<List<UserDTO.RolesEnum>?> roles = default, Option<List<DeviceDto>?> devices = default)
         {
             IdOption = id;
             FirstNameOption = firstName;
@@ -53,7 +53,7 @@ namespace Cheqi.Sdk.Models.Generated
             PhoneNumberOption = phoneNumber;
             GenderOption = gender;
             HasCompletedOnboardingOption = hasCompletedOnboarding;
-            AddressDtoOption = addressDto;
+            AddressOption = address;
             ProfileImageIdOption = profileImageId;
             RolesOption = roles;
             DevicesOption = devices;
@@ -300,17 +300,17 @@ namespace Cheqi.Sdk.Models.Generated
         public bool? HasCompletedOnboarding { get { return this.HasCompletedOnboardingOption; } set { this.HasCompletedOnboardingOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of AddressDto
+        /// Used to track the state of Address
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<AddressDTO?> AddressDtoOption { get; private set; }
+        public Option<AddressDTO?> AddressOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets AddressDto
+        /// Gets or Sets Address
         /// </summary>
-        [JsonPropertyName("addressDto")]
-        public AddressDTO? AddressDto { get { return this.AddressDtoOption; } set { this.AddressDtoOption = new(value); } }
+        [JsonPropertyName("address")]
+        public AddressDTO? Address { get { return this.AddressOption; } set { this.AddressOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of ProfileImageId
@@ -366,7 +366,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  PhoneNumber: ").Append(PhoneNumber).Append("\n");
             sb.Append("  Gender: ").Append(Gender).Append("\n");
             sb.Append("  HasCompletedOnboarding: ").Append(HasCompletedOnboarding).Append("\n");
-            sb.Append("  AddressDto: ").Append(AddressDto).Append("\n");
+            sb.Append("  Address: ").Append(Address).Append("\n");
             sb.Append("  ProfileImageId: ").Append(ProfileImageId).Append("\n");
             sb.Append("  Roles: ").Append(Roles).Append("\n");
             sb.Append("  Devices: ").Append(Devices).Append("\n");
@@ -404,7 +404,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> phoneNumber = default;
             Option<UserDTO.GenderEnum?> gender = default;
             Option<bool?> hasCompletedOnboarding = default;
-            Option<AddressDTO?> addressDto = default;
+            Option<AddressDTO?> address = default;
             Option<string?> profileImageId = default;
             Option<List<UserDTO.RolesEnum>?> roles = default;
             Option<List<DeviceDto>?> devices = default;
@@ -450,9 +450,9 @@ namespace Cheqi.Sdk.Models.Generated
                             if (utf8JsonReader.TokenType != JsonTokenType.Null)
                                 hasCompletedOnboarding = new Option<bool?>(utf8JsonReader.GetBoolean());
                             break;
-                        case "addressDto":
+                        case "address":
                             if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                addressDto = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
+                                address = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "profileImageId":
                             profileImageId = new Option<string?>(utf8JsonReader.GetString()!);
@@ -492,8 +492,8 @@ namespace Cheqi.Sdk.Models.Generated
             if (hasCompletedOnboarding.IsSet && hasCompletedOnboarding.Value == null)
                 throw new ArgumentNullException(nameof(hasCompletedOnboarding), "Property is not nullable for class UserDTO.");
 
-            if (addressDto.IsSet && addressDto.Value == null)
-                throw new ArgumentNullException(nameof(addressDto), "Property is not nullable for class UserDTO.");
+            if (address.IsSet && address.Value == null)
+                throw new ArgumentNullException(nameof(address), "Property is not nullable for class UserDTO.");
 
             if (profileImageId.IsSet && profileImageId.Value == null)
                 throw new ArgumentNullException(nameof(profileImageId), "Property is not nullable for class UserDTO.");
@@ -504,7 +504,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (devices.IsSet && devices.Value == null)
                 throw new ArgumentNullException(nameof(devices), "Property is not nullable for class UserDTO.");
 
-            return new UserDTO(id, firstName, lastName, email, phoneNumber, gender, hasCompletedOnboarding, addressDto, profileImageId, roles, devices);
+            return new UserDTO(id, firstName, lastName, email, phoneNumber, gender, hasCompletedOnboarding, address, profileImageId, roles, devices);
         }
 
         /// <summary>
@@ -543,8 +543,8 @@ namespace Cheqi.Sdk.Models.Generated
             if (userDTO.PhoneNumberOption.IsSet && userDTO.PhoneNumber == null)
                 throw new ArgumentNullException(nameof(userDTO.PhoneNumber), "Property is required for class UserDTO.");
 
-            if (userDTO.AddressDtoOption.IsSet && userDTO.AddressDto == null)
-                throw new ArgumentNullException(nameof(userDTO.AddressDto), "Property is required for class UserDTO.");
+            if (userDTO.AddressOption.IsSet && userDTO.Address == null)
+                throw new ArgumentNullException(nameof(userDTO.Address), "Property is required for class UserDTO.");
 
             if (userDTO.ProfileImageIdOption.IsSet && userDTO.ProfileImageId == null)
                 throw new ArgumentNullException(nameof(userDTO.ProfileImageId), "Property is required for class UserDTO.");
@@ -577,10 +577,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (userDTO.HasCompletedOnboardingOption.IsSet)
                 writer.WriteBoolean("hasCompletedOnboarding", userDTO.HasCompletedOnboardingOption.Value!.Value);
 
-            if (userDTO.AddressDtoOption.IsSet)
+            if (userDTO.AddressOption.IsSet)
             {
-                writer.WritePropertyName("addressDto");
-                JsonSerializer.Serialize(writer, userDTO.AddressDto, jsonSerializerOptions);
+                writer.WritePropertyName("address");
+                JsonSerializer.Serialize(writer, userDTO.Address, jsonSerializerOptions);
             }
             if (userDTO.ProfileImageIdOption.IsSet)
                 writer.WriteString("profileImageId", userDTO.ProfileImageId);

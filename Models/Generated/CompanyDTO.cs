@@ -35,7 +35,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="companyName">companyName</param>
         /// <param name="companyLegalName">companyLegalName</param>
         /// <param name="taxNumber">taxNumber</param>
-        /// <param name="addressDto">addressDto</param>
+        /// <param name="address">address</param>
         /// <param name="companyEmail">companyEmail</param>
         /// <param name="id">id</param>
         /// <param name="phoneNumber">phoneNumber</param>
@@ -53,12 +53,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="accountPausedReason">accountPausedReason</param>
         /// <param name="notificationCodeEnabled">notificationCodeEnabled</param>
         [JsonConstructor]
-        public CompanyDTO(string companyName, string companyLegalName, string taxNumber, AddressDTO addressDto, string companyEmail, Option<Guid?> id = default, Option<string?> phoneNumber = default, Option<List<ContactDetailDto>?> contactDetails = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<string?> website = default, Option<int?> returnDays = default, Option<string?> companyReceiptText = default, Option<string?> companyLogoUrl = default, Option<DateTimeOffset?> companyLogoUrlExpiresAt = default, Option<List<ClientApplicationDTO>?> clientApplications = default, Option<ReturnProcessingMode?> returnProcessingMode = default, Option<CompanyRole?> userRole = default, Option<bool?> accountPaused = default, Option<string?> accountPausedReason = default, Option<bool?> notificationCodeEnabled = default)
+        public CompanyDTO(string companyName, string companyLegalName, string taxNumber, AddressDTO address, string companyEmail, Option<Guid?> id = default, Option<string?> phoneNumber = default, Option<List<ContactDetailDto>?> contactDetails = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<string?> website = default, Option<int?> returnDays = default, Option<string?> companyReceiptText = default, Option<string?> companyLogoUrl = default, Option<DateTimeOffset?> companyLogoUrlExpiresAt = default, Option<List<ClientApplicationDTO>?> clientApplications = default, Option<ReturnProcessingMode?> returnProcessingMode = default, Option<CompanyRole?> userRole = default, Option<bool?> accountPaused = default, Option<string?> accountPausedReason = default, Option<bool?> notificationCodeEnabled = default)
         {
             CompanyName = companyName;
             CompanyLegalName = companyLegalName;
             TaxNumber = taxNumber;
-            AddressDto = addressDto;
+            Address = address;
             CompanyEmail = companyEmail;
             IdOption = id;
             PhoneNumberOption = phoneNumber;
@@ -125,10 +125,10 @@ namespace Cheqi.Sdk.Models.Generated
         public string TaxNumber { get; set; }
 
         /// <summary>
-        /// Gets or Sets AddressDto
+        /// Gets or Sets Address
         /// </summary>
-        [JsonPropertyName("addressDto")]
-        public AddressDTO AddressDto { get; set; }
+        [JsonPropertyName("address")]
+        public AddressDTO Address { get; set; }
 
         /// <summary>
         /// Gets or Sets CompanyEmail
@@ -316,7 +316,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  CompanyName: ").Append(CompanyName).Append("\n");
             sb.Append("  CompanyLegalName: ").Append(CompanyLegalName).Append("\n");
             sb.Append("  TaxNumber: ").Append(TaxNumber).Append("\n");
-            sb.Append("  AddressDto: ").Append(AddressDto).Append("\n");
+            sb.Append("  Address: ").Append(Address).Append("\n");
             sb.Append("  CompanyEmail: ").Append(CompanyEmail).Append("\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  PhoneNumber: ").Append(PhoneNumber).Append("\n");
@@ -368,7 +368,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> companyName = default;
             Option<string?> companyLegalName = default;
             Option<string?> taxNumber = default;
-            Option<AddressDTO?> addressDto = default;
+            Option<AddressDTO?> address = default;
             Option<string?> companyEmail = default;
             Option<Guid?> id = default;
             Option<string?> phoneNumber = default;
@@ -410,9 +410,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "taxNumber":
                             taxNumber = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
-                        case "addressDto":
+                        case "address":
                             if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                addressDto = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
+                                address = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "companyEmail":
                             companyEmail = new Option<string?>(utf8JsonReader.GetString()!);
@@ -489,8 +489,8 @@ namespace Cheqi.Sdk.Models.Generated
             if (!taxNumber.IsSet)
                 throw new ArgumentException("Property is required for class CompanyDTO.", nameof(taxNumber));
 
-            if (!addressDto.IsSet)
-                throw new ArgumentException("Property is required for class CompanyDTO.", nameof(addressDto));
+            if (!address.IsSet)
+                throw new ArgumentException("Property is required for class CompanyDTO.", nameof(address));
 
             if (!companyEmail.IsSet)
                 throw new ArgumentException("Property is required for class CompanyDTO.", nameof(companyEmail));
@@ -504,8 +504,8 @@ namespace Cheqi.Sdk.Models.Generated
             if (taxNumber.IsSet && taxNumber.Value == null)
                 throw new ArgumentNullException(nameof(taxNumber), "Property is not nullable for class CompanyDTO.");
 
-            if (addressDto.IsSet && addressDto.Value == null)
-                throw new ArgumentNullException(nameof(addressDto), "Property is not nullable for class CompanyDTO.");
+            if (address.IsSet && address.Value == null)
+                throw new ArgumentNullException(nameof(address), "Property is not nullable for class CompanyDTO.");
 
             if (companyEmail.IsSet && companyEmail.Value == null)
                 throw new ArgumentNullException(nameof(companyEmail), "Property is not nullable for class CompanyDTO.");
@@ -555,7 +555,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (notificationCodeEnabled.IsSet && notificationCodeEnabled.Value == null)
                 throw new ArgumentNullException(nameof(notificationCodeEnabled), "Property is not nullable for class CompanyDTO.");
 
-            return new CompanyDTO(companyName.Value!, companyLegalName.Value!, taxNumber.Value!, addressDto.Value!, companyEmail.Value!, id, phoneNumber, contactDetails, identifiers, website, returnDays, companyReceiptText, companyLogoUrl, companyLogoUrlExpiresAt, clientApplications, returnProcessingMode, userRole, accountPaused, accountPausedReason, notificationCodeEnabled);
+            return new CompanyDTO(companyName.Value!, companyLegalName.Value!, taxNumber.Value!, address.Value!, companyEmail.Value!, id, phoneNumber, contactDetails, identifiers, website, returnDays, companyReceiptText, companyLogoUrl, companyLogoUrlExpiresAt, clientApplications, returnProcessingMode, userRole, accountPaused, accountPausedReason, notificationCodeEnabled);
         }
 
         /// <summary>
@@ -591,8 +591,8 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyDTO.TaxNumber == null)
                 throw new ArgumentNullException(nameof(companyDTO.TaxNumber), "Property is required for class CompanyDTO.");
 
-            if (companyDTO.AddressDto == null)
-                throw new ArgumentNullException(nameof(companyDTO.AddressDto), "Property is required for class CompanyDTO.");
+            if (companyDTO.Address == null)
+                throw new ArgumentNullException(nameof(companyDTO.Address), "Property is required for class CompanyDTO.");
 
             if (companyDTO.CompanyEmail == null)
                 throw new ArgumentNullException(nameof(companyDTO.CompanyEmail), "Property is required for class CompanyDTO.");
@@ -627,8 +627,8 @@ namespace Cheqi.Sdk.Models.Generated
 
             writer.WriteString("taxNumber", companyDTO.TaxNumber);
 
-            writer.WritePropertyName("addressDto");
-            JsonSerializer.Serialize(writer, companyDTO.AddressDto, jsonSerializerOptions);
+            writer.WritePropertyName("address");
+            JsonSerializer.Serialize(writer, companyDTO.Address, jsonSerializerOptions);
             writer.WriteString("companyEmail", companyDTO.CompanyEmail);
 
             if (companyDTO.IdOption.IsSet)

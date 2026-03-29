@@ -94,9 +94,9 @@ public sealed class CreditNote
     public List<TaxTotal>? TaxTotal { get; set; }
 
     /// <summary>
-    /// Verification nonce.
+    /// Receipt UUID.
     /// </summary>
-    [JsonPropertyName("verificationNonce")]
-    [XmlIgnore]
-    public string? VerificationNonce { get; set; }
+    [JsonPropertyName("receiptUuid")]
+    [XmlElement("UUID", Namespace = UblNamespaces.Cbc)]
+    public string? ReceiptUuid { get; set; }
 }

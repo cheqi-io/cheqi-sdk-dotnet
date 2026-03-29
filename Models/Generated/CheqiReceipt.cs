@@ -49,9 +49,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="sellingParty">sellingParty</param>
         /// <param name="receivingParty">receivingParty</param>
         /// <param name="barcodes">Optional list of barcodes or QR codes embedded in the receipt</param>
-        /// <param name="verificationNonce">The verification nonce of the receipt</param>
+        /// <param name="receiptUuid">The verification nonce of the receipt</param>
         [JsonConstructor]
-        public CheqiReceipt(Option<decimal?> totalAmount = default, Option<string?> documentNumber = default, Option<List<Identifier>?> identifiers = default, Option<DateTimeOffset?> issueDate = default, Option<string?> currency = default, Option<decimal?> receiptSubtotal = default, Option<decimal?> totalBeforeTax = default, Option<decimal?> totalTaxAmount = default, Option<List<Product>?> products = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Tax>?> taxes = default, Option<Period?> period = default, Option<string?> note = default, Option<SellingParty?> sellingParty = default, Option<ReceivingParty?> receivingParty = default, Option<List<Barcode>?> barcodes = default, Option<string?> verificationNonce = default)
+        public CheqiReceipt(Option<decimal?> totalAmount = default, Option<string?> documentNumber = default, Option<List<Identifier>?> identifiers = default, Option<DateTimeOffset?> issueDate = default, Option<string?> currency = default, Option<decimal?> receiptSubtotal = default, Option<decimal?> totalBeforeTax = default, Option<decimal?> totalTaxAmount = default, Option<List<Product>?> products = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Tax>?> taxes = default, Option<Period?> period = default, Option<string?> note = default, Option<SellingParty?> sellingParty = default, Option<ReceivingParty?> receivingParty = default, Option<List<Barcode>?> barcodes = default, Option<string?> receiptUuid = default)
         {
             TotalAmountOption = totalAmount;
             DocumentNumberOption = documentNumber;
@@ -70,7 +70,7 @@ namespace Cheqi.Sdk.Models.Generated
             SellingPartyOption = sellingParty;
             ReceivingPartyOption = receivingParty;
             BarcodesOption = barcodes;
-            VerificationNonceOption = verificationNonce;
+            ReceiptUuidOption = receiptUuid;
             OnCreated();
         }
 
@@ -320,18 +320,18 @@ namespace Cheqi.Sdk.Models.Generated
         public List<Barcode>? Barcodes { get { return this.BarcodesOption; } set { this.BarcodesOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of VerificationNonce
+        /// Used to track the state of ReceiptUuid
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> VerificationNonceOption { get; private set; }
+        public Option<string?> ReceiptUuidOption { get; private set; }
 
         /// <summary>
         /// The verification nonce of the receipt
         /// </summary>
         /// <value>The verification nonce of the receipt</value>
-        [JsonPropertyName("verificationNonce")]
-        public string? VerificationNonce { get { return this.VerificationNonceOption; } set { this.VerificationNonceOption = new(value); } }
+        [JsonPropertyName("receiptUuid")]
+        public string? ReceiptUuid { get { return this.ReceiptUuidOption; } set { this.ReceiptUuidOption = new(value); } }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -358,7 +358,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  SellingParty: ").Append(SellingParty).Append("\n");
             sb.Append("  ReceivingParty: ").Append(ReceivingParty).Append("\n");
             sb.Append("  Barcodes: ").Append(Barcodes).Append("\n");
-            sb.Append("  VerificationNonce: ").Append(VerificationNonce).Append("\n");
+            sb.Append("  ReceiptUuid: ").Append(ReceiptUuid).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -408,7 +408,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<SellingParty?> sellingParty = default;
             Option<ReceivingParty?> receivingParty = default;
             Option<List<Barcode>?> barcodes = default;
-            Option<string?> verificationNonce = default;
+            Option<string?> receiptUuid = default;
 
             while (utf8JsonReader.Read())
             {
@@ -490,8 +490,8 @@ namespace Cheqi.Sdk.Models.Generated
                             if (utf8JsonReader.TokenType != JsonTokenType.Null)
                                 barcodes = new Option<List<Barcode>?>(JsonSerializer.Deserialize<List<Barcode>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
-                        case "verificationNonce":
-                            verificationNonce = new Option<string?>(utf8JsonReader.GetString()!);
+                        case "receiptUuid":
+                            receiptUuid = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         default:
                             break;
@@ -550,10 +550,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (barcodes.IsSet && barcodes.Value == null)
                 throw new ArgumentNullException(nameof(barcodes), "Property is not nullable for class CheqiReceipt.");
 
-            if (verificationNonce.IsSet && verificationNonce.Value == null)
-                throw new ArgumentNullException(nameof(verificationNonce), "Property is not nullable for class CheqiReceipt.");
+            if (receiptUuid.IsSet && receiptUuid.Value == null)
+                throw new ArgumentNullException(nameof(receiptUuid), "Property is not nullable for class CheqiReceipt.");
 
-            return new CheqiReceipt(totalAmount, documentNumber, identifiers, issueDate, currency, receiptSubtotal, totalBeforeTax, totalTaxAmount, products, discounts, charges, taxes, period, note, sellingParty, receivingParty, barcodes, verificationNonce);
+            return new CheqiReceipt(totalAmount, documentNumber, identifiers, issueDate, currency, receiptSubtotal, totalBeforeTax, totalTaxAmount, products, discounts, charges, taxes, period, note, sellingParty, receivingParty, barcodes, receiptUuid);
         }
 
         /// <summary>
@@ -616,8 +616,8 @@ namespace Cheqi.Sdk.Models.Generated
             if (cheqiReceipt.BarcodesOption.IsSet && cheqiReceipt.Barcodes == null)
                 throw new ArgumentNullException(nameof(cheqiReceipt.Barcodes), "Property is required for class CheqiReceipt.");
 
-            if (cheqiReceipt.VerificationNonceOption.IsSet && cheqiReceipt.VerificationNonce == null)
-                throw new ArgumentNullException(nameof(cheqiReceipt.VerificationNonce), "Property is required for class CheqiReceipt.");
+            if (cheqiReceipt.ReceiptUuidOption.IsSet && cheqiReceipt.ReceiptUuid == null)
+                throw new ArgumentNullException(nameof(cheqiReceipt.ReceiptUuid), "Property is required for class CheqiReceipt.");
 
             if (cheqiReceipt.TotalAmountOption.IsSet)
                 writer.WriteNumber("totalAmount", cheqiReceipt.TotalAmountOption.Value!.Value);
@@ -688,8 +688,8 @@ namespace Cheqi.Sdk.Models.Generated
                 writer.WritePropertyName("barcodes");
                 JsonSerializer.Serialize(writer, cheqiReceipt.Barcodes, jsonSerializerOptions);
             }
-            if (cheqiReceipt.VerificationNonceOption.IsSet)
-                writer.WriteString("verificationNonce", cheqiReceipt.VerificationNonce);
+            if (cheqiReceipt.ReceiptUuidOption.IsSet)
+                writer.WriteString("receiptUuid", cheqiReceipt.ReceiptUuid);
         }
     }
 }

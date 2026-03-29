@@ -213,11 +213,11 @@ public sealed class PurchaseReceipt
     public List<PurchaseReceiptLine>? PurchaseReceiptLine { get; set; }
 
     /// <summary>
-    /// Verification nonce for receipt validation.
+    /// Receipt UUID for receipt validation.
     /// </summary>
-    [JsonPropertyName("verificationNonce")]
-    [XmlElement("VerificationNonce", Namespace = UblNamespaces.Cbc)]
-    public string? VerificationNonce { get; set; }
+    [JsonPropertyName("receiptUuid")]
+    [XmlElement("UUID", Namespace = UblNamespaces.Cbc)]
+    public string? ReceiptUuid { get; set; }
 }
 
 /// <summary>
