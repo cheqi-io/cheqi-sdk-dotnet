@@ -38,14 +38,13 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="encryptedCustomerAesKey">Base64-encoded encrypted customer details AES key</param>
         /// <param name="publicKey">Base64-encoded public key used to encrypt the request</param>
         /// <param name="supplierPartyId">Supplier party ID for storage</param>
-        /// <param name="receiptFormats">receiptFormats</param>
         /// <param name="recipientId">The recipient ID of the credit note</param>
         /// <param name="creditNoteId">The credit note ID</param>
         /// <param name="originalReceiptId">The original receipt ID</param>
         /// <param name="receiverType">receiverType</param>
         /// <param name="finalHash">finalHash</param>
         [JsonConstructor]
-        public EncryptedCreditNote(string varEncryptedCreditNote, string encryptedSymmetricKey, string encryptedCustomerDetails, string encryptedCustomerAesKey, string publicKey, Guid supplierPartyId, Option<List<ReceiptFormat>?> receiptFormats = default, Option<string?> recipientId = default, Option<string?> creditNoteId = default, Option<string?> originalReceiptId = default, Option<ReceiverType?> receiverType = default, Option<string?> finalHash = default)
+        public EncryptedCreditNote(string varEncryptedCreditNote, string encryptedSymmetricKey, string encryptedCustomerDetails, string encryptedCustomerAesKey, string publicKey, Guid supplierPartyId, Option<string?> recipientId = default, Option<string?> creditNoteId = default, Option<string?> originalReceiptId = default, Option<ReceiverType?> receiverType = default, Option<string?> finalHash = default)
         {
             VarEncryptedCreditNote = varEncryptedCreditNote;
             EncryptedSymmetricKey = encryptedSymmetricKey;
@@ -53,7 +52,6 @@ namespace Cheqi.Sdk.Models.Generated
             EncryptedCustomerAesKey = encryptedCustomerAesKey;
             PublicKey = publicKey;
             SupplierPartyId = supplierPartyId;
-            ReceiptFormatsOption = receiptFormats;
             RecipientIdOption = recipientId;
             CreditNoteIdOption = creditNoteId;
             OriginalReceiptIdOption = originalReceiptId;
@@ -119,19 +117,6 @@ namespace Cheqi.Sdk.Models.Generated
         /// <value>Supplier party ID for storage</value>
         [JsonPropertyName("supplierPartyId")]
         public Guid SupplierPartyId { get; set; }
-
-        /// <summary>
-        /// Used to track the state of ReceiptFormats
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<List<ReceiptFormat>?> ReceiptFormatsOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets ReceiptFormats
-        /// </summary>
-        [JsonPropertyName("receiptFormats")]
-        public List<ReceiptFormat>? ReceiptFormats { get { return this.ReceiptFormatsOption; } set { this.ReceiptFormatsOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of RecipientId
@@ -205,7 +190,6 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  EncryptedCustomerAesKey: ").Append(EncryptedCustomerAesKey).Append("\n");
             sb.Append("  PublicKey: ").Append(PublicKey).Append("\n");
             sb.Append("  SupplierPartyId: ").Append(SupplierPartyId).Append("\n");
-            sb.Append("  ReceiptFormats: ").Append(ReceiptFormats).Append("\n");
             sb.Append("  RecipientId: ").Append(RecipientId).Append("\n");
             sb.Append("  CreditNoteId: ").Append(CreditNoteId).Append("\n");
             sb.Append("  OriginalReceiptId: ").Append(OriginalReceiptId).Append("\n");
@@ -244,7 +228,6 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> encryptedCustomerAesKey = default;
             Option<string?> publicKey = default;
             Option<Guid?> supplierPartyId = default;
-            Option<List<ReceiptFormat>?> receiptFormats = default;
             Option<string?> recipientId = default;
             Option<string?> creditNoteId = default;
             Option<string?> originalReceiptId = default;
@@ -284,10 +267,6 @@ namespace Cheqi.Sdk.Models.Generated
                         case "supplierPartyId":
                             if (utf8JsonReader.TokenType != JsonTokenType.Null)
                                 supplierPartyId = new Option<Guid?>(utf8JsonReader.GetGuid());
-                            break;
-                        case "receiptFormats":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                receiptFormats = new Option<List<ReceiptFormat>?>(JsonSerializer.Deserialize<List<ReceiptFormat>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "recipientId":
                             recipientId = new Option<string?>(utf8JsonReader.GetString()!);
@@ -348,9 +327,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (supplierPartyId.IsSet && supplierPartyId.Value == null)
                 throw new ArgumentNullException(nameof(supplierPartyId), "Property is not nullable for class EncryptedCreditNote.");
 
-            if (receiptFormats.IsSet && receiptFormats.Value == null)
-                throw new ArgumentNullException(nameof(receiptFormats), "Property is not nullable for class EncryptedCreditNote.");
-
             if (recipientId.IsSet && recipientId.Value == null)
                 throw new ArgumentNullException(nameof(recipientId), "Property is not nullable for class EncryptedCreditNote.");
 
@@ -366,7 +342,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (finalHash.IsSet && finalHash.Value == null)
                 throw new ArgumentNullException(nameof(finalHash), "Property is not nullable for class EncryptedCreditNote.");
 
-            return new EncryptedCreditNote(varEncryptedCreditNote.Value!, encryptedSymmetricKey.Value!, encryptedCustomerDetails.Value!, encryptedCustomerAesKey.Value!, publicKey.Value!, supplierPartyId.Value!.Value!, receiptFormats, recipientId, creditNoteId, originalReceiptId, receiverType, finalHash);
+            return new EncryptedCreditNote(varEncryptedCreditNote.Value!, encryptedSymmetricKey.Value!, encryptedCustomerDetails.Value!, encryptedCustomerAesKey.Value!, publicKey.Value!, supplierPartyId.Value!.Value!, recipientId, creditNoteId, originalReceiptId, receiverType, finalHash);
         }
 
         /// <summary>
@@ -408,9 +384,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (encryptedCreditNote.PublicKey == null)
                 throw new ArgumentNullException(nameof(encryptedCreditNote.PublicKey), "Property is required for class EncryptedCreditNote.");
 
-            if (encryptedCreditNote.ReceiptFormatsOption.IsSet && encryptedCreditNote.ReceiptFormats == null)
-                throw new ArgumentNullException(nameof(encryptedCreditNote.ReceiptFormats), "Property is required for class EncryptedCreditNote.");
-
             if (encryptedCreditNote.RecipientIdOption.IsSet && encryptedCreditNote.RecipientId == null)
                 throw new ArgumentNullException(nameof(encryptedCreditNote.RecipientId), "Property is required for class EncryptedCreditNote.");
 
@@ -435,11 +408,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             writer.WriteString("supplierPartyId", encryptedCreditNote.SupplierPartyId);
 
-            if (encryptedCreditNote.ReceiptFormatsOption.IsSet)
-            {
-                writer.WritePropertyName("receiptFormats");
-                JsonSerializer.Serialize(writer, encryptedCreditNote.ReceiptFormats, jsonSerializerOptions);
-            }
             if (encryptedCreditNote.RecipientIdOption.IsSet)
                 writer.WriteString("recipientId", encryptedCreditNote.RecipientId);
 
