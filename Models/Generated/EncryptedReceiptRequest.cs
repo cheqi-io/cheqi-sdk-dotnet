@@ -25,18 +25,18 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// The encrypted receipts
+    /// Recipient-specific encrypted receipt payloads. Each item contains ciphertext for one recipient envelope plus the wrapped symmetric key and verification metadata.
     /// </summary>
     public partial class EncryptedReceiptRequest
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="EncryptedReceiptRequest" /> class.
         /// </summary>
-        /// <param name="recipientId">ID of the recipient</param>
-        /// <param name="encryptedReceipt">Encrypted receipt</param>
-        /// <param name="encryptedSymmetricKey">The symmetric key that is encrypted with the public key of the recipient</param>
-        /// <param name="finalHash">The final hash of the canonnicalized CheqiReceipt</param>
-        /// <param name="publicKey">The public key that is used to encrypt the receipt</param>
+        /// <param name="recipientId">Temporary recipient identifier returned by recipient resolution for a single matched recipient. This is not the final device or client-application id.</param>
+        /// <param name="encryptedReceipt">Base64 ciphertext of the receipt envelope.</param>
+        /// <param name="encryptedSymmetricKey">Wrapped symmetric content-encryption key for this recipient. Encrypt the content key with the recipient public key and submit the wrapped value here.</param>
+        /// <param name="finalHash">Final hash of the canonicalized CHEQI JSON receipt contained in the plaintext envelope. Used for downstream verification and integrity checks.</param>
+        /// <param name="publicKey">Recipient public key that was used to encrypt the symmetric content key and ciphertext payload.</param>
         /// <param name="supplierPartyId">The id of the selling party</param>
         /// <param name="notificationDisplayCode">notificationDisplayCode</param>
         [JsonConstructor]
@@ -62,9 +62,9 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> RecipientIdOption { get; private set; }
 
         /// <summary>
-        /// ID of the recipient
+        /// Temporary recipient identifier returned by recipient resolution for a single matched recipient. This is not the final device or client-application id.
         /// </summary>
-        /// <value>ID of the recipient</value>
+        /// <value>Temporary recipient identifier returned by recipient resolution for a single matched recipient. This is not the final device or client-application id.</value>
         [JsonPropertyName("recipientId")]
         public string? RecipientId { get { return this.RecipientIdOption; } set { this.RecipientIdOption = new(value); } }
 
@@ -76,9 +76,9 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> EncryptedReceiptOption { get; private set; }
 
         /// <summary>
-        /// Encrypted receipt
+        /// Base64 ciphertext of the receipt envelope.
         /// </summary>
-        /// <value>Encrypted receipt</value>
+        /// <value>Base64 ciphertext of the receipt envelope.</value>
         [JsonPropertyName("encryptedReceipt")]
         public string? EncryptedReceipt { get { return this.EncryptedReceiptOption; } set { this.EncryptedReceiptOption = new(value); } }
 
@@ -90,9 +90,9 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> EncryptedSymmetricKeyOption { get; private set; }
 
         /// <summary>
-        /// The symmetric key that is encrypted with the public key of the recipient
+        /// Wrapped symmetric content-encryption key for this recipient. Encrypt the content key with the recipient public key and submit the wrapped value here.
         /// </summary>
-        /// <value>The symmetric key that is encrypted with the public key of the recipient</value>
+        /// <value>Wrapped symmetric content-encryption key for this recipient. Encrypt the content key with the recipient public key and submit the wrapped value here.</value>
         [JsonPropertyName("encryptedSymmetricKey")]
         public string? EncryptedSymmetricKey { get { return this.EncryptedSymmetricKeyOption; } set { this.EncryptedSymmetricKeyOption = new(value); } }
 
@@ -104,9 +104,9 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> FinalHashOption { get; private set; }
 
         /// <summary>
-        /// The final hash of the canonnicalized CheqiReceipt
+        /// Final hash of the canonicalized CHEQI JSON receipt contained in the plaintext envelope. Used for downstream verification and integrity checks.
         /// </summary>
-        /// <value>The final hash of the canonnicalized CheqiReceipt</value>
+        /// <value>Final hash of the canonicalized CHEQI JSON receipt contained in the plaintext envelope. Used for downstream verification and integrity checks.</value>
         [JsonPropertyName("finalHash")]
         public string? FinalHash { get { return this.FinalHashOption; } set { this.FinalHashOption = new(value); } }
 
@@ -118,9 +118,9 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> PublicKeyOption { get; private set; }
 
         /// <summary>
-        /// The public key that is used to encrypt the receipt
+        /// Recipient public key that was used to encrypt the symmetric content key and ciphertext payload.
         /// </summary>
-        /// <value>The public key that is used to encrypt the receipt</value>
+        /// <value>Recipient public key that was used to encrypt the symmetric content key and ciphertext payload.</value>
         [JsonPropertyName("publicKey")]
         public string? PublicKey { get { return this.PublicKeyOption; } set { this.PublicKeyOption = new(value); } }
 
@@ -232,12 +232,10 @@ namespace Cheqi.Sdk.Models.Generated
                             publicKey = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "supplierPartyId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                supplierPartyId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            supplierPartyId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "notificationDisplayCode":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                notificationDisplayCode = new Option<NotificationDisplayCode?>(JsonSerializer.Deserialize<NotificationDisplayCode>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            notificationDisplayCode = new Option<NotificationDisplayCode?>(JsonSerializer.Deserialize<NotificationDisplayCode>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;

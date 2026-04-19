@@ -104,6 +104,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// The timestamp of the credit note creation
         /// </summary>
         /// <value>The timestamp of the credit note creation</value>
+        /* <example>1970-01-01T00:00Z</example> */
         [JsonPropertyName("createdAt")]
         public DateTimeOffset? CreatedAt { get { return this.CreatedAtOption; } set { this.CreatedAtOption = new(value); } }
 
@@ -181,8 +182,7 @@ namespace Cheqi.Sdk.Models.Generated
                             templateHash = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "createdAt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         default:
                             break;

@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Encrypted credit note initiation request
+    /// Encrypted credit note initiation request from a customer&#39;s device
     /// </summary>
     public partial class EncryptedCreditNoteInitiationRequest
     {

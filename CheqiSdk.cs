@@ -6,6 +6,7 @@ using Cheqi.Sdk.Encryption;
 using Cheqi.Sdk.Http;
 using Cheqi.Sdk.Matching;
 using Cheqi.Sdk.Models;
+using Cheqi.Sdk.Models.Generated;
 using Cheqi.Sdk.Models.Ubl;
 using Cheqi.Sdk.Receipt;
 using Cheqi.Sdk.Utils;
@@ -220,6 +221,25 @@ public sealed class CheqiSdk : IDisposable
     public Task<PurchaseReceipt> ProcessEncryptedReceiptAsync(EncryptedReceipt encryptedReceipt, string privateKey, CancellationToken cancellationToken = default)
     {
         return Task.Run(() => _receiptProcessor.ProcessEncryptedReceipt(encryptedReceipt, privateKey), cancellationToken);
+    }
+
+    /// <summary>
+    /// Processes an encrypted delivered credit note (synchronous).
+    /// </summary>
+    public DecryptedDeliveredCreditNote ProcessEncryptedCreditNote(EncryptedCreditNoteDto encryptedCreditNote, string privateKey)
+    {
+        return _creditNoteService.DecryptDeliveredCreditNote(encryptedCreditNote, privateKey);
+    }
+
+    /// <summary>
+    /// Processes an encrypted delivered credit note asynchronously.
+    /// </summary>
+    public Task<DecryptedDeliveredCreditNote> ProcessEncryptedCreditNoteAsync(
+        EncryptedCreditNoteDto encryptedCreditNote,
+        string privateKey,
+        CancellationToken cancellationToken = default)
+    {
+        return _creditNoteService.DecryptDeliveredCreditNoteAsync(encryptedCreditNote, privateKey, cancellationToken);
     }
 
     /// <summary>

@@ -145,12 +145,10 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "receiptTemplateRequest":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                receiptTemplateRequest = new Option<ReceiptTemplateRequest?>(JsonSerializer.Deserialize<ReceiptTemplateRequest>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            receiptTemplateRequest = new Option<ReceiptTemplateRequest?>(JsonSerializer.Deserialize<ReceiptTemplateRequest>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "formats":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                formats = new Option<List<ReceiptFormat>?>(JsonSerializer.Deserialize<List<ReceiptFormat>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            formats = new Option<List<ReceiptFormat>?>(JsonSerializer.Deserialize<List<ReceiptFormat>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "buyerCountryCode":
                             buyerCountryCode = new Option<string?>(utf8JsonReader.GetString()!);
@@ -161,8 +159,7 @@ namespace Cheqi.Sdk.Models.Generated
                                 buyerType = new Option<BuyerType?>(BuyerTypeValueConverter.FromStringOrDefault(buyerTypeRawValue));
                             break;
                         case "taxesApplied":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                taxesApplied = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            taxesApplied = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         default:
                             break;

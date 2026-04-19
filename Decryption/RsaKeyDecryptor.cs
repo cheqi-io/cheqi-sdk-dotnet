@@ -63,8 +63,10 @@ public class RsaKeyDecryptor
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to parse RSA private key");
-            throw new DecryptionException("Failed to parse RSA private key", e);
+            const string message = "Failed to parse RSA private key. Expected PKCS#8 format " +
+                "(-----BEGIN PRIVATE KEY----- / Base64 PKCS#8 DER).";
+            _logger.LogError(e, message);
+            throw new DecryptionException(message, e);
         }
     }
 }

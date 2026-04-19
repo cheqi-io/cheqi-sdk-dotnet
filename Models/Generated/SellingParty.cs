@@ -193,12 +193,10 @@ namespace Cheqi.Sdk.Models.Generated
                             taxNumber = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "identifiers":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                identifiers = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            identifiers = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "address":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                address = new Option<PartyAddress?>(JsonSerializer.Deserialize<PartyAddress>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            address = new Option<PartyAddress?>(JsonSerializer.Deserialize<PartyAddress>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;

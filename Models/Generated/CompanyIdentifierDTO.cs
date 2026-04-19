@@ -346,6 +346,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// Timestamp when this identifier was verified
         /// </summary>
         /// <value>Timestamp when this identifier was verified</value>
+        /* <example>2024-01-15T10:30Z</example> */
         [JsonPropertyName("verifiedAt")]
         public DateTimeOffset? VerifiedAt { get { return this.VerifiedAtOption; } set { this.VerifiedAtOption = new(value); } }
 
@@ -420,8 +421,7 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "id":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                id = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            id = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "identifierType":
                             string? identifierTypeRawValue = utf8JsonReader.GetString();
@@ -440,12 +440,10 @@ namespace Cheqi.Sdk.Models.Generated
                             countryCode = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "isVerified":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                isVerified = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            isVerified = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "verifiedAt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                verifiedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            verifiedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         default:
                             break;

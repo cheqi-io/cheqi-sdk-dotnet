@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// With this object the selling party can inject a barcode into the notification of the receipt (e.g. QR code)
+    /// NotificationDisplayCode
     /// </summary>
     public partial class NotificationDisplayCode
     {

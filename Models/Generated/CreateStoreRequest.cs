@@ -179,8 +179,7 @@ namespace Cheqi.Sdk.Models.Generated
                             storeCode = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "addressDto":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                addressDto = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            addressDto = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "phoneNumber":
                             phoneNumber = new Option<string?>(utf8JsonReader.GetString()!);

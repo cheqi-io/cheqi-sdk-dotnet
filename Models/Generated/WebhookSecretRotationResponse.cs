@@ -182,8 +182,7 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "ownerId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                ownerId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            ownerId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "ownerType":
                             ownerType = new Option<string?>(utf8JsonReader.GetString()!);
@@ -192,8 +191,7 @@ namespace Cheqi.Sdk.Models.Generated
                             webhookSecret = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "rotatedAt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                rotatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            rotatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "message":
                             message = new Option<string?>(utf8JsonReader.GetString()!);

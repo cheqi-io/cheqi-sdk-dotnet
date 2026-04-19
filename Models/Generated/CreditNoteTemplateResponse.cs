@@ -32,12 +32,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="CreditNoteTemplateResponse" /> class.
         /// </summary>
-        /// <param name="ubl">UBL XML credit note template as a serialized XML string following the CreditNote schema. See [UBL XML Credit Note Format](https://docs.cheqi.io/creditNote/ubl-format) for the full structure and field reference.</param>
+        /// <param name="ublCreditNote">UBL XML credit note template as a serialized XML string following the CreditNote schema. See [UBL XML Credit Note Format](https://docs.cheqi.io/creditNote/ubl-format) for the full structure and field reference.</param>
         /// <param name="cheqi">cheqi</param>
         [JsonConstructor]
-        public CreditNoteTemplateResponse(Option<string?> ubl = default, Option<CheqiCreditNote?> cheqi = default)
+        public CreditNoteTemplateResponse(Option<string?> ublCreditNote = default, Option<CheqiCreditNote?> cheqi = default)
         {
-            UblOption = ubl;
+            UblCreditNoteOption = ublCreditNote;
             CheqiOption = cheqi;
             OnCreated();
         }
@@ -45,18 +45,18 @@ namespace Cheqi.Sdk.Models.Generated
         partial void OnCreated();
 
         /// <summary>
-        /// Used to track the state of Ubl
+        /// Used to track the state of UblCreditNote
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> UblOption { get; private set; }
+        public Option<string?> UblCreditNoteOption { get; private set; }
 
         /// <summary>
         /// UBL XML credit note template as a serialized XML string following the CreditNote schema. See [UBL XML Credit Note Format](https://docs.cheqi.io/creditNote/ubl-format) for the full structure and field reference.
         /// </summary>
         /// <value>UBL XML credit note template as a serialized XML string following the CreditNote schema. See [UBL XML Credit Note Format](https://docs.cheqi.io/creditNote/ubl-format) for the full structure and field reference.</value>
-        [JsonPropertyName("ubl")]
-        public string? Ubl { get { return this.UblOption; } set { this.UblOption = new(value); } }
+        [JsonPropertyName("ublCreditNote")]
+        public string? UblCreditNote { get { return this.UblCreditNoteOption; } set { this.UblCreditNoteOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Cheqi
@@ -79,7 +79,7 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class CreditNoteTemplateResponse {\n");
-            sb.Append("  Ubl: ").Append(Ubl).Append("\n");
+            sb.Append("  UblCreditNote: ").Append(UblCreditNote).Append("\n");
             sb.Append("  Cheqi: ").Append(Cheqi).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -108,7 +108,7 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<string?> ubl = default;
+            Option<string?> ublCreditNote = default;
             Option<CheqiCreditNote?> cheqi = default;
 
             while (utf8JsonReader.Read())
@@ -126,12 +126,11 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
-                        case "ubl":
-                            ubl = new Option<string?>(utf8JsonReader.GetString()!);
+                        case "ublCreditNote":
+                            ublCreditNote = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "cheqi":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                cheqi = new Option<CheqiCreditNote?>(JsonSerializer.Deserialize<CheqiCreditNote>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            cheqi = new Option<CheqiCreditNote?>(JsonSerializer.Deserialize<CheqiCreditNote>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;
@@ -139,13 +138,13 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
-            if (ubl.IsSet && ubl.Value == null)
-                throw new ArgumentNullException(nameof(ubl), "Property is not nullable for class CreditNoteTemplateResponse.");
+            if (ublCreditNote.IsSet && ublCreditNote.Value == null)
+                throw new ArgumentNullException(nameof(ublCreditNote), "Property is not nullable for class CreditNoteTemplateResponse.");
 
             if (cheqi.IsSet && cheqi.Value == null)
                 throw new ArgumentNullException(nameof(cheqi), "Property is not nullable for class CreditNoteTemplateResponse.");
 
-            return new CreditNoteTemplateResponse(ubl, cheqi);
+            return new CreditNoteTemplateResponse(ublCreditNote, cheqi);
         }
 
         /// <summary>
@@ -172,14 +171,14 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, CreditNoteTemplateResponse creditNoteTemplateResponse, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (creditNoteTemplateResponse.UblOption.IsSet && creditNoteTemplateResponse.Ubl == null)
-                throw new ArgumentNullException(nameof(creditNoteTemplateResponse.Ubl), "Property is required for class CreditNoteTemplateResponse.");
+            if (creditNoteTemplateResponse.UblCreditNoteOption.IsSet && creditNoteTemplateResponse.UblCreditNote == null)
+                throw new ArgumentNullException(nameof(creditNoteTemplateResponse.UblCreditNote), "Property is required for class CreditNoteTemplateResponse.");
 
             if (creditNoteTemplateResponse.CheqiOption.IsSet && creditNoteTemplateResponse.Cheqi == null)
                 throw new ArgumentNullException(nameof(creditNoteTemplateResponse.Cheqi), "Property is required for class CreditNoteTemplateResponse.");
 
-            if (creditNoteTemplateResponse.UblOption.IsSet)
-                writer.WriteString("ubl", creditNoteTemplateResponse.Ubl);
+            if (creditNoteTemplateResponse.UblCreditNoteOption.IsSet)
+                writer.WriteString("ublCreditNote", creditNoteTemplateResponse.UblCreditNote);
 
             if (creditNoteTemplateResponse.CheqiOption.IsSet)
             {

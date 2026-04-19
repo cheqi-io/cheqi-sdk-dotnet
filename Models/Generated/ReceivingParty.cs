@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// The receiving party of the receipt (the buyer/customer).
+    /// Cheqi JSON receiving-party object for the matched customer or customer company. Include this when the recipient accepts the CHEQI JSON receipt format.
     /// </summary>
     public partial class ReceivingParty
     {
@@ -246,8 +246,7 @@ namespace Cheqi.Sdk.Models.Generated
                             taxNumber = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "companyIdentifiers":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                companyIdentifiers = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            companyIdentifiers = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "consumerName":
                             consumerName = new Option<string?>(utf8JsonReader.GetString()!);
@@ -259,12 +258,10 @@ namespace Cheqi.Sdk.Models.Generated
                             phone = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "address":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                address = new Option<PartyAddress?>(JsonSerializer.Deserialize<PartyAddress>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            address = new Option<PartyAddress?>(JsonSerializer.Deserialize<PartyAddress>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "companyRegistration":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                companyRegistration = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            companyRegistration = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;

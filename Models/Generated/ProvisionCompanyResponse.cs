@@ -35,6 +35,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="companyId">companyId</param>
         /// <param name="status">status</param>
         /// <param name="message">message</param>
+        /// <param name="partnerProvisioned">partnerProvisioned</param>
+        /// <param name="merchantClaimed">merchantClaimed</param>
+        /// <param name="provisioningPartnerTier">provisioningPartnerTier</param>
         /// <param name="invitationSent">invitationSent</param>
         /// <param name="requiresOAuth">requiresOAuth</param>
         /// <param name="accessToken">accessToken</param>
@@ -42,11 +45,14 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="expiresIn">expiresIn</param>
         /// <param name="tokenType">tokenType</param>
         [JsonConstructor]
-        public ProvisionCompanyResponse(Option<string?> companyId = default, Option<string?> status = default, Option<string?> message = default, Option<bool?> invitationSent = default, Option<bool?> requiresOAuth = default, Option<string?> accessToken = default, Option<string?> refreshToken = default, Option<long?> expiresIn = default, Option<string?> tokenType = default)
+        public ProvisionCompanyResponse(Option<string?> companyId = default, Option<string?> status = default, Option<string?> message = default, Option<bool?> partnerProvisioned = default, Option<bool?> merchantClaimed = default, Option<string?> provisioningPartnerTier = default, Option<bool?> invitationSent = default, Option<bool?> requiresOAuth = default, Option<string?> accessToken = default, Option<string?> refreshToken = default, Option<long?> expiresIn = default, Option<string?> tokenType = default)
         {
             CompanyIdOption = companyId;
             StatusOption = status;
             MessageOption = message;
+            PartnerProvisionedOption = partnerProvisioned;
+            MerchantClaimedOption = merchantClaimed;
+            ProvisioningPartnerTierOption = provisioningPartnerTier;
             InvitationSentOption = invitationSent;
             RequiresOAuthOption = requiresOAuth;
             AccessTokenOption = accessToken;
@@ -96,6 +102,45 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         [JsonPropertyName("message")]
         public string? Message { get { return this.MessageOption; } set { this.MessageOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of PartnerProvisioned
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<bool?> PartnerProvisionedOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets PartnerProvisioned
+        /// </summary>
+        [JsonPropertyName("partnerProvisioned")]
+        public bool? PartnerProvisioned { get { return this.PartnerProvisionedOption; } set { this.PartnerProvisionedOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of MerchantClaimed
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<bool?> MerchantClaimedOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets MerchantClaimed
+        /// </summary>
+        [JsonPropertyName("merchantClaimed")]
+        public bool? MerchantClaimed { get { return this.MerchantClaimedOption; } set { this.MerchantClaimedOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of ProvisioningPartnerTier
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> ProvisioningPartnerTierOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets ProvisioningPartnerTier
+        /// </summary>
+        [JsonPropertyName("provisioningPartnerTier")]
+        public string? ProvisioningPartnerTier { get { return this.ProvisioningPartnerTierOption; } set { this.ProvisioningPartnerTierOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of InvitationSent
@@ -186,6 +231,9 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  CompanyId: ").Append(CompanyId).Append("\n");
             sb.Append("  Status: ").Append(Status).Append("\n");
             sb.Append("  Message: ").Append(Message).Append("\n");
+            sb.Append("  PartnerProvisioned: ").Append(PartnerProvisioned).Append("\n");
+            sb.Append("  MerchantClaimed: ").Append(MerchantClaimed).Append("\n");
+            sb.Append("  ProvisioningPartnerTier: ").Append(ProvisioningPartnerTier).Append("\n");
             sb.Append("  InvitationSent: ").Append(InvitationSent).Append("\n");
             sb.Append("  RequiresOAuth: ").Append(RequiresOAuth).Append("\n");
             sb.Append("  AccessToken: ").Append(AccessToken).Append("\n");
@@ -222,6 +270,9 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> companyId = default;
             Option<string?> status = default;
             Option<string?> message = default;
+            Option<bool?> partnerProvisioned = default;
+            Option<bool?> merchantClaimed = default;
+            Option<string?> provisioningPartnerTier = default;
             Option<bool?> invitationSent = default;
             Option<bool?> requiresOAuth = default;
             Option<string?> accessToken = default;
@@ -253,13 +304,20 @@ namespace Cheqi.Sdk.Models.Generated
                         case "message":
                             message = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
+                        case "partnerProvisioned":
+                            partnerProvisioned = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
+                            break;
+                        case "merchantClaimed":
+                            merchantClaimed = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
+                            break;
+                        case "provisioningPartnerTier":
+                            provisioningPartnerTier = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
                         case "invitationSent":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                invitationSent = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            invitationSent = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "requiresOAuth":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                requiresOAuth = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            requiresOAuth = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "accessToken":
                             accessToken = new Option<string?>(utf8JsonReader.GetString()!);
@@ -268,8 +326,7 @@ namespace Cheqi.Sdk.Models.Generated
                             refreshToken = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "expiresIn":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                expiresIn = new Option<long?>(utf8JsonReader.GetInt64());
+                            expiresIn = new Option<long?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (long?)null : utf8JsonReader.GetInt64());
                             break;
                         case "tokenType":
                             tokenType = new Option<string?>(utf8JsonReader.GetString()!);
@@ -289,6 +346,15 @@ namespace Cheqi.Sdk.Models.Generated
             if (message.IsSet && message.Value == null)
                 throw new ArgumentNullException(nameof(message), "Property is not nullable for class ProvisionCompanyResponse.");
 
+            if (partnerProvisioned.IsSet && partnerProvisioned.Value == null)
+                throw new ArgumentNullException(nameof(partnerProvisioned), "Property is not nullable for class ProvisionCompanyResponse.");
+
+            if (merchantClaimed.IsSet && merchantClaimed.Value == null)
+                throw new ArgumentNullException(nameof(merchantClaimed), "Property is not nullable for class ProvisionCompanyResponse.");
+
+            if (provisioningPartnerTier.IsSet && provisioningPartnerTier.Value == null)
+                throw new ArgumentNullException(nameof(provisioningPartnerTier), "Property is not nullable for class ProvisionCompanyResponse.");
+
             if (invitationSent.IsSet && invitationSent.Value == null)
                 throw new ArgumentNullException(nameof(invitationSent), "Property is not nullable for class ProvisionCompanyResponse.");
 
@@ -307,7 +373,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (tokenType.IsSet && tokenType.Value == null)
                 throw new ArgumentNullException(nameof(tokenType), "Property is not nullable for class ProvisionCompanyResponse.");
 
-            return new ProvisionCompanyResponse(companyId, status, message, invitationSent, requiresOAuth, accessToken, refreshToken, expiresIn, tokenType);
+            return new ProvisionCompanyResponse(companyId, status, message, partnerProvisioned, merchantClaimed, provisioningPartnerTier, invitationSent, requiresOAuth, accessToken, refreshToken, expiresIn, tokenType);
         }
 
         /// <summary>
@@ -343,6 +409,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (provisionCompanyResponse.MessageOption.IsSet && provisionCompanyResponse.Message == null)
                 throw new ArgumentNullException(nameof(provisionCompanyResponse.Message), "Property is required for class ProvisionCompanyResponse.");
 
+            if (provisionCompanyResponse.ProvisioningPartnerTierOption.IsSet && provisionCompanyResponse.ProvisioningPartnerTier == null)
+                throw new ArgumentNullException(nameof(provisionCompanyResponse.ProvisioningPartnerTier), "Property is required for class ProvisionCompanyResponse.");
+
             if (provisionCompanyResponse.AccessTokenOption.IsSet && provisionCompanyResponse.AccessToken == null)
                 throw new ArgumentNullException(nameof(provisionCompanyResponse.AccessToken), "Property is required for class ProvisionCompanyResponse.");
 
@@ -360,6 +429,15 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (provisionCompanyResponse.MessageOption.IsSet)
                 writer.WriteString("message", provisionCompanyResponse.Message);
+
+            if (provisionCompanyResponse.PartnerProvisionedOption.IsSet)
+                writer.WriteBoolean("partnerProvisioned", provisionCompanyResponse.PartnerProvisionedOption.Value!.Value);
+
+            if (provisionCompanyResponse.MerchantClaimedOption.IsSet)
+                writer.WriteBoolean("merchantClaimed", provisionCompanyResponse.MerchantClaimedOption.Value!.Value);
+
+            if (provisionCompanyResponse.ProvisioningPartnerTierOption.IsSet)
+                writer.WriteString("provisioningPartnerTier", provisionCompanyResponse.ProvisioningPartnerTier);
 
             if (provisionCompanyResponse.InvitationSentOption.IsSet)
                 writer.WriteBoolean("invitationSent", provisionCompanyResponse.InvitationSentOption.Value!.Value);

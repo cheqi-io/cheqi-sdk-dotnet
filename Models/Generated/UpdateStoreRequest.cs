@@ -197,8 +197,7 @@ namespace Cheqi.Sdk.Models.Generated
                             storeName = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "addressDto":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                addressDto = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            addressDto = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "phoneNumber":
                             phoneNumber = new Option<string?>(utf8JsonReader.GetString()!);
@@ -207,8 +206,7 @@ namespace Cheqi.Sdk.Models.Generated
                             email = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "isActive":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                isActive = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            isActive = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "openingHours":
                             openingHours = new Option<string?>(utf8JsonReader.GetString()!);

@@ -88,6 +88,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// The date when the purchase receipt was issued.
         /// </summary>
         /// <value>The date when the purchase receipt was issued.</value>
+        /* <example>2022-01-01T00:00Z</example> */
         [JsonPropertyName("issueDate")]
         public DateTimeOffset IssueDate { get; set; }
 
@@ -385,70 +386,55 @@ namespace Cheqi.Sdk.Models.Generated
                             documentNumber = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "issueDate":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                issueDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            issueDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "currency":
                             currency = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "receiptSubtotal":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                receiptSubtotal = new Option<decimal?>(utf8JsonReader.GetDecimal());
+                            receiptSubtotal = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "totalBeforeTax":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                totalBeforeTax = new Option<decimal?>(utf8JsonReader.GetDecimal());
+                            totalBeforeTax = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "totalTaxAmount":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                totalTaxAmount = new Option<decimal?>(utf8JsonReader.GetDecimal());
+                            totalTaxAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "totalAmount":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                totalAmount = new Option<decimal?>(utf8JsonReader.GetDecimal());
+                            totalAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "products":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                products = new Option<List<Product>?>(JsonSerializer.Deserialize<List<Product>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            products = new Option<List<Product>?>(JsonSerializer.Deserialize<List<Product>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "childCompanyId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                childCompanyId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            childCompanyId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "identifiers":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                identifiers = new Option<List<Identifier>?>(JsonSerializer.Deserialize<List<Identifier>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            identifiers = new Option<List<Identifier>?>(JsonSerializer.Deserialize<List<Identifier>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "discounts":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                discounts = new Option<List<Discount>?>(JsonSerializer.Deserialize<List<Discount>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            discounts = new Option<List<Discount>?>(JsonSerializer.Deserialize<List<Discount>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "charges":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                charges = new Option<List<Charge>?>(JsonSerializer.Deserialize<List<Charge>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            charges = new Option<List<Charge>?>(JsonSerializer.Deserialize<List<Charge>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "taxes":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                taxes = new Option<List<Tax>?>(JsonSerializer.Deserialize<List<Tax>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            taxes = new Option<List<Tax>?>(JsonSerializer.Deserialize<List<Tax>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "transactionDate":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                transactionDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            transactionDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "purchaseDate":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                purchaseDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            purchaseDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "period":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                period = new Option<Period?>(JsonSerializer.Deserialize<Period>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            period = new Option<Period?>(JsonSerializer.Deserialize<Period>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "note":
                             note = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "barcodes":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                barcodes = new Option<List<Barcode>?>(JsonSerializer.Deserialize<List<Barcode>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            barcodes = new Option<List<Barcode>?>(JsonSerializer.Deserialize<List<Barcode>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;

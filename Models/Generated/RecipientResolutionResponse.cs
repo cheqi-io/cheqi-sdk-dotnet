@@ -137,6 +137,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// The expiration time for the matching process
         /// </summary>
         /// <value>The expiration time for the matching process</value>
+        /* <example>2023-01-01T00:00Z</example> */
         [JsonPropertyName("expiresAt")]
         public DateTimeOffset? ExpiresAt { get { return this.ExpiresAtOption; } set { this.ExpiresAtOption = new(value); } }
 
@@ -242,23 +243,19 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "recipients":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                recipients = new Option<List<MatchedRecipient>?>(JsonSerializer.Deserialize<List<MatchedRecipient>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            recipients = new Option<List<MatchedRecipient>?>(JsonSerializer.Deserialize<List<MatchedRecipient>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "customerFound":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                customerFound = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            customerFound = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "matchId":
                             matchId = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "matchedRecipients":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                matchedRecipients = new Option<List<MatchedRecipient>?>(JsonSerializer.Deserialize<List<MatchedRecipient>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            matchedRecipients = new Option<List<MatchedRecipient>?>(JsonSerializer.Deserialize<List<MatchedRecipient>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "expiresAt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                expiresAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            expiresAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "instructions":
                             instructions = new Option<string?>(utf8JsonReader.GetString()!);

@@ -173,12 +173,10 @@ namespace Cheqi.Sdk.Models.Generated
                                 keyAlgorithm = new Option<KeyAlgorithm?>(KeyAlgorithmValueConverter.FromStringOrDefault(keyAlgorithmRawValue));
                             break;
                         case "keyCreatedAt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                keyCreatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            keyCreatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "hasKey":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                hasKey = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            hasKey = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         default:
                             break;

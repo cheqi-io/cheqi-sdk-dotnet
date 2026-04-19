@@ -38,6 +38,7 @@ public class CreditNoteService
     private readonly ICheqiApiClient _apiClient;
     private readonly RFC8785Canonicalizer _canonicalizer;
     private readonly EncryptionService _encryptionService;
+    private readonly CreditNoteMergeService _creditNoteMergeService;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public CreditNoteService(
@@ -53,6 +54,7 @@ public class CreditNoteService
         
         _decryptionService = new DecryptionService();
         _canonicalizer = new RFC8785Canonicalizer();
+        _creditNoteMergeService = new CreditNoteMergeService();
         
         _jsonOptions = new JsonSerializerOptions
         {
@@ -317,6 +319,25 @@ public class CreditNoteService
         CancellationToken cancellationToken = default)
     {
         return Task.Run(() => DecryptCreditNoteRequest(encryptedCreditNote, privateKeyBase64), cancellationToken);
+    }
+
+    public DecryptedDeliveredCreditNote DecryptDeliveredCreditNote(
+        Models.Generated.EncryptedCreditNoteDto encryptedCreditNote,
+        string privateKeyBase64)
+    {
+        ArgumentNullException.ThrowIfNull(encryptedCreditNote);
+        ArgumentNullException.ThrowIfNull(privateKeyBase64);
+
+        var decryptedCreditNote = _decryptionService.DecryptDeliveredCreditNote(encryptedCreditNote, privateKeyBase64);
+        return _creditNoteMergeService.Merge(decryptedCreditNote);
+    }
+
+    public Task<DecryptedDeliveredCreditNote> DecryptDeliveredCreditNoteAsync(
+        Models.Generated.EncryptedCreditNoteDto encryptedCreditNote,
+        string privateKeyBase64,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => DecryptDeliveredCreditNote(encryptedCreditNote, privateKeyBase64), cancellationToken);
     }
 
     #endregion

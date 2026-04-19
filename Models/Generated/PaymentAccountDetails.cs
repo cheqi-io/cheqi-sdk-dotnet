@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// The payment account details, for now only IBAN/WERO is supported
+    /// Payment-account details. For now only IBAN/WERO-style identifiers are supported.
     /// </summary>
     public partial class PaymentAccountDetails
     {
@@ -37,168 +37,30 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="bic">bic</param>
         /// <param name="bankName">bankName</param>
         /// <param name="accountHolderName">accountHolderName</param>
-        /// <param name="institutionName">institutionName</param>
         [JsonConstructor]
-        public PaymentAccountDetails(Option<string?> identifier = default, Option<AccountIdentifierTypeEnum?> accountIdentifierType = default, Option<string?> bic = default, Option<string?> bankName = default, Option<string?> accountHolderName = default, Option<string?> institutionName = default)
+        public PaymentAccountDetails(string identifier, AccountIdentifierType accountIdentifierType, Option<string?> bic = default, Option<string?> bankName = default, Option<string?> accountHolderName = default)
         {
-            IdentifierOption = identifier;
-            AccountIdentifierTypeOption = accountIdentifierType;
+            Identifier = identifier;
+            AccountIdentifierType = accountIdentifierType;
             BicOption = bic;
             BankNameOption = bankName;
             AccountHolderNameOption = accountHolderName;
-            InstitutionNameOption = institutionName;
             OnCreated();
         }
 
         partial void OnCreated();
 
         /// <summary>
-        /// Defines AccountIdentifierType
-        /// </summary>
-        public enum AccountIdentifierTypeEnum
-        {
-            /// <summary>
-            /// Enum IBAN for value: IBAN
-            /// </summary>
-            IBAN = 1,
-
-            /// <summary>
-            /// Enum ROUTINGACCOUNT for value: ROUTING_ACCOUNT
-            /// </summary>
-            ROUTINGACCOUNT = 2,
-
-            /// <summary>
-            /// Enum SORTCODEACCOUNT for value: SORT_CODE_ACCOUNT
-            /// </summary>
-            SORTCODEACCOUNT = 3,
-
-            /// <summary>
-            /// Enum TOKEN for value: TOKEN
-            /// </summary>
-            TOKEN = 4,
-
-            /// <summary>
-            /// Enum WALLET for value: WALLET
-            /// </summary>
-            WALLET = 5,
-
-            /// <summary>
-            /// Enum OTHER for value: OTHER
-            /// </summary>
-            OTHER = 6
-        }
-
-        /// <summary>
-        /// Returns a <see cref="AccountIdentifierTypeEnum"/>
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public static AccountIdentifierTypeEnum AccountIdentifierTypeEnumFromString(string value)
-        {
-            if (value.Equals("IBAN"))
-                return AccountIdentifierTypeEnum.IBAN;
-
-            if (value.Equals("ROUTING_ACCOUNT"))
-                return AccountIdentifierTypeEnum.ROUTINGACCOUNT;
-
-            if (value.Equals("SORT_CODE_ACCOUNT"))
-                return AccountIdentifierTypeEnum.SORTCODEACCOUNT;
-
-            if (value.Equals("TOKEN"))
-                return AccountIdentifierTypeEnum.TOKEN;
-
-            if (value.Equals("WALLET"))
-                return AccountIdentifierTypeEnum.WALLET;
-
-            if (value.Equals("OTHER"))
-                return AccountIdentifierTypeEnum.OTHER;
-
-            throw new NotImplementedException($"Could not convert value to type AccountIdentifierTypeEnum: '{value}'");
-        }
-
-        /// <summary>
-        /// Returns a <see cref="AccountIdentifierTypeEnum"/>
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static AccountIdentifierTypeEnum? AccountIdentifierTypeEnumFromStringOrDefault(string value)
-        {
-            if (value.Equals("IBAN"))
-                return AccountIdentifierTypeEnum.IBAN;
-
-            if (value.Equals("ROUTING_ACCOUNT"))
-                return AccountIdentifierTypeEnum.ROUTINGACCOUNT;
-
-            if (value.Equals("SORT_CODE_ACCOUNT"))
-                return AccountIdentifierTypeEnum.SORTCODEACCOUNT;
-
-            if (value.Equals("TOKEN"))
-                return AccountIdentifierTypeEnum.TOKEN;
-
-            if (value.Equals("WALLET"))
-                return AccountIdentifierTypeEnum.WALLET;
-
-            if (value.Equals("OTHER"))
-                return AccountIdentifierTypeEnum.OTHER;
-
-            return null;
-        }
-
-        /// <summary>
-        /// Converts the <see cref="AccountIdentifierTypeEnum"/> to the json value
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public static string AccountIdentifierTypeEnumToJsonValue(AccountIdentifierTypeEnum? value)
-        {
-            if (value == AccountIdentifierTypeEnum.IBAN)
-                return "IBAN";
-
-            if (value == AccountIdentifierTypeEnum.ROUTINGACCOUNT)
-                return "ROUTING_ACCOUNT";
-
-            if (value == AccountIdentifierTypeEnum.SORTCODEACCOUNT)
-                return "SORT_CODE_ACCOUNT";
-
-            if (value == AccountIdentifierTypeEnum.TOKEN)
-                return "TOKEN";
-
-            if (value == AccountIdentifierTypeEnum.WALLET)
-                return "WALLET";
-
-            if (value == AccountIdentifierTypeEnum.OTHER)
-                return "OTHER";
-
-            throw new NotImplementedException($"Value could not be handled: '{value}'");
-        }
-
-        /// <summary>
-        /// Used to track the state of AccountIdentifierType
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<AccountIdentifierTypeEnum?> AccountIdentifierTypeOption { get; private set; }
-
-        /// <summary>
         /// Gets or Sets AccountIdentifierType
         /// </summary>
         [JsonPropertyName("accountIdentifierType")]
-        public AccountIdentifierTypeEnum? AccountIdentifierType { get { return this.AccountIdentifierTypeOption; } set { this.AccountIdentifierTypeOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of Identifier
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> IdentifierOption { get; private set; }
+        public AccountIdentifierType AccountIdentifierType { get; set; }
 
         /// <summary>
         /// Gets or Sets Identifier
         /// </summary>
         [JsonPropertyName("identifier")]
-        public string? Identifier { get { return this.IdentifierOption; } set { this.IdentifierOption = new(value); } }
+        public string Identifier { get; set; }
 
         /// <summary>
         /// Used to track the state of Bic
@@ -240,19 +102,6 @@ namespace Cheqi.Sdk.Models.Generated
         public string? AccountHolderName { get { return this.AccountHolderNameOption; } set { this.AccountHolderNameOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of InstitutionName
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> InstitutionNameOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets InstitutionName
-        /// </summary>
-        [JsonPropertyName("institutionName")]
-        public string? InstitutionName { get { return this.InstitutionNameOption; } set { this.InstitutionNameOption = new(value); } }
-
-        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -265,7 +114,6 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  Bic: ").Append(Bic).Append("\n");
             sb.Append("  BankName: ").Append(BankName).Append("\n");
             sb.Append("  AccountHolderName: ").Append(AccountHolderName).Append("\n");
-            sb.Append("  InstitutionName: ").Append(InstitutionName).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -294,11 +142,10 @@ namespace Cheqi.Sdk.Models.Generated
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
             Option<string?> identifier = default;
-            Option<PaymentAccountDetails.AccountIdentifierTypeEnum?> accountIdentifierType = default;
+            Option<AccountIdentifierType?> accountIdentifierType = default;
             Option<string?> bic = default;
             Option<string?> bankName = default;
             Option<string?> accountHolderName = default;
-            Option<string?> institutionName = default;
 
             while (utf8JsonReader.Read())
             {
@@ -321,7 +168,7 @@ namespace Cheqi.Sdk.Models.Generated
                         case "accountIdentifierType":
                             string? accountIdentifierTypeRawValue = utf8JsonReader.GetString();
                             if (accountIdentifierTypeRawValue != null)
-                                accountIdentifierType = new Option<PaymentAccountDetails.AccountIdentifierTypeEnum?>(PaymentAccountDetails.AccountIdentifierTypeEnumFromStringOrDefault(accountIdentifierTypeRawValue));
+                                accountIdentifierType = new Option<AccountIdentifierType?>(AccountIdentifierTypeValueConverter.FromStringOrDefault(accountIdentifierTypeRawValue));
                             break;
                         case "bic":
                             bic = new Option<string?>(utf8JsonReader.GetString()!);
@@ -332,14 +179,17 @@ namespace Cheqi.Sdk.Models.Generated
                         case "accountHolderName":
                             accountHolderName = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
-                        case "institutionName":
-                            institutionName = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
                         default:
                             break;
                     }
                 }
             }
+
+            if (!identifier.IsSet)
+                throw new ArgumentException("Property is required for class PaymentAccountDetails.", nameof(identifier));
+
+            if (!accountIdentifierType.IsSet)
+                throw new ArgumentException("Property is required for class PaymentAccountDetails.", nameof(accountIdentifierType));
 
             if (identifier.IsSet && identifier.Value == null)
                 throw new ArgumentNullException(nameof(identifier), "Property is not nullable for class PaymentAccountDetails.");
@@ -356,10 +206,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (accountHolderName.IsSet && accountHolderName.Value == null)
                 throw new ArgumentNullException(nameof(accountHolderName), "Property is not nullable for class PaymentAccountDetails.");
 
-            if (institutionName.IsSet && institutionName.Value == null)
-                throw new ArgumentNullException(nameof(institutionName), "Property is not nullable for class PaymentAccountDetails.");
-
-            return new PaymentAccountDetails(identifier, accountIdentifierType, bic, bankName, accountHolderName, institutionName);
+            return new PaymentAccountDetails(identifier.Value!, accountIdentifierType.Value!.Value!, bic, bankName, accountHolderName);
         }
 
         /// <summary>
@@ -386,7 +233,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, PaymentAccountDetails paymentAccountDetails, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (paymentAccountDetails.IdentifierOption.IsSet && paymentAccountDetails.Identifier == null)
+            if (paymentAccountDetails.Identifier == null)
                 throw new ArgumentNullException(nameof(paymentAccountDetails.Identifier), "Property is required for class PaymentAccountDetails.");
 
             if (paymentAccountDetails.BicOption.IsSet && paymentAccountDetails.Bic == null)
@@ -398,14 +245,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (paymentAccountDetails.AccountHolderNameOption.IsSet && paymentAccountDetails.AccountHolderName == null)
                 throw new ArgumentNullException(nameof(paymentAccountDetails.AccountHolderName), "Property is required for class PaymentAccountDetails.");
 
-            if (paymentAccountDetails.InstitutionNameOption.IsSet && paymentAccountDetails.InstitutionName == null)
-                throw new ArgumentNullException(nameof(paymentAccountDetails.InstitutionName), "Property is required for class PaymentAccountDetails.");
+            writer.WriteString("identifier", paymentAccountDetails.Identifier);
 
-            if (paymentAccountDetails.IdentifierOption.IsSet)
-                writer.WriteString("identifier", paymentAccountDetails.Identifier);
-
-            var accountIdentifierTypeRawValue = PaymentAccountDetails.AccountIdentifierTypeEnumToJsonValue(paymentAccountDetails.AccountIdentifierTypeOption.Value!.Value);
+            var accountIdentifierTypeRawValue = AccountIdentifierTypeValueConverter.ToJsonValue(paymentAccountDetails.AccountIdentifierType);
             writer.WriteString("accountIdentifierType", accountIdentifierTypeRawValue);
+
             if (paymentAccountDetails.BicOption.IsSet)
                 writer.WriteString("bic", paymentAccountDetails.Bic);
 
@@ -414,9 +258,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (paymentAccountDetails.AccountHolderNameOption.IsSet)
                 writer.WriteString("accountHolderName", paymentAccountDetails.AccountHolderName);
-
-            if (paymentAccountDetails.InstitutionNameOption.IsSet)
-                writer.WriteString("institutionName", paymentAccountDetails.InstitutionName);
         }
     }
 }

@@ -115,8 +115,7 @@ namespace Cheqi.Sdk.Models.Generated
                             customerEmail = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "cheqiReceipt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                cheqiReceipt = new Option<CheqiReceipt?>(JsonSerializer.Deserialize<CheqiReceipt>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            cheqiReceipt = new Option<CheqiReceipt?>(JsonSerializer.Deserialize<CheqiReceipt>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;

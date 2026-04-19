@@ -25,32 +25,31 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// The card details
+    /// Card payment details.
     /// </summary>
     public partial class CardDetails
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CardDetails" /> class.
         /// </summary>
-        /// <param name="cardProvider">cardProvider</param>
-        /// <param name="paymentAccountNumber">paymentAccountNumber</param>
-        /// <param name="paymentAccountReference">paymentAccountReference</param>
-        /// <param name="additionalProperties">additionalProperties</param>
+        /// <param name="paymentAccountReference">The Payment Account Reference (PAR), a stable identifier for the card or tokenized payment instrument.</param>
+        /// <param name="cardProvider">The card provider, this is one of the major networks like Mastercard, Visa, American Express etc.</param>
+        /// <param name="lastFourDigits">The last four digits of the card number, if available. Optional and used for display and receipt metadata only.</param>
         [JsonConstructor]
-        public CardDetails(Option<CardProviderEnum?> cardProvider = default, Option<string?> paymentAccountNumber = default, Option<string?> paymentAccountReference = default, Option<Dictionary<string, Object>?> additionalProperties = default)
+        public CardDetails(string paymentAccountReference, Option<CardProviderEnum?> cardProvider = default, Option<string?> lastFourDigits = default)
         {
+            PaymentAccountReference = paymentAccountReference;
             CardProviderOption = cardProvider;
-            PaymentAccountNumberOption = paymentAccountNumber;
-            PaymentAccountReferenceOption = paymentAccountReference;
-            AdditionalPropertiesOption = additionalProperties;
+            LastFourDigitsOption = lastFourDigits;
             OnCreated();
         }
 
         partial void OnCreated();
 
         /// <summary>
-        /// Defines CardProvider
+        /// The card provider, this is one of the major networks like Mastercard, Visa, American Express etc.
         /// </summary>
+        /// <value>The card provider, this is one of the major networks like Mastercard, Visa, American Express etc.</value>
         public enum CardProviderEnum
         {
             /// <summary>
@@ -150,49 +149,32 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<CardProviderEnum?> CardProviderOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets CardProvider
+        /// The card provider, this is one of the major networks like Mastercard, Visa, American Express etc.
         /// </summary>
+        /// <value>The card provider, this is one of the major networks like Mastercard, Visa, American Express etc.</value>
         [JsonPropertyName("cardProvider")]
         public CardProviderEnum? CardProvider { get { return this.CardProviderOption; } set { this.CardProviderOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of PaymentAccountNumber
+        /// The Payment Account Reference (PAR), a stable identifier for the card or tokenized payment instrument.
         /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> PaymentAccountNumberOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets PaymentAccountNumber
-        /// </summary>
-        [JsonPropertyName("paymentAccountNumber")]
-        public string? PaymentAccountNumber { get { return this.PaymentAccountNumberOption; } set { this.PaymentAccountNumberOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of PaymentAccountReference
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> PaymentAccountReferenceOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets PaymentAccountReference
-        /// </summary>
+        /// <value>The Payment Account Reference (PAR), a stable identifier for the card or tokenized payment instrument.</value>
         [JsonPropertyName("paymentAccountReference")]
-        public string? PaymentAccountReference { get { return this.PaymentAccountReferenceOption; } set { this.PaymentAccountReferenceOption = new(value); } }
+        public string PaymentAccountReference { get; set; }
 
         /// <summary>
-        /// Used to track the state of AdditionalProperties
+        /// Used to track the state of LastFourDigits
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<Dictionary<string, Object>?> AdditionalPropertiesOption { get; private set; }
+        public Option<string?> LastFourDigitsOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets AdditionalProperties
+        /// The last four digits of the card number, if available. Optional and used for display and receipt metadata only.
         /// </summary>
-        [JsonPropertyName("additionalProperties")]
-        public Dictionary<string, Object>? AdditionalProperties { get { return this.AdditionalPropertiesOption; } set { this.AdditionalPropertiesOption = new(value); } }
+        /// <value>The last four digits of the card number, if available. Optional and used for display and receipt metadata only.</value>
+        [JsonPropertyName("lastFourDigits")]
+        public string? LastFourDigits { get { return this.LastFourDigitsOption; } set { this.LastFourDigitsOption = new(value); } }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -202,10 +184,9 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class CardDetails {\n");
-            sb.Append("  CardProvider: ").Append(CardProvider).Append("\n");
-            sb.Append("  PaymentAccountNumber: ").Append(PaymentAccountNumber).Append("\n");
             sb.Append("  PaymentAccountReference: ").Append(PaymentAccountReference).Append("\n");
-            sb.Append("  AdditionalProperties: ").Append(AdditionalProperties).Append("\n");
+            sb.Append("  CardProvider: ").Append(CardProvider).Append("\n");
+            sb.Append("  LastFourDigits: ").Append(LastFourDigits).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -233,10 +214,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<CardDetails.CardProviderEnum?> cardProvider = default;
-            Option<string?> paymentAccountNumber = default;
             Option<string?> paymentAccountReference = default;
-            Option<Dictionary<string, Object>?> additionalProperties = default;
+            Option<CardDetails.CardProviderEnum?> cardProvider = default;
+            Option<string?> lastFourDigits = default;
 
             while (utf8JsonReader.Read())
             {
@@ -253,20 +233,16 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
+                        case "paymentAccountReference":
+                            paymentAccountReference = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
                         case "cardProvider":
                             string? cardProviderRawValue = utf8JsonReader.GetString();
                             if (cardProviderRawValue != null)
                                 cardProvider = new Option<CardDetails.CardProviderEnum?>(CardDetails.CardProviderEnumFromStringOrDefault(cardProviderRawValue));
                             break;
-                        case "paymentAccountNumber":
-                            paymentAccountNumber = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
-                        case "paymentAccountReference":
-                            paymentAccountReference = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
-                        case "additionalProperties":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                additionalProperties = new Option<Dictionary<string, Object>?>(JsonSerializer.Deserialize<Dictionary<string, Object>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                        case "lastFourDigits":
+                            lastFourDigits = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         default:
                             break;
@@ -274,19 +250,19 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
-            if (cardProvider.IsSet && cardProvider.Value == null)
-                throw new ArgumentNullException(nameof(cardProvider), "Property is not nullable for class CardDetails.");
-
-            if (paymentAccountNumber.IsSet && paymentAccountNumber.Value == null)
-                throw new ArgumentNullException(nameof(paymentAccountNumber), "Property is not nullable for class CardDetails.");
+            if (!paymentAccountReference.IsSet)
+                throw new ArgumentException("Property is required for class CardDetails.", nameof(paymentAccountReference));
 
             if (paymentAccountReference.IsSet && paymentAccountReference.Value == null)
                 throw new ArgumentNullException(nameof(paymentAccountReference), "Property is not nullable for class CardDetails.");
 
-            if (additionalProperties.IsSet && additionalProperties.Value == null)
-                throw new ArgumentNullException(nameof(additionalProperties), "Property is not nullable for class CardDetails.");
+            if (cardProvider.IsSet && cardProvider.Value == null)
+                throw new ArgumentNullException(nameof(cardProvider), "Property is not nullable for class CardDetails.");
 
-            return new CardDetails(cardProvider, paymentAccountNumber, paymentAccountReference, additionalProperties);
+            if (lastFourDigits.IsSet && lastFourDigits.Value == null)
+                throw new ArgumentNullException(nameof(lastFourDigits), "Property is not nullable for class CardDetails.");
+
+            return new CardDetails(paymentAccountReference.Value!, cardProvider, lastFourDigits);
         }
 
         /// <summary>
@@ -313,28 +289,18 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, CardDetails cardDetails, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (cardDetails.PaymentAccountNumberOption.IsSet && cardDetails.PaymentAccountNumber == null)
-                throw new ArgumentNullException(nameof(cardDetails.PaymentAccountNumber), "Property is required for class CardDetails.");
-
-            if (cardDetails.PaymentAccountReferenceOption.IsSet && cardDetails.PaymentAccountReference == null)
+            if (cardDetails.PaymentAccountReference == null)
                 throw new ArgumentNullException(nameof(cardDetails.PaymentAccountReference), "Property is required for class CardDetails.");
 
-            if (cardDetails.AdditionalPropertiesOption.IsSet && cardDetails.AdditionalProperties == null)
-                throw new ArgumentNullException(nameof(cardDetails.AdditionalProperties), "Property is required for class CardDetails.");
+            if (cardDetails.LastFourDigitsOption.IsSet && cardDetails.LastFourDigits == null)
+                throw new ArgumentNullException(nameof(cardDetails.LastFourDigits), "Property is required for class CardDetails.");
+
+            writer.WriteString("paymentAccountReference", cardDetails.PaymentAccountReference);
 
             var cardProviderRawValue = CardDetails.CardProviderEnumToJsonValue(cardDetails.CardProviderOption.Value!.Value);
             writer.WriteString("cardProvider", cardProviderRawValue);
-            if (cardDetails.PaymentAccountNumberOption.IsSet)
-                writer.WriteString("paymentAccountNumber", cardDetails.PaymentAccountNumber);
-
-            if (cardDetails.PaymentAccountReferenceOption.IsSet)
-                writer.WriteString("paymentAccountReference", cardDetails.PaymentAccountReference);
-
-            if (cardDetails.AdditionalPropertiesOption.IsSet)
-            {
-                writer.WritePropertyName("additionalProperties");
-                JsonSerializer.Serialize(writer, cardDetails.AdditionalProperties, jsonSerializerOptions);
-            }
+            if (cardDetails.LastFourDigitsOption.IsSet)
+                writer.WriteString("lastFourDigits", cardDetails.LastFourDigits);
         }
     }
 }

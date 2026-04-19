@@ -242,8 +242,7 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "recipientId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                recipientId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            recipientId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "encryptedCreditNote":
                             encryptedCreditNote = new Option<string?>(utf8JsonReader.GetString()!);
@@ -261,8 +260,7 @@ namespace Cheqi.Sdk.Models.Generated
                             publicKey = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "supplierPartyId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                supplierPartyId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            supplierPartyId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "creditNoteId":
                             creditNoteId = new Option<string?>(utf8JsonReader.GetString()!);

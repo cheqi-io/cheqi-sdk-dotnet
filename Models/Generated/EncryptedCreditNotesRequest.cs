@@ -34,8 +34,8 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         /// <param name="matchId">The match id that you received during customer matching</param>
         /// <param name="parentCheqiReceiptId">The parent Cheqi this credit note refers to</param>
-        /// <param name="encryptedCreditNotes">A set of encrypted credit notes</param>
-        /// <param name="templateHash">The hash of the credit note template</param>
+        /// <param name="encryptedCreditNotes">Recipient-specific encrypted credit-note payloads. Each item contains ciphertext for one locally assembled recipient envelope plus the wrapped symmetric key and verification metadata.</param>
+        /// <param name="templateHash">Hash of the credit-note template basis used when building and encrypting the recipient envelopes.</param>
         [JsonConstructor]
         public EncryptedCreditNotesRequest(string matchId, string parentCheqiReceiptId, List<EncryptedCreditNote> encryptedCreditNotes, string templateHash)
         {
@@ -65,16 +65,16 @@ namespace Cheqi.Sdk.Models.Generated
         public string ParentCheqiReceiptId { get; set; }
 
         /// <summary>
-        /// A set of encrypted credit notes
+        /// Recipient-specific encrypted credit-note payloads. Each item contains ciphertext for one locally assembled recipient envelope plus the wrapped symmetric key and verification metadata.
         /// </summary>
-        /// <value>A set of encrypted credit notes</value>
+        /// <value>Recipient-specific encrypted credit-note payloads. Each item contains ciphertext for one locally assembled recipient envelope plus the wrapped symmetric key and verification metadata.</value>
         [JsonPropertyName("encryptedCreditNotes")]
         public List<EncryptedCreditNote> EncryptedCreditNotes { get; set; }
 
         /// <summary>
-        /// The hash of the credit note template
+        /// Hash of the credit-note template basis used when building and encrypting the recipient envelopes.
         /// </summary>
-        /// <value>The hash of the credit note template</value>
+        /// <value>Hash of the credit-note template basis used when building and encrypting the recipient envelopes.</value>
         [JsonPropertyName("templateHash")]
         public string TemplateHash { get; set; }
 
@@ -144,8 +144,7 @@ namespace Cheqi.Sdk.Models.Generated
                             parentCheqiReceiptId = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "encryptedCreditNotes":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                encryptedCreditNotes = new Option<List<EncryptedCreditNote>?>(JsonSerializer.Deserialize<List<EncryptedCreditNote>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            encryptedCreditNotes = new Option<List<EncryptedCreditNote>?>(JsonSerializer.Deserialize<List<EncryptedCreditNote>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "templateHash":
                             templateHash = new Option<string?>(utf8JsonReader.GetString()!);

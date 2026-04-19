@@ -298,20 +298,16 @@ namespace Cheqi.Sdk.Models.Generated
                             storeCode = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "active":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                active = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            active = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "id":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                id = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            id = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "companyId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                companyId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            companyId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "addressDto":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                addressDto = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            addressDto = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "phoneNumber":
                             phoneNumber = new Option<string?>(utf8JsonReader.GetString()!);
@@ -320,19 +316,16 @@ namespace Cheqi.Sdk.Models.Generated
                             email = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "isActive":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                isActive = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            isActive = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "openingHours":
                             openingHours = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "createdAt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "updatedAt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                updatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            updatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         default:
                             break;

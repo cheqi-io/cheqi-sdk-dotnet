@@ -1,7 +1,9 @@
 using Cheqi.Sdk.CreditNote;
 using Cheqi.Sdk.Models;
+using Cheqi.Sdk.Models.Generated;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Text.Json;
 
 namespace Cheqi.Sdk.Decryption;
 
@@ -112,6 +114,58 @@ public class DecryptionService
             _logger.LogError(e, "Failed to decrypt credit note for receipt {ReceiptId}",
                 encryptedCreditNote.CheqiReceiptId);
             throw new DecryptionException("Failed to decrypt credit note", e);
+        }
+    }
+
+    public DecryptedDeliveredCreditNote DecryptDeliveredCreditNote(
+        EncryptedCreditNoteDto encryptedCreditNote,
+        string privateKeyBase64)
+    {
+        try
+        {
+            byte[] aesKey = _rsaKeyDecryptor.DecryptKey(
+                encryptedCreditNote.EncryptedSymmetricKey ?? throw new DecryptionException("Encrypted symmetric key is null"),
+                privateKeyBase64
+            );
+
+            string decryptedCreditNoteContent = _aesDecryptor.Decrypt(
+                encryptedCreditNote.EncryptedCreditNote ?? throw new DecryptionException("Encrypted credit note data is null"),
+                aesKey
+            );
+
+            string? decryptedContext = null;
+            CreditNoteContextEnvelope? contextEnvelope = null;
+            if (!string.IsNullOrWhiteSpace(encryptedCreditNote.EncryptedCustomerDetails) &&
+                !string.IsNullOrWhiteSpace(encryptedCreditNote.EncryptedCustomerAesKey))
+            {
+                byte[] contextAesKey = _rsaKeyDecryptor.DecryptKey(
+                    encryptedCreditNote.EncryptedCustomerAesKey,
+                    privateKeyBase64
+                );
+
+                decryptedContext = _aesDecryptor.Decrypt(
+                    encryptedCreditNote.EncryptedCustomerDetails,
+                    contextAesKey
+                );
+
+                contextEnvelope = JsonSerializer.Deserialize<CreditNoteContextEnvelope>(decryptedContext)
+                    ?? throw new DecryptionException("Failed to deserialize credit note context");
+            }
+
+            var creditNoteEnvelope = JsonSerializer.Deserialize<CreditNoteEnvelope>(decryptedCreditNoteContent)
+                ?? throw new DecryptionException("Failed to deserialize credit note envelope");
+
+            return new DecryptedDeliveredCreditNote(
+                creditNoteEnvelope,
+                contextEnvelope,
+                decryptedCreditNoteContent,
+                decryptedContext);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to decrypt delivered credit note for recipient {RecipientId}",
+                encryptedCreditNote.RecipientId);
+            throw new DecryptionException("Failed to decrypt delivered credit note", e);
         }
     }
 

@@ -126,12 +126,10 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "createdWebhooks":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                createdWebhooks = new Option<List<WebhookDTO>?>(JsonSerializer.Deserialize<List<WebhookDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            createdWebhooks = new Option<List<WebhookDTO>?>(JsonSerializer.Deserialize<List<WebhookDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "failedEvents":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                failedEvents = new Option<List<string>?>(JsonSerializer.Deserialize<List<string>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            failedEvents = new Option<List<string>?>(JsonSerializer.Deserialize<List<string>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;

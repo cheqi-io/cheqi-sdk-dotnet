@@ -32,9 +32,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="EncryptedReceiptsRequest" /> class.
         /// </summary>
-        /// <param name="encryptedReceiptRequests">The encrypted receipts</param>
-        /// <param name="matchId">The match ID that was return during the recipient matching process</param>
-        /// <param name="templateHash">The template hash that was return during the recipient matching process</param>
+        /// <param name="encryptedReceiptRequests">Recipient-specific encrypted receipt payloads. Each item contains ciphertext for one recipient envelope plus the wrapped symmetric key and verification metadata.</param>
+        /// <param name="matchId">Match identifier returned by the recipient resolution step. Every recipientId in encryptedReceiptRequests must belong to this match.</param>
+        /// <param name="templateHash">Hash of the receipt template basis used when building and encrypting the recipient envelopes. Submit the same hash that was produced during local envelope construction.</param>
         [JsonConstructor]
         public EncryptedReceiptsRequest(List<EncryptedReceiptRequest> encryptedReceiptRequests, string matchId, string templateHash)
         {
@@ -47,23 +47,23 @@ namespace Cheqi.Sdk.Models.Generated
         partial void OnCreated();
 
         /// <summary>
-        /// The encrypted receipts
+        /// Recipient-specific encrypted receipt payloads. Each item contains ciphertext for one recipient envelope plus the wrapped symmetric key and verification metadata.
         /// </summary>
-        /// <value>The encrypted receipts</value>
+        /// <value>Recipient-specific encrypted receipt payloads. Each item contains ciphertext for one recipient envelope plus the wrapped symmetric key and verification metadata.</value>
         [JsonPropertyName("encryptedReceiptRequests")]
         public List<EncryptedReceiptRequest> EncryptedReceiptRequests { get; set; }
 
         /// <summary>
-        /// The match ID that was return during the recipient matching process
+        /// Match identifier returned by the recipient resolution step. Every recipientId in encryptedReceiptRequests must belong to this match.
         /// </summary>
-        /// <value>The match ID that was return during the recipient matching process</value>
+        /// <value>Match identifier returned by the recipient resolution step. Every recipientId in encryptedReceiptRequests must belong to this match.</value>
         [JsonPropertyName("matchId")]
         public string MatchId { get; set; }
 
         /// <summary>
-        /// The template hash that was return during the recipient matching process
+        /// Hash of the receipt template basis used when building and encrypting the recipient envelopes. Submit the same hash that was produced during local envelope construction.
         /// </summary>
-        /// <value>The template hash that was return during the recipient matching process</value>
+        /// <value>Hash of the receipt template basis used when building and encrypting the recipient envelopes. Submit the same hash that was produced during local envelope construction.</value>
         [JsonPropertyName("templateHash")]
         public string TemplateHash { get; set; }
 
@@ -125,8 +125,7 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "encryptedReceiptRequests":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                encryptedReceiptRequests = new Option<List<EncryptedReceiptRequest>?>(JsonSerializer.Deserialize<List<EncryptedReceiptRequest>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            encryptedReceiptRequests = new Option<List<EncryptedReceiptRequest>?>(JsonSerializer.Deserialize<List<EncryptedReceiptRequest>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "matchId":
                             matchId = new Option<string?>(utf8JsonReader.GetString()!);

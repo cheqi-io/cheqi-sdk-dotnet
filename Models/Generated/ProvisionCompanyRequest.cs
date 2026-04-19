@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// ProvisionCompanyRequest
+    /// Request payload for trusted partner company provisioning.
     /// </summary>
     public partial class ProvisionCompanyRequest
     {
@@ -33,9 +33,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="ProvisionCompanyRequest" /> class.
         /// </summary>
         /// <param name="company">company</param>
-        /// <param name="adminEmail">adminEmail</param>
+        /// <param name="adminEmail">Optional admin email that should receive a company-claim invitation</param>
         [JsonConstructor]
-        public ProvisionCompanyRequest(CompanyDTO company, Option<string?> adminEmail = default)
+        public ProvisionCompanyRequest(CompanyCreationRequest company, Option<string?> adminEmail = default)
         {
             Company = company;
             AdminEmailOption = adminEmail;
@@ -48,7 +48,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// Gets or Sets Company
         /// </summary>
         [JsonPropertyName("company")]
-        public CompanyDTO Company { get; set; }
+        public CompanyCreationRequest Company { get; set; }
 
         /// <summary>
         /// Used to track the state of AdminEmail
@@ -58,8 +58,10 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> AdminEmailOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets AdminEmail
+        /// Optional admin email that should receive a company-claim invitation
         /// </summary>
+        /// <value>Optional admin email that should receive a company-claim invitation</value>
+        /* <example>owner@example.com</example> */
         [JsonPropertyName("adminEmail")]
         public string? AdminEmail { get { return this.AdminEmailOption; } set { this.AdminEmailOption = new(value); } }
 
@@ -100,7 +102,7 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<CompanyDTO?> company = default;
+            Option<CompanyCreationRequest?> company = default;
             Option<string?> adminEmail = default;
 
             while (utf8JsonReader.Read())
@@ -119,11 +121,10 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "company":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                company = new Option<CompanyDTO?>(JsonSerializer.Deserialize<CompanyDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            company = new Option<CompanyCreationRequest?>(JsonSerializer.Deserialize<CompanyCreationRequest>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "adminEmail":
-                            adminEmail = new Option<string?>(utf8JsonReader.GetString()!);
+                            adminEmail = new Option<string?>(utf8JsonReader.GetString());
                             break;
                         default:
                             break;
@@ -136,9 +137,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (company.IsSet && company.Value == null)
                 throw new ArgumentNullException(nameof(company), "Property is not nullable for class ProvisionCompanyRequest.");
-
-            if (adminEmail.IsSet && adminEmail.Value == null)
-                throw new ArgumentNullException(nameof(adminEmail), "Property is not nullable for class ProvisionCompanyRequest.");
 
             return new ProvisionCompanyRequest(company.Value!, adminEmail);
         }
@@ -170,13 +168,13 @@ namespace Cheqi.Sdk.Models.Generated
             if (provisionCompanyRequest.Company == null)
                 throw new ArgumentNullException(nameof(provisionCompanyRequest.Company), "Property is required for class ProvisionCompanyRequest.");
 
-            if (provisionCompanyRequest.AdminEmailOption.IsSet && provisionCompanyRequest.AdminEmail == null)
-                throw new ArgumentNullException(nameof(provisionCompanyRequest.AdminEmail), "Property is required for class ProvisionCompanyRequest.");
-
             writer.WritePropertyName("company");
             JsonSerializer.Serialize(writer, provisionCompanyRequest.Company, jsonSerializerOptions);
             if (provisionCompanyRequest.AdminEmailOption.IsSet)
-                writer.WriteString("adminEmail", provisionCompanyRequest.AdminEmail);
+                if (provisionCompanyRequest.AdminEmailOption.Value != null)
+                    writer.WriteString("adminEmail", provisionCompanyRequest.AdminEmail);
+                else
+                    writer.WriteNull("adminEmail");
         }
     }
 }

@@ -25,29 +25,21 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Period
+    /// The billing or service period covered by this receipt. Use this when the purchase covers a specific time range rather than a single point in time.
     /// </summary>
     public partial class Period
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Period" /> class.
         /// </summary>
-        /// <param name="startDate">startDate</param>
-        /// <param name="startTime">startTime</param>
-        /// <param name="endDate">endDate</param>
-        /// <param name="endTime">endTime</param>
-        /// <param name="durationMeasure">durationMeasure</param>
-        /// <param name="descriptionCode">descriptionCode</param>
-        /// <param name="description">description</param>
+        /// <param name="startDate">The start date of the period</param>
+        /// <param name="endDate">The end date of the period</param>
+        /// <param name="description">Human-readable description of the period</param>
         [JsonConstructor]
-        public Period(Option<string?> startDate = default, Option<string?> startTime = default, Option<string?> endDate = default, Option<string?> endTime = default, Option<Measure?> durationMeasure = default, Option<Code?> descriptionCode = default, Option<string?> description = default)
+        public Period(DateTimeOffset startDate, DateTimeOffset endDate, Option<string?> description = default)
         {
-            StartDateOption = startDate;
-            StartTimeOption = startTime;
-            EndDateOption = endDate;
-            EndTimeOption = endTime;
-            DurationMeasureOption = durationMeasure;
-            DescriptionCodeOption = descriptionCode;
+            StartDate = startDate;
+            EndDate = endDate;
             DescriptionOption = description;
             OnCreated();
         }
@@ -55,82 +47,20 @@ namespace Cheqi.Sdk.Models.Generated
         partial void OnCreated();
 
         /// <summary>
-        /// Used to track the state of StartDate
+        /// The start date of the period
         /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> StartDateOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets StartDate
-        /// </summary>
+        /// <value>The start date of the period</value>
+        /* <example>2024-01-01T00:00Z</example> */
         [JsonPropertyName("startDate")]
-        public string? StartDate { get { return this.StartDateOption; } set { this.StartDateOption = new(value); } }
+        public DateTimeOffset StartDate { get; set; }
 
         /// <summary>
-        /// Used to track the state of StartTime
+        /// The end date of the period
         /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> StartTimeOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets StartTime
-        /// </summary>
-        [JsonPropertyName("startTime")]
-        public string? StartTime { get { return this.StartTimeOption; } set { this.StartTimeOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of EndDate
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> EndDateOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets EndDate
-        /// </summary>
+        /// <value>The end date of the period</value>
+        /* <example>2024-01-01T00:00Z</example> */
         [JsonPropertyName("endDate")]
-        public string? EndDate { get { return this.EndDateOption; } set { this.EndDateOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of EndTime
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> EndTimeOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets EndTime
-        /// </summary>
-        [JsonPropertyName("endTime")]
-        public string? EndTime { get { return this.EndTimeOption; } set { this.EndTimeOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of DurationMeasure
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<Measure?> DurationMeasureOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets DurationMeasure
-        /// </summary>
-        [JsonPropertyName("durationMeasure")]
-        public Measure? DurationMeasure { get { return this.DurationMeasureOption; } set { this.DurationMeasureOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of DescriptionCode
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<Code?> DescriptionCodeOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets DescriptionCode
-        /// </summary>
-        [JsonPropertyName("descriptionCode")]
-        public Code? DescriptionCode { get { return this.DescriptionCodeOption; } set { this.DescriptionCodeOption = new(value); } }
+        public DateTimeOffset EndDate { get; set; }
 
         /// <summary>
         /// Used to track the state of Description
@@ -140,8 +70,10 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> DescriptionOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets Description
+        /// Human-readable description of the period
         /// </summary>
+        /// <value>Human-readable description of the period</value>
+        /* <example>Monthly subscription - January 2024</example> */
         [JsonPropertyName("description")]
         public string? Description { get { return this.DescriptionOption; } set { this.DescriptionOption = new(value); } }
 
@@ -154,11 +86,7 @@ namespace Cheqi.Sdk.Models.Generated
             StringBuilder sb = new StringBuilder();
             sb.Append("class Period {\n");
             sb.Append("  StartDate: ").Append(StartDate).Append("\n");
-            sb.Append("  StartTime: ").Append(StartTime).Append("\n");
             sb.Append("  EndDate: ").Append(EndDate).Append("\n");
-            sb.Append("  EndTime: ").Append(EndTime).Append("\n");
-            sb.Append("  DurationMeasure: ").Append(DurationMeasure).Append("\n");
-            sb.Append("  DescriptionCode: ").Append(DescriptionCode).Append("\n");
             sb.Append("  Description: ").Append(Description).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -170,6 +98,16 @@ namespace Cheqi.Sdk.Models.Generated
     /// </summary>
     public class PeriodJsonConverter : JsonConverter<Period>
     {
+        /// <summary>
+        /// The format to use to serialize StartDate
+        /// </summary>
+        public static string StartDateFormat { get; set; } = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fffffffK";
+
+        /// <summary>
+        /// The format to use to serialize EndDate
+        /// </summary>
+        public static string EndDateFormat { get; set; } = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fffffffK";
+
         /// <summary>
         /// Deserializes json to <see cref="Period" />
         /// </summary>
@@ -187,12 +125,8 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<string?> startDate = default;
-            Option<string?> startTime = default;
-            Option<string?> endDate = default;
-            Option<string?> endTime = default;
-            Option<Measure?> durationMeasure = default;
-            Option<Code?> descriptionCode = default;
+            Option<DateTimeOffset?> startDate = default;
+            Option<DateTimeOffset?> endDate = default;
             Option<string?> description = default;
 
             while (utf8JsonReader.Read())
@@ -211,24 +145,10 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "startDate":
-                            startDate = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
-                        case "startTime":
-                            startTime = new Option<string?>(utf8JsonReader.GetString()!);
+                            startDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "endDate":
-                            endDate = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
-                        case "endTime":
-                            endTime = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
-                        case "durationMeasure":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                durationMeasure = new Option<Measure?>(JsonSerializer.Deserialize<Measure>(ref utf8JsonReader, jsonSerializerOptions)!);
-                            break;
-                        case "descriptionCode":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                descriptionCode = new Option<Code?>(JsonSerializer.Deserialize<Code>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            endDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "description":
                             description = new Option<string?>(utf8JsonReader.GetString()!);
@@ -239,28 +159,22 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
+            if (!startDate.IsSet)
+                throw new ArgumentException("Property is required for class Period.", nameof(startDate));
+
+            if (!endDate.IsSet)
+                throw new ArgumentException("Property is required for class Period.", nameof(endDate));
+
             if (startDate.IsSet && startDate.Value == null)
                 throw new ArgumentNullException(nameof(startDate), "Property is not nullable for class Period.");
-
-            if (startTime.IsSet && startTime.Value == null)
-                throw new ArgumentNullException(nameof(startTime), "Property is not nullable for class Period.");
 
             if (endDate.IsSet && endDate.Value == null)
                 throw new ArgumentNullException(nameof(endDate), "Property is not nullable for class Period.");
 
-            if (endTime.IsSet && endTime.Value == null)
-                throw new ArgumentNullException(nameof(endTime), "Property is not nullable for class Period.");
-
-            if (durationMeasure.IsSet && durationMeasure.Value == null)
-                throw new ArgumentNullException(nameof(durationMeasure), "Property is not nullable for class Period.");
-
-            if (descriptionCode.IsSet && descriptionCode.Value == null)
-                throw new ArgumentNullException(nameof(descriptionCode), "Property is not nullable for class Period.");
-
             if (description.IsSet && description.Value == null)
                 throw new ArgumentNullException(nameof(description), "Property is not nullable for class Period.");
 
-            return new Period(startDate, startTime, endDate, endTime, durationMeasure, descriptionCode, description);
+            return new Period(startDate.Value!.Value!, endDate.Value!.Value!, description);
         }
 
         /// <summary>
@@ -287,49 +201,13 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, Period period, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (period.StartDateOption.IsSet && period.StartDate == null)
-                throw new ArgumentNullException(nameof(period.StartDate), "Property is required for class Period.");
-
-            if (period.StartTimeOption.IsSet && period.StartTime == null)
-                throw new ArgumentNullException(nameof(period.StartTime), "Property is required for class Period.");
-
-            if (period.EndDateOption.IsSet && period.EndDate == null)
-                throw new ArgumentNullException(nameof(period.EndDate), "Property is required for class Period.");
-
-            if (period.EndTimeOption.IsSet && period.EndTime == null)
-                throw new ArgumentNullException(nameof(period.EndTime), "Property is required for class Period.");
-
-            if (period.DurationMeasureOption.IsSet && period.DurationMeasure == null)
-                throw new ArgumentNullException(nameof(period.DurationMeasure), "Property is required for class Period.");
-
-            if (period.DescriptionCodeOption.IsSet && period.DescriptionCode == null)
-                throw new ArgumentNullException(nameof(period.DescriptionCode), "Property is required for class Period.");
-
             if (period.DescriptionOption.IsSet && period.Description == null)
                 throw new ArgumentNullException(nameof(period.Description), "Property is required for class Period.");
 
-            if (period.StartDateOption.IsSet)
-                writer.WriteString("startDate", period.StartDate);
+            writer.WriteString("startDate", period.StartDate.ToString(StartDateFormat));
 
-            if (period.StartTimeOption.IsSet)
-                writer.WriteString("startTime", period.StartTime);
+            writer.WriteString("endDate", period.EndDate.ToString(EndDateFormat));
 
-            if (period.EndDateOption.IsSet)
-                writer.WriteString("endDate", period.EndDate);
-
-            if (period.EndTimeOption.IsSet)
-                writer.WriteString("endTime", period.EndTime);
-
-            if (period.DurationMeasureOption.IsSet)
-            {
-                writer.WritePropertyName("durationMeasure");
-                JsonSerializer.Serialize(writer, period.DurationMeasure, jsonSerializerOptions);
-            }
-            if (period.DescriptionCodeOption.IsSet)
-            {
-                writer.WritePropertyName("descriptionCode");
-                JsonSerializer.Serialize(writer, period.DescriptionCode, jsonSerializerOptions);
-            }
             if (period.DescriptionOption.IsSet)
                 writer.WriteString("description", period.Description);
         }

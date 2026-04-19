@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// A set of encrypted credit notes
+    /// Recipient-specific encrypted credit-note payloads. Each item contains ciphertext for one locally assembled recipient envelope plus the wrapped symmetric key and verification metadata.
     /// </summary>
     public partial class EncryptedCreditNote
     {
@@ -265,8 +265,7 @@ namespace Cheqi.Sdk.Models.Generated
                             publicKey = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "supplierPartyId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                supplierPartyId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            supplierPartyId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "recipientId":
                             recipientId = new Option<string?>(utf8JsonReader.GetString()!);

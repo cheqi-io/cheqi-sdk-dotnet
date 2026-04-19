@@ -170,12 +170,10 @@ namespace Cheqi.Sdk.Models.Generated
                             ublInvoice = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "cheqi":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                cheqi = new Option<CheqiReceipt?>(JsonSerializer.Deserialize<CheqiReceipt>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            cheqi = new Option<CheqiReceipt?>(JsonSerializer.Deserialize<CheqiReceipt>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "vatMetadata":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                vatMetadata = new Option<VatMetadata?>(JsonSerializer.Deserialize<VatMetadata>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            vatMetadata = new Option<VatMetadata?>(JsonSerializer.Deserialize<VatMetadata>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;

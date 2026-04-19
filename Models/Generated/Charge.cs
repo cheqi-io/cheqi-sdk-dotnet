@@ -142,12 +142,10 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "amount":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                amount = new Option<decimal?>(utf8JsonReader.GetDecimal());
+                            amount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "percentage":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                percentage = new Option<double?>(utf8JsonReader.GetDouble());
+                            percentage = new Option<double?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (double?)null : utf8JsonReader.GetDouble());
                             break;
                         case "label":
                             label = new Option<string?>(utf8JsonReader.GetString()!);

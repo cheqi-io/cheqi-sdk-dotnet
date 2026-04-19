@@ -20,7 +20,7 @@ jobs:
           dotnet-version: "6.0.x"
 
       - name: Check OpenAPI spec drift
-        run: make spec-check
+        run: make spec-check ENV=test
 
       - name: Build SDK
         run: make build

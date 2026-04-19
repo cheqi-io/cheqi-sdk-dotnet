@@ -166,19 +166,16 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "rate":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                rate = new Option<double?>(utf8JsonReader.GetDouble());
+                            rate = new Option<double?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (double?)null : utf8JsonReader.GetDouble());
                             break;
                         case "type":
                             type = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "taxableAmount":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                taxableAmount = new Option<decimal?>(utf8JsonReader.GetDecimal());
+                            taxableAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "amount":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                amount = new Option<decimal?>(utf8JsonReader.GetDecimal());
+                            amount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "label":
                             label = new Option<string?>(utf8JsonReader.GetString()!);

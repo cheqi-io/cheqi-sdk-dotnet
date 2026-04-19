@@ -1,5 +1,22 @@
-SPEC_URL ?= https://test.api.cheqi.io/v3/api-docs.yaml
-LOCAL_SPEC_URL ?= http://localhost:8080/openapi/yaml
+ENV ?= test
+
+SPEC_LOCAL_URL := http://localhost:8080/v3/api-docs.yaml
+SPEC_TEST_URL := https://test.api.cheqi.io/v3/api-docs.yaml
+SPEC_SANDBOX_URL := https://sandbox.api.cheqi.io/v3/api-docs.yaml
+SPEC_PROD_URL := https://api.cheqi.io/v3/api-docs.yaml
+
+ifeq ($(ENV),local)
+SPEC_URL := $(SPEC_LOCAL_URL)
+else ifeq ($(ENV),test)
+SPEC_URL := $(SPEC_TEST_URL)
+else ifeq ($(ENV),sandbox)
+SPEC_URL := $(SPEC_SANDBOX_URL)
+else ifeq ($(ENV),prod)
+SPEC_URL := $(SPEC_PROD_URL)
+else
+$(error Unsupported ENV '$(ENV)'. Use one of: local, test, sandbox, prod)
+endif
+
 GENERATED_DIR := Models/Generated
 
 .PHONY: fetch-spec fetch-spec-local generate build test pack spec-check
@@ -9,23 +26,12 @@ fetch-spec:
 	@echo "Spec updated. Run 'make generate' to regenerate models."
 
 fetch-spec-local:
-	curl -fsSL $(LOCAL_SPEC_URL) -o openapi.yaml
-	@echo "Local spec updated from $(LOCAL_SPEC_URL). Run 'make generate' to regenerate models."
+	$(MAKE) fetch-spec ENV=local
 
 generate:
 	rm -rf /tmp/cheqi-dotnet-gen
-	python3 -c "\
-	import yaml; \
-	d=yaml.safe_load(open('openapi.yaml')); \
-	schemas=d.get('components',{}).get('schemas',{}); \
-	[s.update({'enum': list(dict.fromkeys(s['enum']))}) for s in \
-	 [schemas.get(n,{}) for n in schemas] + \
-	 [schemas.get(n,{}).get('properties',{}).get(p,{}) \
-	  for n in schemas for p in schemas.get(n,{}).get('properties',{})] \
-	 if 'enum' in s and len(s['enum']) != len(set(s['enum']))]; \
-	yaml.dump(d, open('/tmp/cheqi-openapi-deduped.yaml','w'), default_flow_style=False, sort_keys=False)"
 	openapi-generator generate \
-		-i /tmp/cheqi-openapi-deduped.yaml \
+		-i openapi.yaml \
 		-g csharp \
 		-o /tmp/cheqi-dotnet-gen \
 		--global-property models,supportingFiles=Option.cs \
@@ -37,7 +43,7 @@ generate:
 	cp /tmp/cheqi-dotnet-gen/Cheqi.Sdk/Models.Generated/*.cs $(GENERATED_DIR)/
 	find $(GENERATED_DIR) -name '*.cs' -exec sed -i '' 's/using Cheqi\.Sdk\.Client;//' {} +
 	find $(GENERATED_DIR) -name '*.cs' -exec sed -i '' 's/namespace Cheqi\.Sdk\.Client/namespace Cheqi.Sdk.Models.Generated/' {} +
-	rm -rf /tmp/cheqi-dotnet-gen /tmp/cheqi-openapi-deduped.yaml
+	rm -rf /tmp/cheqi-dotnet-gen
 	@echo "Models generated in $(GENERATED_DIR)/"
 
 build:

@@ -32,9 +32,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="ReceiptCreatedResponse" /> class.
         /// </summary>
-        /// <param name="cheqiReceiptId">cheqiReceiptId</param>
-        /// <param name="createdAt">createdAt</param>
-        /// <param name="templateHash">templateHash</param>
+        /// <param name="cheqiReceiptId">Stable Cheqi receipt identifier assigned to the submitted receipt.</param>
+        /// <param name="createdAt">Timestamp when Cheqi accepted and queued the encrypted receipt submission.</param>
+        /// <param name="templateHash">Template hash associated with the locally built recipient envelopes. This should match the templateHash submitted in the request and can be stored for audit and verification.</param>
         [JsonConstructor]
         public ReceiptCreatedResponse(Option<string?> cheqiReceiptId = default, Option<DateTimeOffset?> createdAt = default, Option<string?> templateHash = default)
         {
@@ -54,8 +54,10 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> CheqiReceiptIdOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets CheqiReceiptId
+        /// Stable Cheqi receipt identifier assigned to the submitted receipt.
         /// </summary>
+        /// <value>Stable Cheqi receipt identifier assigned to the submitted receipt.</value>
+        /* <example>CHQ-12345678-123456-123456</example> */
         [JsonPropertyName("cheqiReceiptId")]
         public string? CheqiReceiptId { get { return this.CheqiReceiptIdOption; } set { this.CheqiReceiptIdOption = new(value); } }
 
@@ -67,8 +69,9 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<DateTimeOffset?> CreatedAtOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets CreatedAt
+        /// Timestamp when Cheqi accepted and queued the encrypted receipt submission.
         /// </summary>
+        /// <value>Timestamp when Cheqi accepted and queued the encrypted receipt submission.</value>
         [JsonPropertyName("createdAt")]
         public DateTimeOffset? CreatedAt { get { return this.CreatedAtOption; } set { this.CreatedAtOption = new(value); } }
 
@@ -80,8 +83,9 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> TemplateHashOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets TemplateHash
+        /// Template hash associated with the locally built recipient envelopes. This should match the templateHash submitted in the request and can be stored for audit and verification.
         /// </summary>
+        /// <value>Template hash associated with the locally built recipient envelopes. This should match the templateHash submitted in the request and can be stored for audit and verification.</value>
         [JsonPropertyName("templateHash")]
         public string? TemplateHash { get { return this.TemplateHashOption; } set { this.TemplateHashOption = new(value); } }
 
@@ -151,8 +155,7 @@ namespace Cheqi.Sdk.Models.Generated
                             cheqiReceiptId = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "createdAt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "templateHash":
                             templateHash = new Option<string?>(utf8JsonReader.GetString()!);

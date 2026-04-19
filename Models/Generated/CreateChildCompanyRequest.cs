@@ -33,9 +33,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="CreateChildCompanyRequest" /> class.
         /// </summary>
         /// <param name="company">company</param>
-        /// <param name="adminEmail">adminEmail</param>
+        /// <param name="adminEmail">Email address of the company admin to invite</param>
         [JsonConstructor]
-        public CreateChildCompanyRequest(Option<CompanyDTO?> company = default, Option<string?> adminEmail = default)
+        public CreateChildCompanyRequest(Option<CompanyCreationRequest?> company = default, Option<string?> adminEmail = default)
         {
             CompanyOption = company;
             AdminEmailOption = adminEmail;
@@ -49,13 +49,13 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<CompanyDTO?> CompanyOption { get; private set; }
+        public Option<CompanyCreationRequest?> CompanyOption { get; private set; }
 
         /// <summary>
         /// Gets or Sets Company
         /// </summary>
         [JsonPropertyName("company")]
-        public CompanyDTO? Company { get { return this.CompanyOption; } set { this.CompanyOption = new(value); } }
+        public CompanyCreationRequest? Company { get { return this.CompanyOption; } set { this.CompanyOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of AdminEmail
@@ -65,8 +65,10 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<string?> AdminEmailOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets AdminEmail
+        /// Email address of the company admin to invite
         /// </summary>
+        /// <value>Email address of the company admin to invite</value>
+        /* <example>owner@example.com</example> */
         [JsonPropertyName("adminEmail")]
         public string? AdminEmail { get { return this.AdminEmailOption; } set { this.AdminEmailOption = new(value); } }
 
@@ -107,7 +109,7 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<CompanyDTO?> company = default;
+            Option<CompanyCreationRequest?> company = default;
             Option<string?> adminEmail = default;
 
             while (utf8JsonReader.Read())
@@ -126,8 +128,7 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "company":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                company = new Option<CompanyDTO?>(JsonSerializer.Deserialize<CompanyDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            company = new Option<CompanyCreationRequest?>(JsonSerializer.Deserialize<CompanyCreationRequest>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "adminEmail":
                             adminEmail = new Option<string?>(utf8JsonReader.GetString()!);

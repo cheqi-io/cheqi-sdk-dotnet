@@ -38,22 +38,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Enum RSA4096 for value: RSA_4096
         /// </summary>
-        RSA4096 = 2,
-
-        /// <summary>
-        /// Enum ECDSAP256 for value: ECDSA_P256
-        /// </summary>
-        ECDSAP256 = 3,
-
-        /// <summary>
-        /// Enum ECDSAP384 for value: ECDSA_P384
-        /// </summary>
-        ECDSAP384 = 4,
-
-        /// <summary>
-        /// Enum ED25519 for value: ED25519
-        /// </summary>
-        ED25519 = 5
+        RSA4096 = 2
     }
 
     /// <summary>
@@ -74,15 +59,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("RSA_4096"))
                 return KeyAlgorithm.RSA4096;
 
-            if (value.Equals("ECDSA_P256"))
-                return KeyAlgorithm.ECDSAP256;
-
-            if (value.Equals("ECDSA_P384"))
-                return KeyAlgorithm.ECDSAP384;
-
-            if (value.Equals("ED25519"))
-                return KeyAlgorithm.ED25519;
-
             throw new NotImplementedException($"Could not convert value to type KeyAlgorithm: '{value}'");
         }
 
@@ -98,15 +74,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value.Equals("RSA_4096"))
                 return KeyAlgorithm.RSA4096;
-
-            if (value.Equals("ECDSA_P256"))
-                return KeyAlgorithm.ECDSAP256;
-
-            if (value.Equals("ECDSA_P384"))
-                return KeyAlgorithm.ECDSAP384;
-
-            if (value.Equals("ED25519"))
-                return KeyAlgorithm.ED25519;
 
             return null;
         }
@@ -124,15 +91,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value == KeyAlgorithm.RSA4096)
                 return "RSA_4096";
-
-            if (value == KeyAlgorithm.ECDSAP256)
-                return "ECDSA_P256";
-
-            if (value == KeyAlgorithm.ECDSAP384)
-                return "ECDSA_P384";
-
-            if (value == KeyAlgorithm.ED25519)
-                return "ED25519";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }

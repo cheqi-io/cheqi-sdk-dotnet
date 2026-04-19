@@ -173,8 +173,7 @@ namespace Cheqi.Sdk.Models.Generated
                             keyAlgorithm = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "acceptedFormats":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                acceptedFormats = new Option<List<ReceiptFormat>?>(JsonSerializer.Deserialize<List<ReceiptFormat>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            acceptedFormats = new Option<List<ReceiptFormat>?>(JsonSerializer.Deserialize<List<ReceiptFormat>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;

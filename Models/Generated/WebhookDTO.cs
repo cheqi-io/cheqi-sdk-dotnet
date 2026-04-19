@@ -203,12 +203,10 @@ namespace Cheqi.Sdk.Models.Generated
                             varEvent = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "clientApplicationId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                clientApplicationId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            clientApplicationId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "userId":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                userId = new Option<Guid?>(utf8JsonReader.GetGuid());
+                            userId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
                             break;
                         case "companyId":
                             companyId = new Option<string?>(utf8JsonReader.GetString()!);

@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// VAT metadata for cross-border tax handling. Contains supplier/buyer countries, VAT regime classification, and whether VAT was charged on the receipt.
+    /// VAT metadata that accompanies the receipt formats and supports verification and tax handling.
     /// </summary>
     public partial class VatMetadata
     {
@@ -217,8 +217,7 @@ namespace Cheqi.Sdk.Models.Generated
                             buyerCountry = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "crossBorder":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                crossBorder = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            crossBorder = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "buyerType":
                             string? buyerTypeRawValue = utf8JsonReader.GetString();
@@ -226,8 +225,7 @@ namespace Cheqi.Sdk.Models.Generated
                                 buyerType = new Option<BuyerType?>(BuyerTypeValueConverter.FromStringOrDefault(buyerTypeRawValue));
                             break;
                         case "vatOnReceipt":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                vatOnReceipt = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            vatOnReceipt = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "vatRegime":
                             string? vatRegimeRawValue = utf8JsonReader.GetString();
@@ -235,8 +233,7 @@ namespace Cheqi.Sdk.Models.Generated
                                 vatRegime = new Option<VatRegime?>(VatRegimeValueConverter.FromStringOrDefault(vatRegimeRawValue));
                             break;
                         case "taxesApplied":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                taxesApplied = new Option<bool?>(utf8JsonReader.GetBoolean());
+                            taxesApplied = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         default:
                             break;

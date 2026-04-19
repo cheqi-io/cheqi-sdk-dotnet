@@ -240,8 +240,7 @@ namespace Cheqi.Sdk.Models.Generated
                             name = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "events":
-                            if (utf8JsonReader.TokenType != JsonTokenType.Null)
-                                events = new Option<List<WebhookRequestBody.EventsEnum>?>(JsonSerializer.Deserialize<List<WebhookRequestBody.EventsEnum>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            events = new Option<List<WebhookRequestBody.EventsEnum>?>(JsonSerializer.Deserialize<List<WebhookRequestBody.EventsEnum>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "notificationUrl":
                             notificationUrl = new Option<string?>(utf8JsonReader.GetString()!);
