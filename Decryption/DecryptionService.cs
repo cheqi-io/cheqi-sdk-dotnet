@@ -92,7 +92,7 @@ public class DecryptionService
     /// <returns>DecryptedCreditNote containing the credit note request details (JSON)</returns>
     /// <exception cref="DecryptionException">if decryption fails</exception>
     public DecryptedCreditNote DecryptCreditNote(
-        EncryptedCreditNoteInitiationRequest encryptedCreditNote,
+        Cheqi.Sdk.CreditNote.EncryptedCreditNoteInitiationRequest encryptedCreditNote,
         string privateKeyBase64)
     {
         try
