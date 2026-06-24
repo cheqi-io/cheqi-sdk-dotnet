@@ -33,7 +33,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="RecipientResolutionResponse" /> class.
         /// </summary>
         /// <param name="recipients">recipients</param>
-        /// <param name="customerFound">Indicates if a customer was found for the given recipient</param>
+        /// <param name="routeFound">Indicates if Cheqi found a delivery route for the receipt</param>
         /// <param name="matchId">The unique identifier for the matching process</param>
         /// <param name="matchedRecipients">The list of recipients found for the given recipient</param>
         /// <param name="expiresAt">The expiration time for the matching process</param>
@@ -41,10 +41,10 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="buyerCountryCode">The country code of the buyer</param>
         /// <param name="buyerType">buyerType</param>
         [JsonConstructor]
-        public RecipientResolutionResponse(Option<List<MatchedRecipient>?> recipients = default, Option<bool?> customerFound = default, Option<string?> matchId = default, Option<List<MatchedRecipient>?> matchedRecipients = default, Option<DateTimeOffset?> expiresAt = default, Option<string?> instructions = default, Option<string?> buyerCountryCode = default, Option<BuyerType?> buyerType = default)
+        public RecipientResolutionResponse(Option<List<MatchedRecipient>?> recipients = default, Option<bool?> routeFound = default, Option<string?> matchId = default, Option<List<MatchedRecipient>?> matchedRecipients = default, Option<DateTimeOffset?> expiresAt = default, Option<string?> instructions = default, Option<string?> buyerCountryCode = default, Option<BuyerType?> buyerType = default)
         {
             RecipientsOption = recipients;
-            CustomerFoundOption = customerFound;
+            RouteFoundOption = routeFound;
             MatchIdOption = matchId;
             MatchedRecipientsOption = matchedRecipients;
             ExpiresAtOption = expiresAt;
@@ -83,19 +83,19 @@ namespace Cheqi.Sdk.Models.Generated
         public List<MatchedRecipient>? Recipients { get { return this.RecipientsOption; } set { this.RecipientsOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of CustomerFound
+        /// Used to track the state of RouteFound
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<bool?> CustomerFoundOption { get; private set; }
+        public Option<bool?> RouteFoundOption { get; private set; }
 
         /// <summary>
-        /// Indicates if a customer was found for the given recipient
+        /// Indicates if Cheqi found a delivery route for the receipt
         /// </summary>
-        /// <value>Indicates if a customer was found for the given recipient</value>
+        /// <value>Indicates if Cheqi found a delivery route for the receipt</value>
         /* <example>true</example> */
-        [JsonPropertyName("customerFound")]
-        public bool? CustomerFound { get { return this.CustomerFoundOption; } set { this.CustomerFoundOption = new(value); } }
+        [JsonPropertyName("routeFound")]
+        public bool? RouteFound { get { return this.RouteFoundOption; } set { this.RouteFoundOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of MatchId
@@ -108,7 +108,6 @@ namespace Cheqi.Sdk.Models.Generated
         /// The unique identifier for the matching process
         /// </summary>
         /// <value>The unique identifier for the matching process</value>
-        /* <example>123e4567-e89b-12d3-a456-426614174000</example> */
         [JsonPropertyName("matchId")]
         public string? MatchId { get { return this.MatchIdOption; } set { this.MatchIdOption = new(value); } }
 
@@ -179,7 +178,7 @@ namespace Cheqi.Sdk.Models.Generated
             StringBuilder sb = new StringBuilder();
             sb.Append("class RecipientResolutionResponse {\n");
             sb.Append("  Recipients: ").Append(Recipients).Append("\n");
-            sb.Append("  CustomerFound: ").Append(CustomerFound).Append("\n");
+            sb.Append("  RouteFound: ").Append(RouteFound).Append("\n");
             sb.Append("  MatchId: ").Append(MatchId).Append("\n");
             sb.Append("  MatchedRecipients: ").Append(MatchedRecipients).Append("\n");
             sb.Append("  ExpiresAt: ").Append(ExpiresAt).Append("\n");
@@ -219,7 +218,7 @@ namespace Cheqi.Sdk.Models.Generated
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
             Option<List<MatchedRecipient>?> recipients = default;
-            Option<bool?> customerFound = default;
+            Option<bool?> routeFound = default;
             Option<string?> matchId = default;
             Option<List<MatchedRecipient>?> matchedRecipients = default;
             Option<DateTimeOffset?> expiresAt = default;
@@ -245,8 +244,8 @@ namespace Cheqi.Sdk.Models.Generated
                         case "recipients":
                             recipients = new Option<List<MatchedRecipient>?>(JsonSerializer.Deserialize<List<MatchedRecipient>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
-                        case "customerFound":
-                            customerFound = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
+                        case "routeFound":
+                            routeFound = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "matchId":
                             matchId = new Option<string?>(utf8JsonReader.GetString()!);
@@ -277,8 +276,8 @@ namespace Cheqi.Sdk.Models.Generated
             if (recipients.IsSet && recipients.Value == null)
                 throw new ArgumentNullException(nameof(recipients), "Property is not nullable for class RecipientResolutionResponse.");
 
-            if (customerFound.IsSet && customerFound.Value == null)
-                throw new ArgumentNullException(nameof(customerFound), "Property is not nullable for class RecipientResolutionResponse.");
+            if (routeFound.IsSet && routeFound.Value == null)
+                throw new ArgumentNullException(nameof(routeFound), "Property is not nullable for class RecipientResolutionResponse.");
 
             if (matchId.IsSet && matchId.Value == null)
                 throw new ArgumentNullException(nameof(matchId), "Property is not nullable for class RecipientResolutionResponse.");
@@ -298,7 +297,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (buyerType.IsSet && buyerType.Value == null)
                 throw new ArgumentNullException(nameof(buyerType), "Property is not nullable for class RecipientResolutionResponse.");
 
-            return new RecipientResolutionResponse(recipients, customerFound, matchId, matchedRecipients, expiresAt, instructions, buyerCountryCode, buyerType);
+            return new RecipientResolutionResponse(recipients, routeFound, matchId, matchedRecipients, expiresAt, instructions, buyerCountryCode, buyerType);
         }
 
         /// <summary>
@@ -345,8 +344,8 @@ namespace Cheqi.Sdk.Models.Generated
                 writer.WritePropertyName("recipients");
                 JsonSerializer.Serialize(writer, recipientResolutionResponse.Recipients, jsonSerializerOptions);
             }
-            if (recipientResolutionResponse.CustomerFoundOption.IsSet)
-                writer.WriteBoolean("customerFound", recipientResolutionResponse.CustomerFoundOption.Value!.Value);
+            if (recipientResolutionResponse.RouteFoundOption.IsSet)
+                writer.WriteBoolean("routeFound", recipientResolutionResponse.RouteFoundOption.Value!.Value);
 
             if (recipientResolutionResponse.MatchIdOption.IsSet)
                 writer.WriteString("matchId", recipientResolutionResponse.MatchId);

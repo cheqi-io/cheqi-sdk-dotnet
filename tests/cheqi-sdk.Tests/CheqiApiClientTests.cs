@@ -34,8 +34,15 @@ public sealed class CheqiApiClientTests
 
         var client = new CheqiApiClient(config, loggerFactory.CreateLogger<CheqiApiClient>(), httpClient);
 
+        var generationRequest = new Cheqi.Sdk.Models.Generated.ReceiptTemplateGenerationRequest(
+            new ReceiptTemplateRequest(),
+            new List<Cheqi.Sdk.Models.Generated.ReceiptFormat>(),
+            "NL",
+            default,
+            true);
+
         await Assert.ThrowsAsync<CheqiApiException>(() =>
-            client.GenerateReceiptTemplateAsync(new ReceiptTemplateRequest(), cancellationToken: CancellationToken.None));
+            client.GenerateReceiptTemplateAsync(generationRequest, cancellationToken: CancellationToken.None));
 
         var combinedLogs = string.Join("\n", loggerProvider.Messages);
         Assert.DoesNotContain("customer@example.com", combinedLogs);

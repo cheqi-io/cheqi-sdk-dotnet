@@ -71,6 +71,23 @@ public sealed class EncryptionService
     }
 
     /// <summary>
+    /// Encrypts a receipt envelope for a single recipient using hybrid encryption.
+    /// Mirrors the Java <c>encryptReceiptForRecipients(String, MatchedRecipient)</c> overload.
+    /// </summary>
+    /// <param name="purchaseReceipt">The JSON receipt envelope to encrypt</param>
+    /// <param name="recipient">Recipient with public key information</param>
+    /// <returns>The encrypted receipt request for this recipient</returns>
+    /// <exception cref="EncryptionException">if encryption fails</exception>
+    public EncryptedReceiptRequestDto EncryptReceiptForRecipient(string purchaseReceipt, Recipient recipient)
+    {
+        if (recipient == null)
+        {
+            throw new EncryptionException("Recipient cannot be null");
+        }
+        return EncryptReceiptForRecipient(recipient, purchaseReceipt);
+    }
+
+    /// <summary>
     /// Encrypts a credit note for multiple recipients using hybrid encryption.
     /// Each recipient gets a unique AES key encrypted with their RSA public key.
     /// </summary>
@@ -99,6 +116,23 @@ public sealed class EncryptionService
     }
 
     /// <summary>
+    /// Encrypts a credit note envelope for a single recipient using hybrid encryption.
+    /// Mirrors the Java <c>encryptCreditNoteForRecipient(String, MatchedRecipient)</c>.
+    /// </summary>
+    /// <param name="creditNote">The JSON credit note envelope to encrypt</param>
+    /// <param name="recipient">Recipient with public key information</param>
+    /// <returns>The encrypted credit note for this recipient</returns>
+    /// <exception cref="EncryptionException">if encryption fails</exception>
+    public EncryptedCreditNote EncryptCreditNoteForRecipient(string creditNote, Recipient recipient)
+    {
+        if (recipient == null)
+        {
+            throw new EncryptionException("Recipient cannot be null");
+        }
+        return EncryptCreditNoteForRecipient(recipient, creditNote);
+    }
+
+    /// <summary>
     /// Encrypts a receipt for a single recipient using hybrid encryption.
     /// </summary>
     private EncryptedReceiptRequestDto EncryptReceiptForRecipient(Recipient recipient, string purchaseReceipt)
@@ -124,11 +158,11 @@ public sealed class EncryptionService
             {
                 var encryptedSymmetricKey = _rsaKeyEncryptor.EncryptKey(aesKey, recipient.PublicKey);
 
-                var dto = new EncryptedReceiptRequestDto();
-                dto.RecipientId = recipient.Id;
-                dto.PublicKey = recipient.PublicKey;
-                dto.EncryptedReceipt = encryptedReceiptBase64;
-                dto.EncryptedSymmetricKey = encryptedSymmetricKey;
+                var dto = new EncryptedReceiptRequestDto(
+                    recipientId: recipient.Id,
+                    encryptedReceipt: encryptedReceiptBase64,
+                    encryptedSymmetricKey: encryptedSymmetricKey,
+                    publicKey: recipient.PublicKey);
                 return dto;
             }
             catch (Exception rsaException)

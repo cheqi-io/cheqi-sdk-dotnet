@@ -69,7 +69,12 @@ namespace Cheqi.Sdk.Models.Generated
             /// <summary>
             /// Enum CREDITNOTECREATED for value: CREDIT_NOTE_CREATED
             /// </summary>
-            CREDITNOTECREATED = 4
+            CREDITNOTECREATED = 4,
+
+            /// <summary>
+            /// Enum CREDITNOTEFINALIZED for value: CREDIT_NOTE_FINALIZED
+            /// </summary>
+            CREDITNOTEFINALIZED = 5
         }
 
         /// <summary>
@@ -91,6 +96,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value.Equals("CREDIT_NOTE_CREATED"))
                 return EventsEnum.CREDITNOTECREATED;
+
+            if (value.Equals("CREDIT_NOTE_FINALIZED"))
+                return EventsEnum.CREDITNOTEFINALIZED;
 
             throw new NotImplementedException($"Could not convert value to type EventsEnum: '{value}'");
         }
@@ -114,6 +122,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("CREDIT_NOTE_CREATED"))
                 return EventsEnum.CREDITNOTECREATED;
 
+            if (value.Equals("CREDIT_NOTE_FINALIZED"))
+                return EventsEnum.CREDITNOTEFINALIZED;
+
             return null;
         }
 
@@ -136,6 +147,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value == EventsEnum.CREDITNOTECREATED)
                 return "CREDIT_NOTE_CREATED";
+
+            if (value == EventsEnum.CREDITNOTEFINALIZED)
+                return "CREDIT_NOTE_FINALIZED";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }

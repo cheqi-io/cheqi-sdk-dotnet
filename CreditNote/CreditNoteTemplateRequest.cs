@@ -344,6 +344,7 @@ public sealed class CreditNoteTemplateRequest
         /// Convenience method to add a simple product with basic details.
         /// All amounts must be pre-calculated by the POS system.
         /// </summary>
+        /// <param name="identifier">Product identifier (SKU/article number). Required — use the same identifier as the original receipt line so the credit note maps back to it.</param>
         /// <param name="brand">Product brand/manufacturer</param>
         /// <param name="name">Product name/model</param>
         /// <param name="unitPrice">Price per unit</param>
@@ -353,9 +354,10 @@ public sealed class CreditNoteTemplateRequest
         /// <param name="total">Total amount including tax (pre-calculated)</param>
         /// <param name="quantity">Number of units (negative for returns)</param>
         /// <returns>This builder</returns>
-        public CreditNoteTemplateRequestBuilder AddProduct(string brand, string name, string unitPrice, string subtotal, double taxRate, string taxAmount, string total, double quantity)
+        public CreditNoteTemplateRequestBuilder AddProduct(string identifier, string brand, string name, string unitPrice, string subtotal, double taxRate, string taxAmount, string total, double quantity)
         {
             return AddProduct(Product.Builder()
+                .Identifier(identifier)
                 .BrandName(brand)
                 .Name(name)
                 .Quantity(quantity)
@@ -371,9 +373,9 @@ public sealed class CreditNoteTemplateRequest
         /// <summary>
         /// Convenience method with decimal amounts.
         /// </summary>
-        public CreditNoteTemplateRequestBuilder AddProduct(string brand, string name, decimal unitPrice, decimal subtotal, double taxRate, decimal taxAmount, decimal total, double quantity)
+        public CreditNoteTemplateRequestBuilder AddProduct(string identifier, string brand, string name, decimal unitPrice, decimal subtotal, double taxRate, decimal taxAmount, decimal total, double quantity)
         {
-            return AddProduct(brand, name, unitPrice.ToString(), subtotal.ToString(), taxRate, taxAmount.ToString(), total.ToString(), quantity);
+            return AddProduct(identifier, brand, name, unitPrice.ToString(), subtotal.ToString(), taxRate, taxAmount.ToString(), total.ToString(), quantity);
         }
 
         public CreditNoteTemplateRequestBuilder Discounts(List<Discount> discounts)
@@ -485,6 +487,34 @@ public sealed class CreditNoteTemplateRequest
                 _note
             );
         }
+    }
+
+    // ===== MAPPING =====
+
+    /// <summary>
+    /// Maps this request to the generated <see cref="Cheqi.Sdk.Models.Generated.CreditNoteTemplateRequest"/>
+    /// used by the template generation wrapper sent to the backend.
+    /// </summary>
+    internal Cheqi.Sdk.Models.Generated.CreditNoteTemplateRequest ToGenerated()
+    {
+        var generated = new Cheqi.Sdk.Models.Generated.CreditNoteTemplateRequest(
+            documentNumber,
+            originatorDocumentReference,
+            issueDate,
+            currency,
+            creditNoteSubTotal,
+            totalBeforeTax,
+            totalTaxAmount,
+            totalAmount,
+            products.Cast<Cheqi.Sdk.Models.Generated.Product>().ToList(),
+            taxes.Cast<Cheqi.Sdk.Models.Generated.Tax>().ToList());
+
+        if (identifiers.Count > 0)
+            generated.Identifiers = identifiers.ToList();
+        if (discounts.Count > 0)
+            generated.Discounts = discounts.Cast<Cheqi.Sdk.Models.Generated.Discount>().ToList();
+        generated.Note = note;
+        return generated;
     }
 
     // ===== EQUALS, HASHCODE, TOSTRING =====

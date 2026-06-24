@@ -43,7 +43,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Enum COMPANY for value: COMPANY
         /// </summary>
-        COMPANY = 3
+        COMPANY = 3,
+
+        /// <summary>
+        /// Enum EMAILFALLBACK for value: EMAIL_FALLBACK
+        /// </summary>
+        EMAILFALLBACK = 4
     }
 
     /// <summary>
@@ -67,6 +72,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("COMPANY"))
                 return ReceiverType.COMPANY;
 
+            if (value.Equals("EMAIL_FALLBACK"))
+                return ReceiverType.EMAILFALLBACK;
+
             throw new NotImplementedException($"Could not convert value to type ReceiverType: '{value}'");
         }
 
@@ -85,6 +93,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value.Equals("COMPANY"))
                 return ReceiverType.COMPANY;
+
+            if (value.Equals("EMAIL_FALLBACK"))
+                return ReceiverType.EMAILFALLBACK;
 
             return null;
         }
@@ -105,6 +116,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value == ReceiverType.COMPANY)
                 return "COMPANY";
+
+            if (value == ReceiverType.EMAILFALLBACK)
+                return "EMAIL_FALLBACK";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }

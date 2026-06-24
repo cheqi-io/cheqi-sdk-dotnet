@@ -28,18 +28,17 @@ public sealed class CheqiSdkOptionsTests
     [Fact]
     public void CommonModelsCanBeCreatedWithoutBuilders()
     {
-        var card = new Cheqi.Sdk.Models.Generated.CardDetails();
+        var card = new Cheqi.Sdk.Models.Generated.CardDetails("PAR123");
         card.CardProvider = Cheqi.Sdk.Models.Generated.CardDetails.CardProviderEnum.VISA;
-        card.PaymentAccountReference = "PAR123";
 
         var identification = new Cheqi.Sdk.Models.Generated.IdentificationDetails(
-            Cheqi.Sdk.Models.Generated.IdentificationDetails.PaymentTypeEnum.CARDPAYMENT);
+            Cheqi.Sdk.Models.Generated.PaymentType.CARDPAYMENT);
         identification.CardDetails = card;
         identification.RecipientEmail = "customer@example.com";
 
         Assert.Equal(Cheqi.Sdk.Models.Generated.CardDetails.CardProviderEnum.VISA, card.CardProvider);
         Assert.Equal("PAR123", card.PaymentAccountReference);
-        Assert.Equal(Cheqi.Sdk.Models.Generated.IdentificationDetails.PaymentTypeEnum.CARDPAYMENT, identification.PaymentType);
+        Assert.Equal(Cheqi.Sdk.Models.Generated.PaymentType.CARDPAYMENT, identification.PaymentType);
         Assert.Equal("customer@example.com", identification.RecipientEmail);
     }
 

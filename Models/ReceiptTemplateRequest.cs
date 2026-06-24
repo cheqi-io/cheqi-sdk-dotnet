@@ -1,6 +1,9 @@
 using System.Globalization;
+using System.Text.Json.Serialization;
 using Cheqi.Sdk.Models.Enums;
 using GeneratedModels = Cheqi.Sdk.Models.Generated;
+using BuyerType = Cheqi.Sdk.Models.Generated.BuyerType;
+using BarcodeType = Cheqi.Sdk.Models.Generated.BarcodeType;
 
 namespace Cheqi.Sdk.Models;
 
@@ -40,6 +43,29 @@ public class ReceiptTemplateRequest : GeneratedModels.ReceiptTemplateRequest
     public ReceiptTemplateRequest()
         : base("", default, "", 0, 0, 0, 0, new List<GeneratedModels.Product>()) { }
 
+    // ===== SDK-ONLY VAT CONTEXT (lifted into ReceiptTemplateGenerationRequest, not serialized inline) =====
+
+    /// <summary>
+    /// Buyer country code used for VAT resolution. Not serialized on the receipt body;
+    /// lifted into the template generation request.
+    /// </summary>
+    [JsonIgnore]
+    public string? BuyerCountryCode { get; set; }
+
+    /// <summary>
+    /// Buyer type used for VAT resolution. Not serialized on the receipt body;
+    /// lifted into the template generation request.
+    /// </summary>
+    [JsonIgnore]
+    public BuyerType? BuyerType { get; set; }
+
+    /// <summary>
+    /// Whether taxes are applied. Not serialized on the receipt body;
+    /// lifted into the template generation request.
+    /// </summary>
+    [JsonIgnore]
+    public bool? TaxesApplied { get; set; }
+
     // ===== BUILDER =====
 
     public static ReceiptTemplateRequestBuilder Builder() => new ReceiptTemplateRequestBuilder();
@@ -63,6 +89,10 @@ public class ReceiptTemplateRequest : GeneratedModels.ReceiptTemplateRequest
         private DateTimeOffset? _purchaseDate;
         private GeneratedModels.Period? _period;
         private string? _note;
+        private string? _buyerCountryCode;
+        private BuyerType? _buyerType;
+        private bool? _taxesApplied;
+        private List<GeneratedModels.Barcode>? _barcodes;
 
         internal ReceiptTemplateRequestBuilder() { }
 
@@ -85,6 +115,13 @@ public class ReceiptTemplateRequest : GeneratedModels.ReceiptTemplateRequest
             _purchaseDate = other.PurchaseDate;
             _period = other.Period;
             _note = other.Note;
+            if (other is ReceiptTemplateRequest sdkReq)
+            {
+                _buyerCountryCode = sdkReq.BuyerCountryCode;
+                _buyerType = sdkReq.BuyerType;
+                _taxesApplied = sdkReq.TaxesApplied;
+            }
+            _barcodes = other.Barcodes?.ToList();
             return this;
         }
 
@@ -186,7 +223,7 @@ public class ReceiptTemplateRequest : GeneratedModels.ReceiptTemplateRequest
         }
 
         public ReceiptTemplateRequestBuilder AddProduct(string identifier, string brand, string name,
-            string unitPrice, string subtotal, double taxRate, string taxAmount, string total, double quantity)
+            string unitPrice, string subtotal, double taxRate, string taxableAmount, string taxAmount, string total, double quantity)
         {
             return AddProduct(Product.Builder()
                 .BrandName(brand)
@@ -198,15 +235,15 @@ public class ReceiptTemplateRequest : GeneratedModels.ReceiptTemplateRequest
                 .UnitPrice(unitPrice)
                 .Subtotal(subtotal)
                 .Total(total)
-                .AddTax(taxRate, "VAT", taxAmount)
+                .AddTax(taxRate, "VAT", taxableAmount, taxAmount)
                 .Build());
         }
 
         public ReceiptTemplateRequestBuilder AddProduct(string identifier, string brand, string name,
-            decimal unitPrice, decimal subtotal, double taxRate, decimal taxAmount, decimal total, double quantity)
+            decimal unitPrice, decimal subtotal, double taxRate, decimal taxableAmount, decimal taxAmount, decimal total, double quantity)
         {
             return AddProduct(identifier, brand, name, unitPrice.ToString(), subtotal.ToString(),
-                taxRate, taxAmount.ToString(), total.ToString(), quantity);
+                taxRate, taxableAmount.ToString(), taxAmount.ToString(), total.ToString(), quantity);
         }
 
         public ReceiptTemplateRequestBuilder Discounts(List<GeneratedModels.Discount> discounts)
@@ -326,6 +363,47 @@ public class ReceiptTemplateRequest : GeneratedModels.ReceiptTemplateRequest
             return this;
         }
 
+        public ReceiptTemplateRequestBuilder BuyerCountryCode(string? buyerCountryCode)
+        {
+            _buyerCountryCode = buyerCountryCode;
+            return this;
+        }
+
+        public ReceiptTemplateRequestBuilder BuyerType(BuyerType? buyerType)
+        {
+            _buyerType = buyerType;
+            return this;
+        }
+
+        public ReceiptTemplateRequestBuilder TaxesApplied(bool? taxesApplied)
+        {
+            _taxesApplied = taxesApplied;
+            return this;
+        }
+
+        public ReceiptTemplateRequestBuilder Barcodes(List<GeneratedModels.Barcode> barcodes)
+        {
+            _barcodes = barcodes;
+            return this;
+        }
+
+        public ReceiptTemplateRequestBuilder AddBarcode(GeneratedModels.Barcode barcode)
+        {
+            _barcodes ??= new List<GeneratedModels.Barcode>();
+            _barcodes.Add(barcode);
+            return this;
+        }
+
+        public ReceiptTemplateRequestBuilder AddBarcode(BarcodeType type, string data, string? label = null)
+        {
+            return AddBarcode(Barcode.Of(type, data, label));
+        }
+
+        public ReceiptTemplateRequestBuilder AddQrCode(string data, string? label = null)
+        {
+            return AddBarcode(Barcode.QrCode(data, label));
+        }
+
         public ReceiptTemplateRequest Build()
         {
             if (_documentNumber == null)
@@ -361,6 +439,10 @@ public class ReceiptTemplateRequest : GeneratedModels.ReceiptTemplateRequest
             r.PurchaseDate = _purchaseDate;
             r.Period = _period;
             r.Note = _note;
+            r.BuyerCountryCode = _buyerCountryCode;
+            r.BuyerType = _buyerType;
+            r.TaxesApplied = _taxesApplied;
+            r.Barcodes = _barcodes;
             return r;
         }
     }

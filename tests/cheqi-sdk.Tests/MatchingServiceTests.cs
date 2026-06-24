@@ -13,7 +13,7 @@ public sealed class MatchingServiceTests
     {
         var apiClient = new FakeCheqiApiClient();
         var service = new MatchingService(apiClient);
-        var details = new IdentificationDetails(IdentificationDetails.PaymentTypeEnum.CARDPAYMENT);
+        var details = new IdentificationDetails(PaymentType.CARDPAYMENT);
 
         await Assert.ThrowsAsync<ArgumentException>(() => service.MatchCustomerAsync(details, "token"));
     }
@@ -49,7 +49,7 @@ public sealed class MatchingServiceTests
         apiClient.MatchCustomerAsyncHandler = (_, token, _) =>
         {
             capturedToken = token;
-            return Task.FromResult(new RecipientResolutionResponse { CustomerFound = false });
+            return Task.FromResult(new RecipientResolutionResponse { RouteFound = false });
         };
 
         var service = new MatchingService(apiClient);

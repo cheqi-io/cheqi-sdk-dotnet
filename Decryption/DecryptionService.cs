@@ -42,7 +42,7 @@ public class DecryptionService
     /// <param name="privateKeyBase64">The client's private key in Base64 PKCS#8 format</param>
     /// <returns>DecryptedReceipt containing both receipt content and customer details</returns>
     /// <exception cref="DecryptionException">if decryption fails</exception>
-    public DecryptedReceipt DecryptReceipt(EncryptedReceipt encryptedReceipt, string privateKeyBase64)
+    public DecryptedReceipt DecryptReceipt(Models.EncryptedReceipt encryptedReceipt, string privateKeyBase64)
     {
         try
         {
@@ -172,7 +172,7 @@ public class DecryptionService
     /// <summary>
     /// Checks if the encrypted receipt contains customer details.
     /// </summary>
-    private bool HasCustomerDetails(EncryptedReceipt encryptedReceipt)
+    private bool HasCustomerDetails(Models.EncryptedReceipt encryptedReceipt)
     {
         return !string.IsNullOrWhiteSpace(encryptedReceipt.encryptedCustomerDetails) &&
                encryptedReceipt.encryptedCustomerAesKey != null;

@@ -35,16 +35,14 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="id">id</param>
         /// <param name="companyName">companyName</param>
         /// <param name="companyLegalName">companyLegalName</param>
-        /// <param name="taxNumber">taxNumber</param>
         /// <param name="identifiers">identifiers</param>
         /// <param name="paymentAccounts">paymentAccounts</param>
         [JsonConstructor]
-        public AuthorizedCompanyDTO(Option<Guid?> id = default, Option<string?> companyName = default, Option<string?> companyLegalName = default, Option<string?> taxNumber = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<List<AuthorizedPaymentAccountDTO>?> paymentAccounts = default)
+        public AuthorizedCompanyDTO(Option<Guid?> id = default, Option<string?> companyName = default, Option<string?> companyLegalName = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<List<AuthorizedPaymentAccountDTO>?> paymentAccounts = default)
         {
             IdOption = id;
             CompanyNameOption = companyName;
             CompanyLegalNameOption = companyLegalName;
-            TaxNumberOption = taxNumber;
             IdentifiersOption = identifiers;
             PaymentAccountsOption = paymentAccounts;
             OnCreated();
@@ -92,19 +90,6 @@ namespace Cheqi.Sdk.Models.Generated
         public string? CompanyLegalName { get { return this.CompanyLegalNameOption; } set { this.CompanyLegalNameOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of TaxNumber
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> TaxNumberOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets TaxNumber
-        /// </summary>
-        [JsonPropertyName("taxNumber")]
-        public string? TaxNumber { get { return this.TaxNumberOption; } set { this.TaxNumberOption = new(value); } }
-
-        /// <summary>
         /// Used to track the state of Identifiers
         /// </summary>
         [JsonIgnore]
@@ -141,7 +126,6 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  CompanyName: ").Append(CompanyName).Append("\n");
             sb.Append("  CompanyLegalName: ").Append(CompanyLegalName).Append("\n");
-            sb.Append("  TaxNumber: ").Append(TaxNumber).Append("\n");
             sb.Append("  Identifiers: ").Append(Identifiers).Append("\n");
             sb.Append("  PaymentAccounts: ").Append(PaymentAccounts).Append("\n");
             sb.Append("}\n");
@@ -174,7 +158,6 @@ namespace Cheqi.Sdk.Models.Generated
             Option<Guid?> id = default;
             Option<string?> companyName = default;
             Option<string?> companyLegalName = default;
-            Option<string?> taxNumber = default;
             Option<List<CompanyIdentifierDTO>?> identifiers = default;
             Option<List<AuthorizedPaymentAccountDTO>?> paymentAccounts = default;
 
@@ -202,9 +185,6 @@ namespace Cheqi.Sdk.Models.Generated
                         case "companyLegalName":
                             companyLegalName = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
-                        case "taxNumber":
-                            taxNumber = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
                         case "identifiers":
                             identifiers = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
@@ -226,16 +206,13 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyLegalName.IsSet && companyLegalName.Value == null)
                 throw new ArgumentNullException(nameof(companyLegalName), "Property is not nullable for class AuthorizedCompanyDTO.");
 
-            if (taxNumber.IsSet && taxNumber.Value == null)
-                throw new ArgumentNullException(nameof(taxNumber), "Property is not nullable for class AuthorizedCompanyDTO.");
-
             if (identifiers.IsSet && identifiers.Value == null)
                 throw new ArgumentNullException(nameof(identifiers), "Property is not nullable for class AuthorizedCompanyDTO.");
 
             if (paymentAccounts.IsSet && paymentAccounts.Value == null)
                 throw new ArgumentNullException(nameof(paymentAccounts), "Property is not nullable for class AuthorizedCompanyDTO.");
 
-            return new AuthorizedCompanyDTO(id, companyName, companyLegalName, taxNumber, identifiers, paymentAccounts);
+            return new AuthorizedCompanyDTO(id, companyName, companyLegalName, identifiers, paymentAccounts);
         }
 
         /// <summary>
@@ -268,9 +245,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (authorizedCompanyDTO.CompanyLegalNameOption.IsSet && authorizedCompanyDTO.CompanyLegalName == null)
                 throw new ArgumentNullException(nameof(authorizedCompanyDTO.CompanyLegalName), "Property is required for class AuthorizedCompanyDTO.");
 
-            if (authorizedCompanyDTO.TaxNumberOption.IsSet && authorizedCompanyDTO.TaxNumber == null)
-                throw new ArgumentNullException(nameof(authorizedCompanyDTO.TaxNumber), "Property is required for class AuthorizedCompanyDTO.");
-
             if (authorizedCompanyDTO.IdentifiersOption.IsSet && authorizedCompanyDTO.Identifiers == null)
                 throw new ArgumentNullException(nameof(authorizedCompanyDTO.Identifiers), "Property is required for class AuthorizedCompanyDTO.");
 
@@ -285,9 +259,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (authorizedCompanyDTO.CompanyLegalNameOption.IsSet)
                 writer.WriteString("companyLegalName", authorizedCompanyDTO.CompanyLegalName);
-
-            if (authorizedCompanyDTO.TaxNumberOption.IsSet)
-                writer.WriteString("taxNumber", authorizedCompanyDTO.TaxNumber);
 
             if (authorizedCompanyDTO.IdentifiersOption.IsSet)
             {

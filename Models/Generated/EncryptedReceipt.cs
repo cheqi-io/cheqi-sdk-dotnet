@@ -25,18 +25,18 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// EncryptedReceiptDto
+    /// EncryptedReceipt
     /// </summary>
-    public partial class EncryptedReceiptDto
+    public partial class EncryptedReceipt
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="EncryptedReceiptDto" /> class.
+        /// Initializes a new instance of the <see cref="EncryptedReceipt" /> class.
         /// </summary>
         /// <param name="additionalProperties">additionalProperties</param>
         /// <param name="recipientId">recipientId</param>
         /// <param name="receiptId">receiptId</param>
         /// <param name="receiverType">receiverType</param>
-        /// <param name="encryptedReceipt">encryptedReceipt</param>
+        /// <param name="varEncryptedReceipt">varEncryptedReceipt</param>
         /// <param name="encryptedSymmetricKey">encryptedSymmetricKey</param>
         /// <param name="encryptedCustomerDetails">encryptedCustomerDetails</param>
         /// <param name="encryptedCustomerAesKey">encryptedCustomerAesKey</param>
@@ -46,13 +46,13 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="receiptFormats">receiptFormats</param>
         /// <param name="notificationDisplayCode">notificationDisplayCode</param>
         [JsonConstructor]
-        public EncryptedReceiptDto(Option<Dictionary<string, Object>?> additionalProperties = default, Option<Guid?> recipientId = default, Option<string?> receiptId = default, Option<ReceiverType?> receiverType = default, Option<string?> encryptedReceipt = default, Option<string?> encryptedSymmetricKey = default, Option<string?> encryptedCustomerDetails = default, Option<string?> encryptedCustomerAesKey = default, Option<string?> finalHash = default, Option<string?> publicKey = default, Option<Guid?> supplierPartyId = default, Option<List<ReceiptFormat>?> receiptFormats = default, Option<NotificationDisplayCode?> notificationDisplayCode = default)
+        public EncryptedReceipt(Option<Dictionary<string, Object>?> additionalProperties = default, Option<Guid?> recipientId = default, Option<string?> receiptId = default, Option<ReceiverType?> receiverType = default, Option<string?> varEncryptedReceipt = default, Option<string?> encryptedSymmetricKey = default, Option<string?> encryptedCustomerDetails = default, Option<string?> encryptedCustomerAesKey = default, Option<string?> finalHash = default, Option<string?> publicKey = default, Option<Guid?> supplierPartyId = default, Option<List<ReceiptFormat>?> receiptFormats = default, Option<NotificationDisplayCode?> notificationDisplayCode = default)
         {
             AdditionalPropertiesOption = additionalProperties;
             RecipientIdOption = recipientId;
             ReceiptIdOption = receiptId;
             ReceiverTypeOption = receiverType;
-            EncryptedReceiptOption = encryptedReceipt;
+            VarEncryptedReceiptOption = varEncryptedReceipt;
             EncryptedSymmetricKeyOption = encryptedSymmetricKey;
             EncryptedCustomerDetailsOption = encryptedCustomerDetails;
             EncryptedCustomerAesKeyOption = encryptedCustomerAesKey;
@@ -119,17 +119,17 @@ namespace Cheqi.Sdk.Models.Generated
         public string? ReceiptId { get { return this.ReceiptIdOption; } set { this.ReceiptIdOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of EncryptedReceipt
+        /// Used to track the state of VarEncryptedReceipt
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> EncryptedReceiptOption { get; private set; }
+        public Option<string?> VarEncryptedReceiptOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets EncryptedReceipt
+        /// Gets or Sets VarEncryptedReceipt
         /// </summary>
         [JsonPropertyName("encryptedReceipt")]
-        public string? EncryptedReceipt { get { return this.EncryptedReceiptOption; } set { this.EncryptedReceiptOption = new(value); } }
+        public string? VarEncryptedReceipt { get { return this.VarEncryptedReceiptOption; } set { this.VarEncryptedReceiptOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of EncryptedSymmetricKey
@@ -242,12 +242,12 @@ namespace Cheqi.Sdk.Models.Generated
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("class EncryptedReceiptDto {\n");
+            sb.Append("class EncryptedReceipt {\n");
             sb.Append("  AdditionalProperties: ").Append(AdditionalProperties).Append("\n");
             sb.Append("  RecipientId: ").Append(RecipientId).Append("\n");
             sb.Append("  ReceiptId: ").Append(ReceiptId).Append("\n");
             sb.Append("  ReceiverType: ").Append(ReceiverType).Append("\n");
-            sb.Append("  EncryptedReceipt: ").Append(EncryptedReceipt).Append("\n");
+            sb.Append("  VarEncryptedReceipt: ").Append(VarEncryptedReceipt).Append("\n");
             sb.Append("  EncryptedSymmetricKey: ").Append(EncryptedSymmetricKey).Append("\n");
             sb.Append("  EncryptedCustomerDetails: ").Append(EncryptedCustomerDetails).Append("\n");
             sb.Append("  EncryptedCustomerAesKey: ").Append(EncryptedCustomerAesKey).Append("\n");
@@ -262,19 +262,19 @@ namespace Cheqi.Sdk.Models.Generated
     }
 
     /// <summary>
-    /// A Json converter for type <see cref="EncryptedReceiptDto" />
+    /// A Json converter for type <see cref="EncryptedReceipt" />
     /// </summary>
-    public class EncryptedReceiptDtoJsonConverter : JsonConverter<EncryptedReceiptDto>
+    public class EncryptedReceiptJsonConverter : JsonConverter<EncryptedReceipt>
     {
         /// <summary>
-        /// Deserializes json to <see cref="EncryptedReceiptDto" />
+        /// Deserializes json to <see cref="EncryptedReceipt" />
         /// </summary>
         /// <param name="utf8JsonReader"></param>
         /// <param name="typeToConvert"></param>
         /// <param name="jsonSerializerOptions"></param>
         /// <returns></returns>
         /// <exception cref="JsonException"></exception>
-        public override EncryptedReceiptDto Read(ref Utf8JsonReader utf8JsonReader, Type typeToConvert, JsonSerializerOptions jsonSerializerOptions)
+        public override EncryptedReceipt Read(ref Utf8JsonReader utf8JsonReader, Type typeToConvert, JsonSerializerOptions jsonSerializerOptions)
         {
             int currentDepth = utf8JsonReader.CurrentDepth;
 
@@ -287,7 +287,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<Guid?> recipientId = default;
             Option<string?> receiptId = default;
             Option<ReceiverType?> receiverType = default;
-            Option<string?> encryptedReceipt = default;
+            Option<string?> varEncryptedReceipt = default;
             Option<string?> encryptedSymmetricKey = default;
             Option<string?> encryptedCustomerDetails = default;
             Option<string?> encryptedCustomerAesKey = default;
@@ -327,7 +327,7 @@ namespace Cheqi.Sdk.Models.Generated
                                 receiverType = new Option<ReceiverType?>(ReceiverTypeValueConverter.FromStringOrDefault(receiverTypeRawValue));
                             break;
                         case "encryptedReceipt":
-                            encryptedReceipt = new Option<string?>(utf8JsonReader.GetString()!);
+                            varEncryptedReceipt = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "encryptedSymmetricKey":
                             encryptedSymmetricKey = new Option<string?>(utf8JsonReader.GetString()!);
@@ -360,147 +360,147 @@ namespace Cheqi.Sdk.Models.Generated
             }
 
             if (additionalProperties.IsSet && additionalProperties.Value == null)
-                throw new ArgumentNullException(nameof(additionalProperties), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(additionalProperties), "Property is not nullable for class EncryptedReceipt.");
 
             if (recipientId.IsSet && recipientId.Value == null)
-                throw new ArgumentNullException(nameof(recipientId), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(recipientId), "Property is not nullable for class EncryptedReceipt.");
 
             if (receiptId.IsSet && receiptId.Value == null)
-                throw new ArgumentNullException(nameof(receiptId), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(receiptId), "Property is not nullable for class EncryptedReceipt.");
 
             if (receiverType.IsSet && receiverType.Value == null)
-                throw new ArgumentNullException(nameof(receiverType), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(receiverType), "Property is not nullable for class EncryptedReceipt.");
 
-            if (encryptedReceipt.IsSet && encryptedReceipt.Value == null)
-                throw new ArgumentNullException(nameof(encryptedReceipt), "Property is not nullable for class EncryptedReceiptDto.");
+            if (varEncryptedReceipt.IsSet && varEncryptedReceipt.Value == null)
+                throw new ArgumentNullException(nameof(varEncryptedReceipt), "Property is not nullable for class EncryptedReceipt.");
 
             if (encryptedSymmetricKey.IsSet && encryptedSymmetricKey.Value == null)
-                throw new ArgumentNullException(nameof(encryptedSymmetricKey), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(encryptedSymmetricKey), "Property is not nullable for class EncryptedReceipt.");
 
             if (encryptedCustomerDetails.IsSet && encryptedCustomerDetails.Value == null)
-                throw new ArgumentNullException(nameof(encryptedCustomerDetails), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(encryptedCustomerDetails), "Property is not nullable for class EncryptedReceipt.");
 
             if (encryptedCustomerAesKey.IsSet && encryptedCustomerAesKey.Value == null)
-                throw new ArgumentNullException(nameof(encryptedCustomerAesKey), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(encryptedCustomerAesKey), "Property is not nullable for class EncryptedReceipt.");
 
             if (finalHash.IsSet && finalHash.Value == null)
-                throw new ArgumentNullException(nameof(finalHash), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(finalHash), "Property is not nullable for class EncryptedReceipt.");
 
             if (publicKey.IsSet && publicKey.Value == null)
-                throw new ArgumentNullException(nameof(publicKey), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(publicKey), "Property is not nullable for class EncryptedReceipt.");
 
             if (supplierPartyId.IsSet && supplierPartyId.Value == null)
-                throw new ArgumentNullException(nameof(supplierPartyId), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(supplierPartyId), "Property is not nullable for class EncryptedReceipt.");
 
             if (receiptFormats.IsSet && receiptFormats.Value == null)
-                throw new ArgumentNullException(nameof(receiptFormats), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(receiptFormats), "Property is not nullable for class EncryptedReceipt.");
 
             if (notificationDisplayCode.IsSet && notificationDisplayCode.Value == null)
-                throw new ArgumentNullException(nameof(notificationDisplayCode), "Property is not nullable for class EncryptedReceiptDto.");
+                throw new ArgumentNullException(nameof(notificationDisplayCode), "Property is not nullable for class EncryptedReceipt.");
 
-            return new EncryptedReceiptDto(additionalProperties, recipientId, receiptId, receiverType, encryptedReceipt, encryptedSymmetricKey, encryptedCustomerDetails, encryptedCustomerAesKey, finalHash, publicKey, supplierPartyId, receiptFormats, notificationDisplayCode);
+            return new EncryptedReceipt(additionalProperties, recipientId, receiptId, receiverType, varEncryptedReceipt, encryptedSymmetricKey, encryptedCustomerDetails, encryptedCustomerAesKey, finalHash, publicKey, supplierPartyId, receiptFormats, notificationDisplayCode);
         }
 
         /// <summary>
-        /// Serializes a <see cref="EncryptedReceiptDto" />
+        /// Serializes a <see cref="EncryptedReceipt" />
         /// </summary>
         /// <param name="writer"></param>
-        /// <param name="encryptedReceiptDto"></param>
+        /// <param name="encryptedReceipt"></param>
         /// <param name="jsonSerializerOptions"></param>
         /// <exception cref="NotImplementedException"></exception>
-        public override void Write(Utf8JsonWriter writer, EncryptedReceiptDto encryptedReceiptDto, JsonSerializerOptions jsonSerializerOptions)
+        public override void Write(Utf8JsonWriter writer, EncryptedReceipt encryptedReceipt, JsonSerializerOptions jsonSerializerOptions)
         {
             writer.WriteStartObject();
 
-            WriteProperties(writer, encryptedReceiptDto, jsonSerializerOptions);
+            WriteProperties(writer, encryptedReceipt, jsonSerializerOptions);
             writer.WriteEndObject();
         }
 
         /// <summary>
-        /// Serializes the properties of <see cref="EncryptedReceiptDto" />
+        /// Serializes the properties of <see cref="EncryptedReceipt" />
         /// </summary>
         /// <param name="writer"></param>
-        /// <param name="encryptedReceiptDto"></param>
+        /// <param name="encryptedReceipt"></param>
         /// <param name="jsonSerializerOptions"></param>
         /// <exception cref="NotImplementedException"></exception>
-        public void WriteProperties(Utf8JsonWriter writer, EncryptedReceiptDto encryptedReceiptDto, JsonSerializerOptions jsonSerializerOptions)
+        public void WriteProperties(Utf8JsonWriter writer, EncryptedReceipt encryptedReceipt, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (encryptedReceiptDto.AdditionalPropertiesOption.IsSet && encryptedReceiptDto.AdditionalProperties == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.AdditionalProperties), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.AdditionalPropertiesOption.IsSet && encryptedReceipt.AdditionalProperties == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.AdditionalProperties), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.ReceiptIdOption.IsSet && encryptedReceiptDto.ReceiptId == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.ReceiptId), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.ReceiptIdOption.IsSet && encryptedReceipt.ReceiptId == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.ReceiptId), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.EncryptedReceiptOption.IsSet && encryptedReceiptDto.EncryptedReceipt == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.EncryptedReceipt), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.VarEncryptedReceiptOption.IsSet && encryptedReceipt.VarEncryptedReceipt == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.VarEncryptedReceipt), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.EncryptedSymmetricKeyOption.IsSet && encryptedReceiptDto.EncryptedSymmetricKey == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.EncryptedSymmetricKey), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.EncryptedSymmetricKeyOption.IsSet && encryptedReceipt.EncryptedSymmetricKey == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.EncryptedSymmetricKey), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.EncryptedCustomerDetailsOption.IsSet && encryptedReceiptDto.EncryptedCustomerDetails == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.EncryptedCustomerDetails), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.EncryptedCustomerDetailsOption.IsSet && encryptedReceipt.EncryptedCustomerDetails == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.EncryptedCustomerDetails), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.EncryptedCustomerAesKeyOption.IsSet && encryptedReceiptDto.EncryptedCustomerAesKey == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.EncryptedCustomerAesKey), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.EncryptedCustomerAesKeyOption.IsSet && encryptedReceipt.EncryptedCustomerAesKey == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.EncryptedCustomerAesKey), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.FinalHashOption.IsSet && encryptedReceiptDto.FinalHash == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.FinalHash), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.FinalHashOption.IsSet && encryptedReceipt.FinalHash == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.FinalHash), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.PublicKeyOption.IsSet && encryptedReceiptDto.PublicKey == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.PublicKey), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.PublicKeyOption.IsSet && encryptedReceipt.PublicKey == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.PublicKey), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.ReceiptFormatsOption.IsSet && encryptedReceiptDto.ReceiptFormats == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.ReceiptFormats), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.ReceiptFormatsOption.IsSet && encryptedReceipt.ReceiptFormats == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.ReceiptFormats), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.NotificationDisplayCodeOption.IsSet && encryptedReceiptDto.NotificationDisplayCode == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptDto.NotificationDisplayCode), "Property is required for class EncryptedReceiptDto.");
+            if (encryptedReceipt.NotificationDisplayCodeOption.IsSet && encryptedReceipt.NotificationDisplayCode == null)
+                throw new ArgumentNullException(nameof(encryptedReceipt.NotificationDisplayCode), "Property is required for class EncryptedReceipt.");
 
-            if (encryptedReceiptDto.AdditionalPropertiesOption.IsSet)
+            if (encryptedReceipt.AdditionalPropertiesOption.IsSet)
             {
                 writer.WritePropertyName("additionalProperties");
-                JsonSerializer.Serialize(writer, encryptedReceiptDto.AdditionalProperties, jsonSerializerOptions);
+                JsonSerializer.Serialize(writer, encryptedReceipt.AdditionalProperties, jsonSerializerOptions);
             }
-            if (encryptedReceiptDto.RecipientIdOption.IsSet)
-                writer.WriteString("recipientId", encryptedReceiptDto.RecipientIdOption.Value!.Value);
+            if (encryptedReceipt.RecipientIdOption.IsSet)
+                writer.WriteString("recipientId", encryptedReceipt.RecipientIdOption.Value!.Value);
 
-            if (encryptedReceiptDto.ReceiptIdOption.IsSet)
-                writer.WriteString("receiptId", encryptedReceiptDto.ReceiptId);
+            if (encryptedReceipt.ReceiptIdOption.IsSet)
+                writer.WriteString("receiptId", encryptedReceipt.ReceiptId);
 
-            if (encryptedReceiptDto.ReceiverTypeOption.IsSet)
+            if (encryptedReceipt.ReceiverTypeOption.IsSet)
             {
-                var receiverTypeRawValue = ReceiverTypeValueConverter.ToJsonValue(encryptedReceiptDto.ReceiverType!.Value);
+                var receiverTypeRawValue = ReceiverTypeValueConverter.ToJsonValue(encryptedReceipt.ReceiverType!.Value);
                 writer.WriteString("receiverType", receiverTypeRawValue);
             }
-            if (encryptedReceiptDto.EncryptedReceiptOption.IsSet)
-                writer.WriteString("encryptedReceipt", encryptedReceiptDto.EncryptedReceipt);
+            if (encryptedReceipt.VarEncryptedReceiptOption.IsSet)
+                writer.WriteString("encryptedReceipt", encryptedReceipt.VarEncryptedReceipt);
 
-            if (encryptedReceiptDto.EncryptedSymmetricKeyOption.IsSet)
-                writer.WriteString("encryptedSymmetricKey", encryptedReceiptDto.EncryptedSymmetricKey);
+            if (encryptedReceipt.EncryptedSymmetricKeyOption.IsSet)
+                writer.WriteString("encryptedSymmetricKey", encryptedReceipt.EncryptedSymmetricKey);
 
-            if (encryptedReceiptDto.EncryptedCustomerDetailsOption.IsSet)
-                writer.WriteString("encryptedCustomerDetails", encryptedReceiptDto.EncryptedCustomerDetails);
+            if (encryptedReceipt.EncryptedCustomerDetailsOption.IsSet)
+                writer.WriteString("encryptedCustomerDetails", encryptedReceipt.EncryptedCustomerDetails);
 
-            if (encryptedReceiptDto.EncryptedCustomerAesKeyOption.IsSet)
-                writer.WriteString("encryptedCustomerAesKey", encryptedReceiptDto.EncryptedCustomerAesKey);
+            if (encryptedReceipt.EncryptedCustomerAesKeyOption.IsSet)
+                writer.WriteString("encryptedCustomerAesKey", encryptedReceipt.EncryptedCustomerAesKey);
 
-            if (encryptedReceiptDto.FinalHashOption.IsSet)
-                writer.WriteString("finalHash", encryptedReceiptDto.FinalHash);
+            if (encryptedReceipt.FinalHashOption.IsSet)
+                writer.WriteString("finalHash", encryptedReceipt.FinalHash);
 
-            if (encryptedReceiptDto.PublicKeyOption.IsSet)
-                writer.WriteString("publicKey", encryptedReceiptDto.PublicKey);
+            if (encryptedReceipt.PublicKeyOption.IsSet)
+                writer.WriteString("publicKey", encryptedReceipt.PublicKey);
 
-            if (encryptedReceiptDto.SupplierPartyIdOption.IsSet)
-                writer.WriteString("supplierPartyId", encryptedReceiptDto.SupplierPartyIdOption.Value!.Value);
+            if (encryptedReceipt.SupplierPartyIdOption.IsSet)
+                writer.WriteString("supplierPartyId", encryptedReceipt.SupplierPartyIdOption.Value!.Value);
 
-            if (encryptedReceiptDto.ReceiptFormatsOption.IsSet)
+            if (encryptedReceipt.ReceiptFormatsOption.IsSet)
             {
                 writer.WritePropertyName("receiptFormats");
-                JsonSerializer.Serialize(writer, encryptedReceiptDto.ReceiptFormats, jsonSerializerOptions);
+                JsonSerializer.Serialize(writer, encryptedReceipt.ReceiptFormats, jsonSerializerOptions);
             }
-            if (encryptedReceiptDto.NotificationDisplayCodeOption.IsSet)
+            if (encryptedReceipt.NotificationDisplayCodeOption.IsSet)
             {
                 writer.WritePropertyName("notificationDisplayCode");
-                JsonSerializer.Serialize(writer, encryptedReceiptDto.NotificationDisplayCode, jsonSerializerOptions);
+                JsonSerializer.Serialize(writer, encryptedReceipt.NotificationDisplayCode, jsonSerializerOptions);
             }
         }
     }

@@ -34,7 +34,6 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         /// <param name="companyName">Display name of the company</param>
         /// <param name="companyLegalName">Legal registered name of the company</param>
-        /// <param name="taxNumber">Tax identification number of the company</param>
         /// <param name="address">address</param>
         /// <param name="companyEmail">Primary company email address</param>
         /// <param name="phoneNumber">Primary company phone number</param>
@@ -45,12 +44,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="companyReceiptText">Optional custom receipt text appended to company receipts</param>
         /// <param name="returnProcessingMode">returnProcessingMode</param>
         /// <param name="notificationCodeEnabled">Whether notification-code based receipt retrieval is enabled</param>
+        /// <param name="emailFallbackEnabled">Whether receipts may fall back to PDF email delivery when recipient matching does not find a Cheqi recipient</param>
         [JsonConstructor]
-        public CompanyCreationRequest(string companyName, string companyLegalName, string taxNumber, AddressDTO address, string companyEmail, Option<string?> phoneNumber = default, Option<List<ContactDetailDto>?> contactDetails = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<string?> website = default, Option<int?> returnDays = default, Option<string?> companyReceiptText = default, Option<ReturnProcessingMode?> returnProcessingMode = default, Option<bool?> notificationCodeEnabled = default)
+        public CompanyCreationRequest(string companyName, string companyLegalName, AddressDTO address, string companyEmail, Option<string?> phoneNumber = default, Option<List<ContactDetailDto>?> contactDetails = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<string?> website = default, Option<int?> returnDays = default, Option<string?> companyReceiptText = default, Option<ReturnProcessingMode?> returnProcessingMode = default, Option<bool?> notificationCodeEnabled = default, Option<bool?> emailFallbackEnabled = default)
         {
             CompanyName = companyName;
             CompanyLegalName = companyLegalName;
-            TaxNumber = taxNumber;
             Address = address;
             CompanyEmail = companyEmail;
             PhoneNumberOption = phoneNumber;
@@ -61,6 +60,7 @@ namespace Cheqi.Sdk.Models.Generated
             CompanyReceiptTextOption = companyReceiptText;
             ReturnProcessingModeOption = returnProcessingMode;
             NotificationCodeEnabledOption = notificationCodeEnabled;
+            EmailFallbackEnabledOption = emailFallbackEnabled;
             OnCreated();
         }
 
@@ -94,14 +94,6 @@ namespace Cheqi.Sdk.Models.Generated
         /* <example>Example Coffee Shop B.V.</example> */
         [JsonPropertyName("companyLegalName")]
         public string CompanyLegalName { get; set; }
-
-        /// <summary>
-        /// Tax identification number of the company
-        /// </summary>
-        /// <value>Tax identification number of the company</value>
-        /* <example>NL123456789B01</example> */
-        [JsonPropertyName("taxNumber")]
-        public string TaxNumber { get; set; }
 
         /// <summary>
         /// Gets or Sets Address
@@ -219,6 +211,20 @@ namespace Cheqi.Sdk.Models.Generated
         public bool? NotificationCodeEnabled { get { return this.NotificationCodeEnabledOption; } set { this.NotificationCodeEnabledOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of EmailFallbackEnabled
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<bool?> EmailFallbackEnabledOption { get; private set; }
+
+        /// <summary>
+        /// Whether receipts may fall back to PDF email delivery when recipient matching does not find a Cheqi recipient
+        /// </summary>
+        /// <value>Whether receipts may fall back to PDF email delivery when recipient matching does not find a Cheqi recipient</value>
+        [JsonPropertyName("emailFallbackEnabled")]
+        public bool? EmailFallbackEnabled { get { return this.EmailFallbackEnabledOption; } set { this.EmailFallbackEnabledOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -228,7 +234,6 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("class CompanyCreationRequest {\n");
             sb.Append("  CompanyName: ").Append(CompanyName).Append("\n");
             sb.Append("  CompanyLegalName: ").Append(CompanyLegalName).Append("\n");
-            sb.Append("  TaxNumber: ").Append(TaxNumber).Append("\n");
             sb.Append("  Address: ").Append(Address).Append("\n");
             sb.Append("  CompanyEmail: ").Append(CompanyEmail).Append("\n");
             sb.Append("  PhoneNumber: ").Append(PhoneNumber).Append("\n");
@@ -239,6 +244,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  CompanyReceiptText: ").Append(CompanyReceiptText).Append("\n");
             sb.Append("  ReturnProcessingMode: ").Append(ReturnProcessingMode).Append("\n");
             sb.Append("  NotificationCodeEnabled: ").Append(NotificationCodeEnabled).Append("\n");
+            sb.Append("  EmailFallbackEnabled: ").Append(EmailFallbackEnabled).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -268,7 +274,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             Option<string?> companyName = default;
             Option<string?> companyLegalName = default;
-            Option<string?> taxNumber = default;
             Option<AddressDTO?> address = default;
             Option<string?> companyEmail = default;
             Option<string?> phoneNumber = default;
@@ -279,6 +284,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> companyReceiptText = default;
             Option<ReturnProcessingMode?> returnProcessingMode = default;
             Option<bool?> notificationCodeEnabled = default;
+            Option<bool?> emailFallbackEnabled = default;
 
             while (utf8JsonReader.Read())
             {
@@ -300,9 +306,6 @@ namespace Cheqi.Sdk.Models.Generated
                             break;
                         case "companyLegalName":
                             companyLegalName = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
-                        case "taxNumber":
-                            taxNumber = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "address":
                             address = new Option<AddressDTO?>(JsonSerializer.Deserialize<AddressDTO>(ref utf8JsonReader, jsonSerializerOptions)!);
@@ -336,6 +339,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "notificationCodeEnabled":
                             notificationCodeEnabled = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
+                        case "emailFallbackEnabled":
+                            emailFallbackEnabled = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
+                            break;
                         default:
                             break;
                     }
@@ -347,9 +353,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (!companyLegalName.IsSet)
                 throw new ArgumentException("Property is required for class CompanyCreationRequest.", nameof(companyLegalName));
-
-            if (!taxNumber.IsSet)
-                throw new ArgumentException("Property is required for class CompanyCreationRequest.", nameof(taxNumber));
 
             if (!address.IsSet)
                 throw new ArgumentException("Property is required for class CompanyCreationRequest.", nameof(address));
@@ -363,9 +366,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyLegalName.IsSet && companyLegalName.Value == null)
                 throw new ArgumentNullException(nameof(companyLegalName), "Property is not nullable for class CompanyCreationRequest.");
 
-            if (taxNumber.IsSet && taxNumber.Value == null)
-                throw new ArgumentNullException(nameof(taxNumber), "Property is not nullable for class CompanyCreationRequest.");
-
             if (address.IsSet && address.Value == null)
                 throw new ArgumentNullException(nameof(address), "Property is not nullable for class CompanyCreationRequest.");
 
@@ -378,7 +378,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (identifiers.IsSet && identifiers.Value == null)
                 throw new ArgumentNullException(nameof(identifiers), "Property is not nullable for class CompanyCreationRequest.");
 
-            return new CompanyCreationRequest(companyName.Value!, companyLegalName.Value!, taxNumber.Value!, address.Value!, companyEmail.Value!, phoneNumber, contactDetails, identifiers, website, returnDays, companyReceiptText, returnProcessingMode, notificationCodeEnabled);
+            return new CompanyCreationRequest(companyName.Value!, companyLegalName.Value!, address.Value!, companyEmail.Value!, phoneNumber, contactDetails, identifiers, website, returnDays, companyReceiptText, returnProcessingMode, notificationCodeEnabled, emailFallbackEnabled);
         }
 
         /// <summary>
@@ -411,9 +411,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyCreationRequest.CompanyLegalName == null)
                 throw new ArgumentNullException(nameof(companyCreationRequest.CompanyLegalName), "Property is required for class CompanyCreationRequest.");
 
-            if (companyCreationRequest.TaxNumber == null)
-                throw new ArgumentNullException(nameof(companyCreationRequest.TaxNumber), "Property is required for class CompanyCreationRequest.");
-
             if (companyCreationRequest.Address == null)
                 throw new ArgumentNullException(nameof(companyCreationRequest.Address), "Property is required for class CompanyCreationRequest.");
 
@@ -429,8 +426,6 @@ namespace Cheqi.Sdk.Models.Generated
             writer.WriteString("companyName", companyCreationRequest.CompanyName);
 
             writer.WriteString("companyLegalName", companyCreationRequest.CompanyLegalName);
-
-            writer.WriteString("taxNumber", companyCreationRequest.TaxNumber);
 
             writer.WritePropertyName("address");
             JsonSerializer.Serialize(writer, companyCreationRequest.Address, jsonSerializerOptions);
@@ -483,6 +478,12 @@ namespace Cheqi.Sdk.Models.Generated
                     writer.WriteBoolean("notificationCodeEnabled", companyCreationRequest.NotificationCodeEnabledOption.Value!.Value);
                 else
                     writer.WriteNull("notificationCodeEnabled");
+
+            if (companyCreationRequest.EmailFallbackEnabledOption.IsSet)
+                if (companyCreationRequest.EmailFallbackEnabledOption.Value != null)
+                    writer.WriteBoolean("emailFallbackEnabled", companyCreationRequest.EmailFallbackEnabledOption.Value!.Value);
+                else
+                    writer.WriteNull("emailFallbackEnabled");
         }
     }
 }

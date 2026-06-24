@@ -6,27 +6,32 @@ using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsReq
 using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
 using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
 using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
+using ReceiptTemplateGenerationRequest = Cheqi.Sdk.Models.Generated.ReceiptTemplateGenerationRequest;
+using ReceiptTemplateResponse = Cheqi.Sdk.Models.Generated.ReceiptTemplateResponse;
+using CheqiReceipt = Cheqi.Sdk.Models.Generated.CheqiReceipt;
+using CreditNoteTemplateGenerationRequest = Cheqi.Sdk.Models.Generated.CreditNoteTemplateGenerationRequest;
+using CreditNoteTemplateResponse = Cheqi.Sdk.Models.Generated.CreditNoteTemplateResponse;
 
 namespace Cheqi.Sdk.Tests.TestSupport;
 
 internal sealed class FakeCheqiApiClient : ICheqiApiClient
 {
     public Func<IdentificationDetails, string?, CancellationToken, Task<RecipientResolutionResponse>> MatchCustomerAsyncHandler { get; set; } =
-        (_, _, _) => Task.FromResult(new RecipientResolutionResponse { CustomerFound = false });
+        (_, _, _) => Task.FromResult(new RecipientResolutionResponse { RouteFound = false });
 
-    public Func<ReceiptTemplateRequest, string?, CancellationToken, Task<string>> GenerateReceiptTemplateAsyncHandler { get; set; } =
-        (_, _, _) => Task.FromResult("{}");
+    public Func<ReceiptTemplateGenerationRequest, string?, CancellationToken, Task<ReceiptTemplateResponse>> GenerateReceiptTemplateAsyncHandler { get; set; } =
+        (_, _, _) => Task.FromResult(new ReceiptTemplateResponse());
 
     public Func<EncryptedReceiptsRequest, string?, CancellationToken, Task<ReceiptCreatedResponse>> SubmitEncryptedReceiptsAsyncHandler { get; set; } =
         (_, _, _) => Task.FromResult(new ReceiptCreatedResponse("cheqi-receipt", DateTimeOffset.UtcNow, "template-hash"));
 
-    public Func<CreditNoteTemplateRequest, string?, CancellationToken, Task<string>> GenerateCreditNoteTemplateAsyncHandler { get; set; } =
-        (_, _, _) => Task.FromResult("{\"id\":\"credit-note\"}");
+    public Func<CreditNoteTemplateGenerationRequest, string?, CancellationToken, Task<CreditNoteTemplateResponse>> GenerateCreditNoteTemplateAsyncHandler { get; set; } =
+        (_, _, _) => Task.FromResult(new CreditNoteTemplateResponse());
 
     public Func<EncryptedCreditNotesRequest, string?, CancellationToken, Task<CreditNoteCreatedResponse>> SubmitEncryptedCreditNotesAsyncHandler { get; set; } =
         (_, _, _) => Task.FromResult(new CreditNoteCreatedResponse { Success = true, CreditNoteId = "credit-note-id", RecipientCount = 1 });
 
-    public Func<string, Cheqi.Sdk.Models.Ubl.PurchaseReceipt, string?, CancellationToken, Task> SendReceiptViaEmailAsyncHandler { get; set; } =
+    public Func<string, CheqiReceipt, string?, CancellationToken, Task> SendReceiptViaEmailAsyncHandler { get; set; } =
         (_, _, _, _) => Task.CompletedTask;
 
     public Task<RecipientResolutionResponse> ResolveRecipientsAsync(
@@ -41,8 +46,8 @@ internal sealed class FakeCheqiApiClient : ICheqiApiClient
         CancellationToken cancellationToken = default) =>
         MatchCustomerAsyncHandler(identificationDetails, accessToken, cancellationToken);
 
-    public Task<string> GenerateReceiptTemplateAsync(
-        ReceiptTemplateRequest request,
+    public Task<ReceiptTemplateResponse> GenerateReceiptTemplateAsync(
+        ReceiptTemplateGenerationRequest request,
         string? accessToken = null,
         CancellationToken cancellationToken = default) =>
         GenerateReceiptTemplateAsyncHandler(request, accessToken, cancellationToken);
@@ -53,8 +58,8 @@ internal sealed class FakeCheqiApiClient : ICheqiApiClient
         CancellationToken cancellationToken = default) =>
         SubmitEncryptedReceiptsAsyncHandler(request, accessToken, cancellationToken);
 
-    public Task<string> GenerateCreditNoteTemplateAsync(
-        CreditNoteTemplateRequest request,
+    public Task<CreditNoteTemplateResponse> GenerateCreditNoteTemplateAsync(
+        CreditNoteTemplateGenerationRequest request,
         string? accessToken = null,
         CancellationToken cancellationToken = default) =>
         GenerateCreditNoteTemplateAsyncHandler(request, accessToken, cancellationToken);
@@ -125,10 +130,10 @@ internal sealed class FakeCheqiApiClient : ICheqiApiClient
 
     public Task SendReceiptViaEmailAsync(
         string customerEmail,
-        Cheqi.Sdk.Models.Ubl.PurchaseReceipt purchaseReceipt,
+        CheqiReceipt cheqiReceipt,
         string? accessToken = null,
         CancellationToken cancellationToken = default) =>
-        SendReceiptViaEmailAsyncHandler(customerEmail, purchaseReceipt, accessToken, cancellationToken);
+        SendReceiptViaEmailAsyncHandler(customerEmail, cheqiReceipt, accessToken, cancellationToken);
 
     public void Dispose()
     {

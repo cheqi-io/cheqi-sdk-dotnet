@@ -36,16 +36,18 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="identifierType">identifierType</param>
         /// <param name="registrationScheme">The local registration scheme or registry name. Use a known value or a custom string for unsupported registries.</param>
         /// <param name="value">The actual identifier value</param>
+        /// <param name="label">Human-readable display label for this identifier</param>
         /// <param name="countryCode">ISO 3166-1 alpha-2 country code</param>
         /// <param name="isVerified">Whether this identifier has been verified by Cheqi</param>
         /// <param name="verifiedAt">Timestamp when this identifier was verified</param>
         [JsonConstructor]
-        public CompanyIdentifierDTO(Option<Guid?> id = default, Option<CompanyIdentifierType?> identifierType = default, Option<RegistrationSchemeEnum?> registrationScheme = default, Option<string?> value = default, Option<string?> countryCode = default, Option<bool?> isVerified = default, Option<DateTimeOffset?> verifiedAt = default)
+        public CompanyIdentifierDTO(Option<Guid?> id = default, Option<CompanyIdentifierType?> identifierType = default, Option<RegistrationSchemeEnum?> registrationScheme = default, Option<string?> value = default, Option<string?> label = default, Option<string?> countryCode = default, Option<bool?> isVerified = default, Option<DateTimeOffset?> verifiedAt = default)
         {
             IdOption = id;
             IdentifierTypeOption = identifierType;
             RegistrationSchemeOption = registrationScheme;
             ValueOption = value;
+            LabelOption = label;
             CountryCodeOption = countryCode;
             IsVerifiedOption = isVerified;
             VerifiedAtOption = verifiedAt;
@@ -306,6 +308,21 @@ namespace Cheqi.Sdk.Models.Generated
         public string? Value { get { return this.ValueOption; } set { this.ValueOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of Label
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> LabelOption { get; private set; }
+
+        /// <summary>
+        /// Human-readable display label for this identifier
+        /// </summary>
+        /// <value>Human-readable display label for this identifier</value>
+        /* <example>KVK Number</example> */
+        [JsonPropertyName("label")]
+        public string? Label { get { return this.LabelOption; } set { this.LabelOption = new(value); } }
+
+        /// <summary>
         /// Used to track the state of CountryCode
         /// </summary>
         [JsonIgnore]
@@ -362,6 +379,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  IdentifierType: ").Append(IdentifierType).Append("\n");
             sb.Append("  RegistrationScheme: ").Append(RegistrationScheme).Append("\n");
             sb.Append("  Value: ").Append(Value).Append("\n");
+            sb.Append("  Label: ").Append(Label).Append("\n");
             sb.Append("  CountryCode: ").Append(CountryCode).Append("\n");
             sb.Append("  IsVerified: ").Append(IsVerified).Append("\n");
             sb.Append("  VerifiedAt: ").Append(VerifiedAt).Append("\n");
@@ -401,6 +419,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<CompanyIdentifierType?> identifierType = default;
             Option<CompanyIdentifierDTO.RegistrationSchemeEnum?> registrationScheme = default;
             Option<string?> value = default;
+            Option<string?> label = default;
             Option<string?> countryCode = default;
             Option<bool?> isVerified = default;
             Option<DateTimeOffset?> verifiedAt = default;
@@ -436,6 +455,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "value":
                             value = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
+                        case "label":
+                            label = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
                         case "countryCode":
                             countryCode = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
@@ -463,6 +485,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.IsSet && value.Value == null)
                 throw new ArgumentNullException(nameof(value), "Property is not nullable for class CompanyIdentifierDTO.");
 
+            if (label.IsSet && label.Value == null)
+                throw new ArgumentNullException(nameof(label), "Property is not nullable for class CompanyIdentifierDTO.");
+
             if (countryCode.IsSet && countryCode.Value == null)
                 throw new ArgumentNullException(nameof(countryCode), "Property is not nullable for class CompanyIdentifierDTO.");
 
@@ -472,7 +497,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (verifiedAt.IsSet && verifiedAt.Value == null)
                 throw new ArgumentNullException(nameof(verifiedAt), "Property is not nullable for class CompanyIdentifierDTO.");
 
-            return new CompanyIdentifierDTO(id, identifierType, registrationScheme, value, countryCode, isVerified, verifiedAt);
+            return new CompanyIdentifierDTO(id, identifierType, registrationScheme, value, label, countryCode, isVerified, verifiedAt);
         }
 
         /// <summary>
@@ -502,6 +527,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyIdentifierDTO.ValueOption.IsSet && companyIdentifierDTO.Value == null)
                 throw new ArgumentNullException(nameof(companyIdentifierDTO.Value), "Property is required for class CompanyIdentifierDTO.");
 
+            if (companyIdentifierDTO.LabelOption.IsSet && companyIdentifierDTO.Label == null)
+                throw new ArgumentNullException(nameof(companyIdentifierDTO.Label), "Property is required for class CompanyIdentifierDTO.");
+
             if (companyIdentifierDTO.CountryCodeOption.IsSet && companyIdentifierDTO.CountryCode == null)
                 throw new ArgumentNullException(nameof(companyIdentifierDTO.CountryCode), "Property is required for class CompanyIdentifierDTO.");
 
@@ -517,6 +545,9 @@ namespace Cheqi.Sdk.Models.Generated
             writer.WriteString("registrationScheme", registrationSchemeRawValue);
             if (companyIdentifierDTO.ValueOption.IsSet)
                 writer.WriteString("value", companyIdentifierDTO.Value);
+
+            if (companyIdentifierDTO.LabelOption.IsSet)
+                writer.WriteString("label", companyIdentifierDTO.Label);
 
             if (companyIdentifierDTO.CountryCodeOption.IsSet)
                 writer.WriteString("countryCode", companyIdentifierDTO.CountryCode);

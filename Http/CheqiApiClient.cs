@@ -12,6 +12,10 @@ using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsReq
 using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
 using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
 using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
+using ReceiptTemplateGenerationRequest = Cheqi.Sdk.Models.Generated.ReceiptTemplateGenerationRequest;
+using ReceiptTemplateResponse = Cheqi.Sdk.Models.Generated.ReceiptTemplateResponse;
+using CreditNoteTemplateGenerationRequest = Cheqi.Sdk.Models.Generated.CreditNoteTemplateGenerationRequest;
+using CreditNoteTemplateResponse = Cheqi.Sdk.Models.Generated.CreditNoteTemplateResponse;
 
 namespace Cheqi.Sdk.Http;
 
@@ -67,6 +71,11 @@ public sealed class CheqiApiClient : ICheqiApiClient
         {
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
+
+        if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
+        {
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CheqiSDK/1.0");
+        }
     }
 
     public async Task<RecipientResolutionResponse> ResolveRecipientsAsync(
@@ -91,16 +100,16 @@ public sealed class CheqiApiClient : ICheqiApiClient
         return ResolveRecipientsAsync(identificationDetails, accessToken, cancellationToken);
     }
 
-    public async Task<string> GenerateReceiptTemplateAsync(
-        ReceiptTemplateRequest templateRequest,
+    public async Task<ReceiptTemplateResponse> GenerateReceiptTemplateAsync(
+        ReceiptTemplateGenerationRequest generationRequest,
         string? accessToken = null,
         CancellationToken cancellationToken = default)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.ReceiptTemplate);
         await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken);
-        request.Content = CreateJsonContent(templateRequest);
+        request.Content = CreateJsonContent(generationRequest);
 
-        var response = await SendRawAsync(request, cancellationToken);
+        var response = await SendAsync<ReceiptTemplateResponse>(request, cancellationToken);
         return response;
     }
 
@@ -117,16 +126,16 @@ public sealed class CheqiApiClient : ICheqiApiClient
         return response;
     }
 
-    public async Task<string> GenerateCreditNoteTemplateAsync(
-        CreditNoteTemplateRequest templateRequest,
+    public async Task<CreditNoteTemplateResponse> GenerateCreditNoteTemplateAsync(
+        CreditNoteTemplateGenerationRequest generationRequest,
         string? accessToken = null,
         CancellationToken cancellationToken = default)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.CreditNoteTemplate);
         await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken);
-        request.Content = CreateJsonContent(templateRequest);
+        request.Content = CreateJsonContent(generationRequest);
 
-        var response = await SendRawAsync(request, cancellationToken);
+        var response = await SendAsync<CreditNoteTemplateResponse>(request, cancellationToken);
         return response;
     }
 
@@ -383,12 +392,12 @@ public sealed class CheqiApiClient : ICheqiApiClient
 
     public async Task SendReceiptViaEmailAsync(
         string customerEmail,
-        Models.Ubl.PurchaseReceipt purchaseReceipt,
+        Cheqi.Sdk.Models.Generated.CheqiReceipt cheqiReceipt,
         string? accessToken = null,
         CancellationToken cancellationToken = default)
     {
-        var emailRequest = new EmailReceiptRequest(customerEmail, purchaseReceipt);
-        
+        var emailRequest = new Cheqi.Sdk.Models.Generated.EmailReceiptRequest(customerEmail, cheqiReceipt);
+
         var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.ReceiptEmail);
         await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken);
         request.Content = CreateJsonContent(emailRequest);

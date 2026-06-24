@@ -35,18 +35,18 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="recipientId">Temporary recipient identifier returned by recipient resolution for a single matched recipient. This is not the final device or client-application id.</param>
         /// <param name="encryptedReceipt">Base64 ciphertext of the receipt envelope.</param>
         /// <param name="encryptedSymmetricKey">Wrapped symmetric content-encryption key for this recipient. Encrypt the content key with the recipient public key and submit the wrapped value here.</param>
-        /// <param name="finalHash">Final hash of the canonicalized CHEQI JSON receipt contained in the plaintext envelope. Used for downstream verification and integrity checks.</param>
         /// <param name="publicKey">Recipient public key that was used to encrypt the symmetric content key and ciphertext payload.</param>
+        /// <param name="finalHash">Final hash of the canonicalized CHEQI JSON receipt contained in the plaintext envelope. Used for downstream verification and integrity checks.</param>
         /// <param name="supplierPartyId">The id of the selling party</param>
         /// <param name="notificationDisplayCode">notificationDisplayCode</param>
         [JsonConstructor]
-        public EncryptedReceiptRequest(Option<string?> recipientId = default, Option<string?> encryptedReceipt = default, Option<string?> encryptedSymmetricKey = default, Option<string?> finalHash = default, Option<string?> publicKey = default, Option<Guid?> supplierPartyId = default, Option<NotificationDisplayCode?> notificationDisplayCode = default)
+        public EncryptedReceiptRequest(string recipientId, string encryptedReceipt, string encryptedSymmetricKey, string publicKey, Option<string?> finalHash = default, Option<Guid?> supplierPartyId = default, Option<NotificationDisplayCode?> notificationDisplayCode = default)
         {
-            RecipientIdOption = recipientId;
-            EncryptedReceiptOption = encryptedReceipt;
-            EncryptedSymmetricKeyOption = encryptedSymmetricKey;
+            RecipientId = recipientId;
+            EncryptedReceipt = encryptedReceipt;
+            EncryptedSymmetricKey = encryptedSymmetricKey;
+            PublicKey = publicKey;
             FinalHashOption = finalHash;
-            PublicKeyOption = publicKey;
             SupplierPartyIdOption = supplierPartyId;
             NotificationDisplayCodeOption = notificationDisplayCode;
             OnCreated();
@@ -55,46 +55,32 @@ namespace Cheqi.Sdk.Models.Generated
         partial void OnCreated();
 
         /// <summary>
-        /// Used to track the state of RecipientId
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> RecipientIdOption { get; private set; }
-
-        /// <summary>
         /// Temporary recipient identifier returned by recipient resolution for a single matched recipient. This is not the final device or client-application id.
         /// </summary>
         /// <value>Temporary recipient identifier returned by recipient resolution for a single matched recipient. This is not the final device or client-application id.</value>
         [JsonPropertyName("recipientId")]
-        public string? RecipientId { get { return this.RecipientIdOption; } set { this.RecipientIdOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of EncryptedReceipt
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> EncryptedReceiptOption { get; private set; }
+        public string RecipientId { get; set; }
 
         /// <summary>
         /// Base64 ciphertext of the receipt envelope.
         /// </summary>
         /// <value>Base64 ciphertext of the receipt envelope.</value>
         [JsonPropertyName("encryptedReceipt")]
-        public string? EncryptedReceipt { get { return this.EncryptedReceiptOption; } set { this.EncryptedReceiptOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of EncryptedSymmetricKey
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> EncryptedSymmetricKeyOption { get; private set; }
+        public string EncryptedReceipt { get; set; }
 
         /// <summary>
         /// Wrapped symmetric content-encryption key for this recipient. Encrypt the content key with the recipient public key and submit the wrapped value here.
         /// </summary>
         /// <value>Wrapped symmetric content-encryption key for this recipient. Encrypt the content key with the recipient public key and submit the wrapped value here.</value>
         [JsonPropertyName("encryptedSymmetricKey")]
-        public string? EncryptedSymmetricKey { get { return this.EncryptedSymmetricKeyOption; } set { this.EncryptedSymmetricKeyOption = new(value); } }
+        public string EncryptedSymmetricKey { get; set; }
+
+        /// <summary>
+        /// Recipient public key that was used to encrypt the symmetric content key and ciphertext payload.
+        /// </summary>
+        /// <value>Recipient public key that was used to encrypt the symmetric content key and ciphertext payload.</value>
+        [JsonPropertyName("publicKey")]
+        public string PublicKey { get; set; }
 
         /// <summary>
         /// Used to track the state of FinalHash
@@ -109,20 +95,6 @@ namespace Cheqi.Sdk.Models.Generated
         /// <value>Final hash of the canonicalized CHEQI JSON receipt contained in the plaintext envelope. Used for downstream verification and integrity checks.</value>
         [JsonPropertyName("finalHash")]
         public string? FinalHash { get { return this.FinalHashOption; } set { this.FinalHashOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of PublicKey
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> PublicKeyOption { get; private set; }
-
-        /// <summary>
-        /// Recipient public key that was used to encrypt the symmetric content key and ciphertext payload.
-        /// </summary>
-        /// <value>Recipient public key that was used to encrypt the symmetric content key and ciphertext payload.</value>
-        [JsonPropertyName("publicKey")]
-        public string? PublicKey { get { return this.PublicKeyOption; } set { this.PublicKeyOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of SupplierPartyId
@@ -162,8 +134,8 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  RecipientId: ").Append(RecipientId).Append("\n");
             sb.Append("  EncryptedReceipt: ").Append(EncryptedReceipt).Append("\n");
             sb.Append("  EncryptedSymmetricKey: ").Append(EncryptedSymmetricKey).Append("\n");
-            sb.Append("  FinalHash: ").Append(FinalHash).Append("\n");
             sb.Append("  PublicKey: ").Append(PublicKey).Append("\n");
+            sb.Append("  FinalHash: ").Append(FinalHash).Append("\n");
             sb.Append("  SupplierPartyId: ").Append(SupplierPartyId).Append("\n");
             sb.Append("  NotificationDisplayCode: ").Append(NotificationDisplayCode).Append("\n");
             sb.Append("}\n");
@@ -196,8 +168,8 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> recipientId = default;
             Option<string?> encryptedReceipt = default;
             Option<string?> encryptedSymmetricKey = default;
-            Option<string?> finalHash = default;
             Option<string?> publicKey = default;
+            Option<string?> finalHash = default;
             Option<Guid?> supplierPartyId = default;
             Option<NotificationDisplayCode?> notificationDisplayCode = default;
 
@@ -225,11 +197,11 @@ namespace Cheqi.Sdk.Models.Generated
                         case "encryptedSymmetricKey":
                             encryptedSymmetricKey = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
-                        case "finalHash":
-                            finalHash = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
                         case "publicKey":
                             publicKey = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "finalHash":
+                            finalHash = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "supplierPartyId":
                             supplierPartyId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
@@ -243,6 +215,18 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
+            if (!recipientId.IsSet)
+                throw new ArgumentException("Property is required for class EncryptedReceiptRequest.", nameof(recipientId));
+
+            if (!encryptedReceipt.IsSet)
+                throw new ArgumentException("Property is required for class EncryptedReceiptRequest.", nameof(encryptedReceipt));
+
+            if (!encryptedSymmetricKey.IsSet)
+                throw new ArgumentException("Property is required for class EncryptedReceiptRequest.", nameof(encryptedSymmetricKey));
+
+            if (!publicKey.IsSet)
+                throw new ArgumentException("Property is required for class EncryptedReceiptRequest.", nameof(publicKey));
+
             if (recipientId.IsSet && recipientId.Value == null)
                 throw new ArgumentNullException(nameof(recipientId), "Property is not nullable for class EncryptedReceiptRequest.");
 
@@ -252,11 +236,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (encryptedSymmetricKey.IsSet && encryptedSymmetricKey.Value == null)
                 throw new ArgumentNullException(nameof(encryptedSymmetricKey), "Property is not nullable for class EncryptedReceiptRequest.");
 
-            if (finalHash.IsSet && finalHash.Value == null)
-                throw new ArgumentNullException(nameof(finalHash), "Property is not nullable for class EncryptedReceiptRequest.");
-
             if (publicKey.IsSet && publicKey.Value == null)
                 throw new ArgumentNullException(nameof(publicKey), "Property is not nullable for class EncryptedReceiptRequest.");
+
+            if (finalHash.IsSet && finalHash.Value == null)
+                throw new ArgumentNullException(nameof(finalHash), "Property is not nullable for class EncryptedReceiptRequest.");
 
             if (supplierPartyId.IsSet && supplierPartyId.Value == null)
                 throw new ArgumentNullException(nameof(supplierPartyId), "Property is not nullable for class EncryptedReceiptRequest.");
@@ -264,7 +248,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (notificationDisplayCode.IsSet && notificationDisplayCode.Value == null)
                 throw new ArgumentNullException(nameof(notificationDisplayCode), "Property is not nullable for class EncryptedReceiptRequest.");
 
-            return new EncryptedReceiptRequest(recipientId, encryptedReceipt, encryptedSymmetricKey, finalHash, publicKey, supplierPartyId, notificationDisplayCode);
+            return new EncryptedReceiptRequest(recipientId.Value!, encryptedReceipt.Value!, encryptedSymmetricKey.Value!, publicKey.Value!, finalHash, supplierPartyId, notificationDisplayCode);
         }
 
         /// <summary>
@@ -291,38 +275,34 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, EncryptedReceiptRequest encryptedReceiptRequest, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (encryptedReceiptRequest.RecipientIdOption.IsSet && encryptedReceiptRequest.RecipientId == null)
+            if (encryptedReceiptRequest.RecipientId == null)
                 throw new ArgumentNullException(nameof(encryptedReceiptRequest.RecipientId), "Property is required for class EncryptedReceiptRequest.");
 
-            if (encryptedReceiptRequest.EncryptedReceiptOption.IsSet && encryptedReceiptRequest.EncryptedReceipt == null)
+            if (encryptedReceiptRequest.EncryptedReceipt == null)
                 throw new ArgumentNullException(nameof(encryptedReceiptRequest.EncryptedReceipt), "Property is required for class EncryptedReceiptRequest.");
 
-            if (encryptedReceiptRequest.EncryptedSymmetricKeyOption.IsSet && encryptedReceiptRequest.EncryptedSymmetricKey == null)
+            if (encryptedReceiptRequest.EncryptedSymmetricKey == null)
                 throw new ArgumentNullException(nameof(encryptedReceiptRequest.EncryptedSymmetricKey), "Property is required for class EncryptedReceiptRequest.");
+
+            if (encryptedReceiptRequest.PublicKey == null)
+                throw new ArgumentNullException(nameof(encryptedReceiptRequest.PublicKey), "Property is required for class EncryptedReceiptRequest.");
 
             if (encryptedReceiptRequest.FinalHashOption.IsSet && encryptedReceiptRequest.FinalHash == null)
                 throw new ArgumentNullException(nameof(encryptedReceiptRequest.FinalHash), "Property is required for class EncryptedReceiptRequest.");
 
-            if (encryptedReceiptRequest.PublicKeyOption.IsSet && encryptedReceiptRequest.PublicKey == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptRequest.PublicKey), "Property is required for class EncryptedReceiptRequest.");
-
             if (encryptedReceiptRequest.NotificationDisplayCodeOption.IsSet && encryptedReceiptRequest.NotificationDisplayCode == null)
                 throw new ArgumentNullException(nameof(encryptedReceiptRequest.NotificationDisplayCode), "Property is required for class EncryptedReceiptRequest.");
 
-            if (encryptedReceiptRequest.RecipientIdOption.IsSet)
-                writer.WriteString("recipientId", encryptedReceiptRequest.RecipientId);
+            writer.WriteString("recipientId", encryptedReceiptRequest.RecipientId);
 
-            if (encryptedReceiptRequest.EncryptedReceiptOption.IsSet)
-                writer.WriteString("encryptedReceipt", encryptedReceiptRequest.EncryptedReceipt);
+            writer.WriteString("encryptedReceipt", encryptedReceiptRequest.EncryptedReceipt);
 
-            if (encryptedReceiptRequest.EncryptedSymmetricKeyOption.IsSet)
-                writer.WriteString("encryptedSymmetricKey", encryptedReceiptRequest.EncryptedSymmetricKey);
+            writer.WriteString("encryptedSymmetricKey", encryptedReceiptRequest.EncryptedSymmetricKey);
+
+            writer.WriteString("publicKey", encryptedReceiptRequest.PublicKey);
 
             if (encryptedReceiptRequest.FinalHashOption.IsSet)
                 writer.WriteString("finalHash", encryptedReceiptRequest.FinalHash);
-
-            if (encryptedReceiptRequest.PublicKeyOption.IsSet)
-                writer.WriteString("publicKey", encryptedReceiptRequest.PublicKey);
 
             if (encryptedReceiptRequest.SupplierPartyIdOption.IsSet)
                 writer.WriteString("supplierPartyId", encryptedReceiptRequest.SupplierPartyIdOption.Value!.Value);

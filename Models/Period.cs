@@ -15,7 +15,7 @@ namespace Cheqi.Sdk.Models;
 /// </summary>
 public sealed class Period : Cheqi.Sdk.Models.Generated.Period
 {
-    public Period() : base() { }
+    public Period() : base(default, default) { }
 
     // ===== BUILDER =====
 
@@ -31,10 +31,8 @@ public sealed class Period : Cheqi.Sdk.Models.Generated.Period
 
         public PeriodBuilder From(Generated.Period other)
         {
-            if (other.StartDate != null)
-                _startDate = DateTimeOffset.Parse(other.StartDate);
-            if (other.EndDate != null)
-                _endDate = DateTimeOffset.Parse(other.EndDate);
+            _startDate = other.StartDate;
+            _endDate = other.EndDate;
             _description = other.Description;
             return this;
         }
@@ -59,8 +57,8 @@ public sealed class Period : Cheqi.Sdk.Models.Generated.Period
 
         public PeriodBuilder EndDate(DateTime endDate)
         {
-            var endOfDay = endDate.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
-            _endDate = new DateTimeOffset(endOfDay, TimeSpan.Zero);
+            // Matches Java: LocalDate end date maps to start-of-day UTC.
+            _endDate = new DateTimeOffset(endDate.Date, TimeSpan.Zero);
             return this;
         }
 
@@ -78,8 +76,8 @@ public sealed class Period : Cheqi.Sdk.Models.Generated.Period
                 throw new InvalidOperationException("EndDate is required");
 
             var p = new Period();
-            p.StartDate = _startDate.Value.ToString("o");
-            p.EndDate = _endDate.Value.ToString("o");
+            p.StartDate = _startDate.Value;
+            p.EndDate = _endDate.Value;
             p.Description = _description;
             return p;
         }

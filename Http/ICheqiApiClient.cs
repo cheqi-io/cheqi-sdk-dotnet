@@ -5,6 +5,10 @@ using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsReq
 using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
 using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
 using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
+using ReceiptTemplateGenerationRequest = Cheqi.Sdk.Models.Generated.ReceiptTemplateGenerationRequest;
+using ReceiptTemplateResponse = Cheqi.Sdk.Models.Generated.ReceiptTemplateResponse;
+using CreditNoteTemplateGenerationRequest = Cheqi.Sdk.Models.Generated.CreditNoteTemplateGenerationRequest;
+using CreditNoteTemplateResponse = Cheqi.Sdk.Models.Generated.CreditNoteTemplateResponse;
 
 namespace Cheqi.Sdk.Http;
 
@@ -43,9 +47,9 @@ public interface ICheqiApiClient : IDisposable
     /// <param name="request">The receipt template request.</param>
     /// <param name="accessToken">Optional OAuth access token.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The generated receipt as JSON.</returns>
-    Task<string> GenerateReceiptTemplateAsync(
-        ReceiptTemplateRequest request,
+    /// <returns>The generated receipt template response (cheqi/UBL formats + VAT metadata).</returns>
+    Task<ReceiptTemplateResponse> GenerateReceiptTemplateAsync(
+        ReceiptTemplateGenerationRequest request,
         string? accessToken = null,
         CancellationToken cancellationToken = default);
 
@@ -67,9 +71,9 @@ public interface ICheqiApiClient : IDisposable
     /// <param name="request">The credit note template request.</param>
     /// <param name="accessToken">Optional OAuth access token.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The generated credit note as JSON.</returns>
-    Task<string> GenerateCreditNoteTemplateAsync(
-        CreditNoteTemplateRequest request,
+    /// <returns>The generated credit note template response (cheqi/UBL credit-note formats).</returns>
+    Task<CreditNoteTemplateResponse> GenerateCreditNoteTemplateAsync(
+        CreditNoteTemplateGenerationRequest request,
         string? accessToken = null,
         CancellationToken cancellationToken = default);
 
@@ -205,12 +209,12 @@ public interface ICheqiApiClient : IDisposable
     /// Sends a receipt via email to a customer.
     /// </summary>
     /// <param name="customerEmail">Customer email address.</param>
-    /// <param name="purchaseReceipt">The purchase receipt to send.</param>
+    /// <param name="cheqiReceipt">The Cheqi receipt to send.</param>
     /// <param name="accessToken">Optional OAuth access token.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task SendReceiptViaEmailAsync(
         string customerEmail,
-        Models.Ubl.PurchaseReceipt purchaseReceipt,
+        Cheqi.Sdk.Models.Generated.CheqiReceipt cheqiReceipt,
         string? accessToken = null,
         CancellationToken cancellationToken = default);
 }

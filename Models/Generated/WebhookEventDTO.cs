@@ -45,7 +45,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="finalizedAt">finalizedAt</param>
         /// <param name="deviceId">deviceId</param>
         [JsonConstructor]
-        public WebhookEventDTO(Option<Guid?> companyId = default, Option<Guid?> userId = default, Option<EventEnum?> @event = default, Option<DateTimeOffset?> createdAt = default, Option<string?> cheqiReceiptId = default, Option<RoutingIdentifier?> routingIdentifier = default, Option<EncryptedReceiptDto?> encryptedReceipt = default, Option<EncryptedCreditNoteInitiationRequest?> encryptedCreditNoteInitiationRequest = default, Option<EncryptedCreditNoteDto?> encryptedCreditNoteDto = default, Option<string?> finalHash = default, Option<DateTimeOffset?> finalizedAt = default, Option<Guid?> deviceId = default)
+        public WebhookEventDTO(Option<Guid?> companyId = default, Option<Guid?> userId = default, Option<EventEnum?> @event = default, Option<DateTimeOffset?> createdAt = default, Option<string?> cheqiReceiptId = default, Option<RoutingIdentifier?> routingIdentifier = default, Option<EncryptedReceipt?> encryptedReceipt = default, Option<EncryptedCreditNoteInitiationRequest?> encryptedCreditNoteInitiationRequest = default, Option<EncryptedCreditNoteDto?> encryptedCreditNoteDto = default, Option<string?> finalHash = default, Option<DateTimeOffset?> finalizedAt = default, Option<Guid?> deviceId = default)
         {
             CompanyIdOption = companyId;
             UserIdOption = userId;
@@ -87,7 +87,12 @@ namespace Cheqi.Sdk.Models.Generated
             /// <summary>
             /// Enum CREDITNOTECREATED for value: CREDIT_NOTE_CREATED
             /// </summary>
-            CREDITNOTECREATED = 4
+            CREDITNOTECREATED = 4,
+
+            /// <summary>
+            /// Enum CREDITNOTEFINALIZED for value: CREDIT_NOTE_FINALIZED
+            /// </summary>
+            CREDITNOTEFINALIZED = 5
         }
 
         /// <summary>
@@ -109,6 +114,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value.Equals("CREDIT_NOTE_CREATED"))
                 return EventEnum.CREDITNOTECREATED;
+
+            if (value.Equals("CREDIT_NOTE_FINALIZED"))
+                return EventEnum.CREDITNOTEFINALIZED;
 
             throw new NotImplementedException($"Could not convert value to type EventEnum: '{value}'");
         }
@@ -132,6 +140,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("CREDIT_NOTE_CREATED"))
                 return EventEnum.CREDITNOTECREATED;
 
+            if (value.Equals("CREDIT_NOTE_FINALIZED"))
+                return EventEnum.CREDITNOTEFINALIZED;
+
             return null;
         }
 
@@ -154,6 +165,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value == EventEnum.CREDITNOTECREATED)
                 return "CREDIT_NOTE_CREATED";
+
+            if (value == EventEnum.CREDITNOTEFINALIZED)
+                return "CREDIT_NOTE_FINALIZED";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }
@@ -241,13 +255,13 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<EncryptedReceiptDto?> EncryptedReceiptOption { get; private set; }
+        public Option<EncryptedReceipt?> EncryptedReceiptOption { get; private set; }
 
         /// <summary>
         /// Gets or Sets EncryptedReceipt
         /// </summary>
         [JsonPropertyName("encryptedReceipt")]
-        public EncryptedReceiptDto? EncryptedReceipt { get { return this.EncryptedReceiptOption; } set { this.EncryptedReceiptOption = new(value); } }
+        public EncryptedReceipt? EncryptedReceipt { get { return this.EncryptedReceiptOption; } set { this.EncryptedReceiptOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of EncryptedCreditNoteInitiationRequest
@@ -377,7 +391,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<DateTimeOffset?> createdAt = default;
             Option<string?> cheqiReceiptId = default;
             Option<RoutingIdentifier?> routingIdentifier = default;
-            Option<EncryptedReceiptDto?> encryptedReceipt = default;
+            Option<EncryptedReceipt?> encryptedReceipt = default;
             Option<EncryptedCreditNoteInitiationRequest?> encryptedCreditNoteInitiationRequest = default;
             Option<EncryptedCreditNoteDto?> encryptedCreditNoteDto = default;
             Option<string?> finalHash = default;
@@ -420,7 +434,7 @@ namespace Cheqi.Sdk.Models.Generated
                             routingIdentifier = new Option<RoutingIdentifier?>(JsonSerializer.Deserialize<RoutingIdentifier>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "encryptedReceipt":
-                            encryptedReceipt = new Option<EncryptedReceiptDto?>(JsonSerializer.Deserialize<EncryptedReceiptDto>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            encryptedReceipt = new Option<EncryptedReceipt?>(JsonSerializer.Deserialize<EncryptedReceipt>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "encryptedCreditNoteInitiationRequest":
                             encryptedCreditNoteInitiationRequest = new Option<EncryptedCreditNoteInitiationRequest?>(JsonSerializer.Deserialize<EncryptedCreditNoteInitiationRequest>(ref utf8JsonReader, jsonSerializerOptions)!);

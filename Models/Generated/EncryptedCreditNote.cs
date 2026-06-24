@@ -41,10 +41,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="recipientId">The recipient ID of the credit note</param>
         /// <param name="creditNoteId">The credit note ID</param>
         /// <param name="originalReceiptId">The original receipt ID</param>
-        /// <param name="receiverType">receiverType</param>
         /// <param name="finalHash">finalHash</param>
         [JsonConstructor]
-        public EncryptedCreditNote(string varEncryptedCreditNote, string encryptedSymmetricKey, string encryptedCustomerDetails, string encryptedCustomerAesKey, string publicKey, Guid supplierPartyId, Option<string?> recipientId = default, Option<string?> creditNoteId = default, Option<string?> originalReceiptId = default, Option<ReceiverType?> receiverType = default, Option<string?> finalHash = default)
+        public EncryptedCreditNote(string varEncryptedCreditNote, string encryptedSymmetricKey, string encryptedCustomerDetails, string encryptedCustomerAesKey, string publicKey, Guid supplierPartyId, Option<string?> recipientId = default, Option<string?> creditNoteId = default, Option<string?> originalReceiptId = default, Option<string?> finalHash = default)
         {
             VarEncryptedCreditNote = varEncryptedCreditNote;
             EncryptedSymmetricKey = encryptedSymmetricKey;
@@ -55,25 +54,11 @@ namespace Cheqi.Sdk.Models.Generated
             RecipientIdOption = recipientId;
             CreditNoteIdOption = creditNoteId;
             OriginalReceiptIdOption = originalReceiptId;
-            ReceiverTypeOption = receiverType;
             FinalHashOption = finalHash;
             OnCreated();
         }
 
         partial void OnCreated();
-
-        /// <summary>
-        /// Used to track the state of ReceiverType
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<ReceiverType?> ReceiverTypeOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets ReceiverType
-        /// </summary>
-        [JsonPropertyName("receiverType")]
-        public ReceiverType? ReceiverType { get { return this.ReceiverTypeOption; } set { this.ReceiverTypeOption = new(value); } }
 
         /// <summary>
         /// The encrypted credit note
@@ -193,7 +178,6 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  RecipientId: ").Append(RecipientId).Append("\n");
             sb.Append("  CreditNoteId: ").Append(CreditNoteId).Append("\n");
             sb.Append("  OriginalReceiptId: ").Append(OriginalReceiptId).Append("\n");
-            sb.Append("  ReceiverType: ").Append(ReceiverType).Append("\n");
             sb.Append("  FinalHash: ").Append(FinalHash).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -231,7 +215,6 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> recipientId = default;
             Option<string?> creditNoteId = default;
             Option<string?> originalReceiptId = default;
-            Option<ReceiverType?> receiverType = default;
             Option<string?> finalHash = default;
 
             while (utf8JsonReader.Read())
@@ -275,11 +258,6 @@ namespace Cheqi.Sdk.Models.Generated
                             break;
                         case "originalReceiptId":
                             originalReceiptId = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
-                        case "receiverType":
-                            string? receiverTypeRawValue = utf8JsonReader.GetString();
-                            if (receiverTypeRawValue != null)
-                                receiverType = new Option<ReceiverType?>(ReceiverTypeValueConverter.FromStringOrDefault(receiverTypeRawValue));
                             break;
                         case "finalHash":
                             finalHash = new Option<string?>(utf8JsonReader.GetString()!);
@@ -335,13 +313,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (originalReceiptId.IsSet && originalReceiptId.Value == null)
                 throw new ArgumentNullException(nameof(originalReceiptId), "Property is not nullable for class EncryptedCreditNote.");
 
-            if (receiverType.IsSet && receiverType.Value == null)
-                throw new ArgumentNullException(nameof(receiverType), "Property is not nullable for class EncryptedCreditNote.");
-
             if (finalHash.IsSet && finalHash.Value == null)
                 throw new ArgumentNullException(nameof(finalHash), "Property is not nullable for class EncryptedCreditNote.");
 
-            return new EncryptedCreditNote(varEncryptedCreditNote.Value!, encryptedSymmetricKey.Value!, encryptedCustomerDetails.Value!, encryptedCustomerAesKey.Value!, publicKey.Value!, supplierPartyId.Value!.Value!, recipientId, creditNoteId, originalReceiptId, receiverType, finalHash);
+            return new EncryptedCreditNote(varEncryptedCreditNote.Value!, encryptedSymmetricKey.Value!, encryptedCustomerDetails.Value!, encryptedCustomerAesKey.Value!, publicKey.Value!, supplierPartyId.Value!.Value!, recipientId, creditNoteId, originalReceiptId, finalHash);
         }
 
         /// <summary>
@@ -416,11 +391,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (encryptedCreditNote.OriginalReceiptIdOption.IsSet)
                 writer.WriteString("originalReceiptId", encryptedCreditNote.OriginalReceiptId);
 
-            if (encryptedCreditNote.ReceiverTypeOption.IsSet)
-            {
-                var receiverTypeRawValue = ReceiverTypeValueConverter.ToJsonValue(encryptedCreditNote.ReceiverType!.Value);
-                writer.WriteString("receiverType", receiverTypeRawValue);
-            }
             if (encryptedCreditNote.FinalHashOption.IsSet)
                 writer.WriteString("finalHash", encryptedCreditNote.FinalHash);
         }

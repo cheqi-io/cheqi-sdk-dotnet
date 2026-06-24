@@ -125,10 +125,13 @@ public sealed class RetryHandler : DelegatingHandler
             }
         }
 
-        // Exponential backoff with jitter
-        var exponentialDelay = _baseDelay * Math.Pow(2, attempt - 1);
-        var jitter = Random.Shared.NextDouble() * 0.2; // Up to 20% jitter
-        return exponentialDelay + TimeSpan.FromMilliseconds(exponentialDelay.TotalMilliseconds * jitter);
+        // Exponential backoff with jitter, matching the Java SDK:
+        // base 5s for rate-limit (429), 1s otherwise; jitter 0.75-1.25; capped at 30s.
+        double baseDelayMs = response?.StatusCode == HttpStatusCode.TooManyRequests ? 5000 : 1000;
+        double exponentialMs = baseDelayMs * Math.Pow(2, attempt - 1);
+        double jitter = 0.75 + (Random.Shared.NextDouble() * 0.5);
+        double delayWithJitterMs = Math.Min(exponentialMs * jitter, 30000);
+        return TimeSpan.FromMilliseconds(delayWithJitterMs);
     }
 
     private static async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage request)

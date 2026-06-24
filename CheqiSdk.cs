@@ -210,7 +210,7 @@ public sealed class CheqiSdk : IDisposable
     /// <summary>
     /// Processes an encrypted receipt (synchronous - Java compatibility).
     /// </summary>
-    public PurchaseReceipt ProcessEncryptedReceipt(EncryptedReceipt encryptedReceipt, string privateKey)
+    public PurchaseReceipt ProcessEncryptedReceipt(Models.EncryptedReceipt encryptedReceipt, string privateKey)
     {
         return _receiptProcessor.ProcessEncryptedReceipt(encryptedReceipt, privateKey);
     }
@@ -218,7 +218,7 @@ public sealed class CheqiSdk : IDisposable
     /// <summary>
     /// Processes an encrypted receipt asynchronously (C# idiomatic).
     /// </summary>
-    public Task<PurchaseReceipt> ProcessEncryptedReceiptAsync(EncryptedReceipt encryptedReceipt, string privateKey, CancellationToken cancellationToken = default)
+    public Task<PurchaseReceipt> ProcessEncryptedReceiptAsync(Models.EncryptedReceipt encryptedReceipt, string privateKey, CancellationToken cancellationToken = default)
     {
         return Task.Run(() => _receiptProcessor.ProcessEncryptedReceipt(encryptedReceipt, privateKey), cancellationToken);
     }

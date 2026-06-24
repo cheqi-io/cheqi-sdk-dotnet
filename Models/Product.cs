@@ -288,6 +288,18 @@ public sealed class Product : GeneratedModels.Product
             return this;
         }
 
+        public ProductBuilder AddBarcode(Cheqi.Sdk.Models.Generated.BarcodeType type, string data, string? label = null)
+        {
+            _barcodes.Add(Barcode.Of(type, data, label));
+            return this;
+        }
+
+        public ProductBuilder AddQrCode(string data, string? label = null)
+        {
+            _barcodes.Add(Barcode.QrCode(data, label));
+            return this;
+        }
+
         // ===== TOTALS & PERIOD =====
 
         public ProductBuilder Subtotal(decimal subtotal)

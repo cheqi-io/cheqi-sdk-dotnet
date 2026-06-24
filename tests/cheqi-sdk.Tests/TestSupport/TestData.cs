@@ -6,6 +6,7 @@ using ReceiptTemplateRequest = Cheqi.Sdk.Models.ReceiptTemplateRequest;
 using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
 using MatchedRecipient = Cheqi.Sdk.Models.Generated.MatchedRecipient;
 using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
+using PaymentType = Cheqi.Sdk.Models.Generated.PaymentType;
 
 namespace Cheqi.Sdk.Tests.TestSupport;
 
@@ -13,14 +14,14 @@ internal static class TestData
 {
     public static IdentificationDetails PairingCodeIdentification(string pairingCode = "PAIR-123")
     {
-        var details = new IdentificationDetails(IdentificationDetails.PaymentTypeEnum.CARDPAYMENT);
+        var details = new IdentificationDetails(PaymentType.CARDPAYMENT);
         details.PairingCode = pairingCode;
         return details;
     }
 
     public static IdentificationDetails ReceiptIdIdentification(string cheqiReceiptId = "receipt-123", string? email = null)
     {
-        var details = new IdentificationDetails(IdentificationDetails.PaymentTypeEnum.CARDPAYMENT);
+        var details = new IdentificationDetails(PaymentType.CARDPAYMENT);
         details.CheqiReceiptId = cheqiReceiptId;
         details.RecipientEmail = email;
         return details;
@@ -28,7 +29,7 @@ internal static class TestData
 
     public static IdentificationDetails EmailIdentification(string email = "customer@example.com")
     {
-        var details = new IdentificationDetails(IdentificationDetails.PaymentTypeEnum.CARDPAYMENT);
+        var details = new IdentificationDetails(PaymentType.CARDPAYMENT);
         details.RecipientEmail = email;
         return details;
     }
@@ -36,7 +37,7 @@ internal static class TestData
     public static RecipientResolutionResponse CustomerFoundResponse(string matchId = "match-123", List<MatchedRecipient>? recipients = null)
     {
         var response = new RecipientResolutionResponse();
-        response.CustomerFound = true;
+        response.RouteFound = true;
         response.MatchId = matchId;
         response.Recipients = recipients ?? new List<MatchedRecipient> { CreateRecipient() };
         return response;
@@ -51,6 +52,10 @@ internal static class TestData
         recipient.Id = id;
         recipient.PublicKey = publicKey;
         recipient.KeyAlgorithm = "RSA";
+        recipient.AcceptedFormats = new List<Cheqi.Sdk.Models.Generated.ReceiptFormat>
+        {
+            Cheqi.Sdk.Models.Generated.ReceiptFormat.CHEQI
+        };
         return recipient;
     }
 
@@ -92,7 +97,7 @@ internal static class TestData
             .TotalBeforeTax(-100m)
             .TotalTaxAmount(-21m)
             .TotalAmount(-121m)
-            .AddProduct("Cheqi", "Subscription refund", 100m, -100m, 21.0, -21m, -121m, -1.0)
+            .AddProduct("SKU-REFUND-1", "Cheqi", "Subscription refund", 100m, -100m, 21.0, -21m, -121m, -1.0)
             .AddTax(21.0, "VAT", -21m)
             .Build();
 }

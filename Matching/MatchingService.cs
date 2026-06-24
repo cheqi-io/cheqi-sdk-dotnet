@@ -64,7 +64,7 @@ public class MatchingService
         {
             var response = await _apiClient.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken);
 
-            if (response.CustomerFound == true)
+            if (response.RouteFound == true)
             {
                 _logger.LogInformation("Customer matched successfully: {Count} recipients found", response.Recipients?.Count ?? 0);
             }
@@ -123,7 +123,7 @@ public class MatchingService
         {
             var response = await _apiClient.MatchCustomerAsync(identificationDetails, null, cancellationToken);
 
-            if (response.CustomerFound == true)
+            if (response.RouteFound == true)
             {
                 _logger.LogInformation("Customer matched successfully: {Count} recipients found", response.Recipients?.Count ?? 0);
             }
@@ -180,8 +180,7 @@ public class MatchingService
         }
 
         var card = identificationDetails.CardDetails;
-        return (!string.IsNullOrWhiteSpace(card.PaymentAccountNumber)) ||
-               (!string.IsNullOrWhiteSpace(card.PaymentAccountReference));
+        return !string.IsNullOrWhiteSpace(card.PaymentAccountReference);
     }
 
     /// <summary>

@@ -5,30 +5,30 @@ using Cheqi.Sdk.Http;
 using Cheqi.Sdk.Http.Exceptions;
 using Cheqi.Sdk.Matching;
 using Cheqi.Sdk.Models;
-using Cheqi.Sdk.Models.Ubl;
 using Cheqi.Sdk.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Linq;
 using System.Text.Json;
 using DecryptionException = Cheqi.Sdk.Decryption.DecryptionException;
 using Recipient = Cheqi.Sdk.Models.Generated.MatchedRecipient;
 using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
 using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
+using ReceiptFormat = Cheqi.Sdk.Models.Generated.ReceiptFormat;
+using CreditNoteTemplateResponse = Cheqi.Sdk.Models.Generated.CreditNoteTemplateResponse;
+using CreditNoteTemplateGenerationRequest = Cheqi.Sdk.Models.Generated.CreditNoteTemplateGenerationRequest;
 
 namespace Cheqi.Sdk.CreditNote;
 
 /// <summary>
 /// Service for processing credit note requests with end-to-end encryption.
-/// 
-/// This service handles:
-/// - Credit note generation and encryption for returns/refunds
-/// - Decryption of encrypted credit note requests from customers
-/// - Customer identification via cheqiReceiptId (links to original receipt)
-/// - Bidirectional encrypted communication (merchant ↔ customer)
-/// 
-/// Note: Credit notes identify customers using the cheqiReceiptId from the original receipt,
-/// not payment details like card PAR or IBAN. The cheqiReceiptId automatically resolves
-/// to the customer who received the original receipt.
+///
+/// Mirrors the Java SDK credit-note flow:
+/// - Customer matching via cheqiReceiptId (links to the original receipt)
+/// - Receipt format determination from the matched recipients
+/// - Typed credit-note template generation (CHEQI / UBL credit-note formats)
+/// - Per-recipient encrypted credit-note envelopes (only the formats each recipient accepts)
+/// - Decryption of delivered credit notes and incoming credit-note requests
 /// </summary>
 public class CreditNoteService
 {
@@ -36,7 +36,6 @@ public class CreditNoteService
     private readonly DecryptionService _decryptionService;
     private readonly MatchingService _matchingService;
     private readonly ICheqiApiClient _apiClient;
-    private readonly RFC8785Canonicalizer _canonicalizer;
     private readonly EncryptionService _encryptionService;
     private readonly CreditNoteMergeService _creditNoteMergeService;
     private readonly JsonSerializerOptions _jsonOptions;
@@ -51,198 +50,76 @@ public class CreditNoteService
         _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         _matchingService = matchingService ?? throw new ArgumentNullException(nameof(matchingService));
         _logger = logger ?? NullLogger<CreditNoteService>.Instance;
-        
+
         _decryptionService = new DecryptionService();
-        _canonicalizer = new RFC8785Canonicalizer();
         _creditNoteMergeService = new CreditNoteMergeService();
-        
+
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
             WriteIndented = false
         };
-        
+
         _logger.LogInformation("CreditNoteService initialized successfully");
     }
 
-    #region Process Complete Credit Note (API Key)
+    #region Process Complete Credit Note
 
     /// <summary>
-    /// Process complete credit note using API key from SDK config.
-    /// Uses Bearer token authentication with the API key configured during SDK initialization.
-    /// For companies accessing their own data directly.
+    /// Complete credit note processing workflow (mirrors Java <c>processCompleteCreditNote</c>):
+    /// 1. Matches the customer using the original receipt id (cheqiReceiptId).
+    /// 2. If no route is found and no email is provided, returns early.
+    /// 3. Determines accepted formats and generates the credit-note template.
+    /// 4. If a route is found: builds a per-recipient envelope, encrypts and submits.
     /// </summary>
-    /// <param name="identificationDetails">Customer identification details</param>
-    /// <param name="creditNoteTemplateRequest">Credit note template request</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>CreditNoteResult indicating success or failure</returns>
-    /// <exception cref="CheqiSDKException">if processing fails</exception>
+    /// <param name="identificationDetails">Customer identification details (must include cheqiReceiptId).</param>
+    /// <param name="creditNoteTemplateRequest">Credit note template request.</param>
+    /// <param name="accessToken">OAuth access token, or null to use the API key from SDK config.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public async Task<CreditNoteResult> ProcessCompleteCreditNoteAsync(
         IdentificationDetails identificationDetails,
         CreditNoteTemplateRequest creditNoteTemplateRequest,
+        string? accessToken = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(identificationDetails);
         ArgumentNullException.ThrowIfNull(creditNoteTemplateRequest);
 
-        // Validate that cheqiReceiptId is present for credit notes
         if (string.IsNullOrWhiteSpace(identificationDetails.CheqiReceiptId))
         {
             throw new CheqiSDKException(
                 "Original receipt ID (cheqiReceiptId) is required for credit note processing",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
+                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
         }
+
+        var originalReceiptId = identificationDetails.CheqiReceiptId!;
 
         try
         {
-            _logger.LogDebug("Matching customer with API key");
-            var matchResponse = await _matchingService.MatchCustomerAsync(identificationDetails, cancellationToken);
+            _logger.LogDebug("Matching customer with {Auth}", accessToken != null ? "access token" : "API key");
+            var matchResponse = accessToken != null
+                ? await _matchingService.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken)
+                : await _matchingService.MatchCustomerAsync(identificationDetails, cancellationToken);
 
-            if (!matchResponse.CustomerFound == true && string.IsNullOrWhiteSpace(identificationDetails.RecipientEmail))
+            if (matchResponse.RouteFound != true && string.IsNullOrWhiteSpace(identificationDetails.RecipientEmail))
             {
-                _logger.LogInformation("Customer not found and no email provided - skipping template generation as no recipient is known");
+                _logger.LogInformation("Customer not found and no email provided - skipping template generation");
                 return CreditNoteResult.NoRecipients();
             }
 
-            // Generate credit note template
-            _logger.LogDebug("Generating credit note template with API key");
-            string creditNoteTemplate = await GenerateCreditNoteTemplateAsync(creditNoteTemplateRequest, cancellationToken);
+            var formats = DetermineFormats(matchResponse);
 
-            var creditNote = JsonSerializer.Deserialize<Models.Ubl.CreditNote>(creditNoteTemplate, _jsonOptions)
-                ?? throw new CheqiSDKException("Failed to deserialize credit note template", CheqiSDKException.ErrorCodes.INVALID_RESPONSE, 500, null);
+            _logger.LogDebug("Generating credit note template");
+            var templateResponse = await GenerateCreditNoteTemplateAsync(creditNoteTemplateRequest, formats, matchResponse, accessToken, cancellationToken);
 
-            if (matchResponse.CustomerFound == true)
-            {
-                string creditNoteTemplateJson = JsonSerializer.Serialize(creditNote, _jsonOptions);
-                string canonicalCreditNoteJson = _canonicalizer.Canonicalize(creditNoteTemplateJson);
-                string templateHash = HashUtils.Sha256Hex(canonicalCreditNoteJson);
-
-                _logger.LogDebug("Creating encrypted credit notes for {Count} recipients", matchResponse.Recipients?.Count ?? 0);
-                var encryptedCreditNotes = CreateEncryptedCreditNotes(
-                    canonicalCreditNoteJson,
-                    matchResponse.Recipients ?? new List<Recipient>()
-                );
-
-                _logger.LogDebug("Sending {Count} encrypted credit notes to backend with API key", encryptedCreditNotes.Count);
-                var response = await SendEncryptedCreditNotesAsync(
-                    identificationDetails.CheqiReceiptId!,
-                    encryptedCreditNotes,
-                    templateHash,
-                    matchResponse,
-                    cancellationToken);
-
-                _logger.LogInformation("Credit note processing completed successfully: {Count} credit notes created for {RecipientCount} recipients",
-                    encryptedCreditNotes.Count, matchResponse.Recipients?.Count ?? 0);
-                return CreditNoteResult.Success(response.CreditNoteId ?? string.Empty, response.RecipientCount);
-            }
-            else
+            if (matchResponse.RouteFound != true)
             {
                 _logger.LogInformation("Customer not found but email provided - credit note template generated but not sent");
                 return CreditNoteResult.NoRecipients();
             }
-        }
-        catch (CheqiSDKException)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Unexpected error during credit note processing: {Message}", e.Message);
-            throw new CheqiSDKException("Credit note processing failed: " + e.Message, e);
-        }
-    }
 
-    #endregion
-
-    #region Process Complete Credit Note (OAuth)
-
-    /// <summary>
-    /// Process complete credit note using OAuth2 access token.
-    /// For third-party integrators accessing merchant data via OAuth2 authorization.
-    /// </summary>
-    /// <param name="identificationDetails">Customer identification details</param>
-    /// <param name="creditNoteTemplateRequest">Credit note template request</param>
-    /// <param name="accessToken">OAuth2 access token</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>CreditNoteResult indicating success or failure</returns>
-    /// <exception cref="CheqiSDKException">if processing fails</exception>
-    public async Task<CreditNoteResult> ProcessCompleteCreditNoteAsync(
-        IdentificationDetails identificationDetails,
-        CreditNoteTemplateRequest creditNoteTemplateRequest,
-        string accessToken,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(identificationDetails);
-        ArgumentNullException.ThrowIfNull(creditNoteTemplateRequest);
-
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            throw new CheqiSDKException(
-                "Access token cannot be null or empty",
-                CheqiSDKException.ErrorCodes.AUTHENTICATION_FAILED,
-                401,
-                null);
-        }
-
-        // Validate that cheqiReceiptId is present for credit notes
-        if (string.IsNullOrWhiteSpace(identificationDetails.CheqiReceiptId))
-        {
-            throw new CheqiSDKException(
-                "Original receipt ID (cheqiReceiptId) is required for credit note processing",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
-        }
-
-        try
-        {
-            _logger.LogDebug("Matching customer with access token");
-            var matchResponse = await _matchingService.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken);
-
-            if (!matchResponse.CustomerFound == true && string.IsNullOrWhiteSpace(identificationDetails.RecipientEmail))
-            {
-                _logger.LogInformation("Customer not found and no email provided - skipping template generation as no recipient is known");
-                return CreditNoteResult.NoRecipients();
-            }
-
-            _logger.LogDebug("Generating credit note template with access token");
-            string creditNoteTemplate = await GenerateCreditNoteTemplateAsync(creditNoteTemplateRequest, accessToken, cancellationToken);
-
-            var creditNote = JsonSerializer.Deserialize<Models.Ubl.CreditNote>(creditNoteTemplate, _jsonOptions)
-                ?? throw new CheqiSDKException("Failed to deserialize credit note template", CheqiSDKException.ErrorCodes.INVALID_RESPONSE, 500, null);
-
-            if (matchResponse.CustomerFound == true)
-            {
-                string creditNoteTemplateJson = JsonSerializer.Serialize(creditNote, _jsonOptions);
-                string canonicalCreditNoteJson = _canonicalizer.Canonicalize(creditNoteTemplateJson);
-                string templateHash = HashUtils.Sha256Hex(canonicalCreditNoteJson);
-
-                _logger.LogDebug("Creating encrypted credit notes for {Count} recipients", matchResponse.Recipients?.Count ?? 0);
-                var encryptedCreditNotes = CreateEncryptedCreditNotes(
-                    canonicalCreditNoteJson,
-                    matchResponse.Recipients ?? new List<Recipient>()
-                );
-
-                _logger.LogDebug("Sending {Count} encrypted credit notes to backend with access token", encryptedCreditNotes.Count);
-                var response = await SendEncryptedCreditNotesAsync(
-                    identificationDetails.CheqiReceiptId!,
-                    encryptedCreditNotes,
-                    templateHash,
-                    matchResponse,
-                    accessToken,
-                    cancellationToken);
-
-                _logger.LogInformation("Credit note processing completed successfully: {Count} credit notes created for {RecipientCount} recipients",
-                    encryptedCreditNotes.Count, matchResponse.Recipients?.Count ?? 0);
-                return CreditNoteResult.Success(response.CreditNoteId ?? string.Empty, response.RecipientCount);
-            }
-            else
-            {
-                _logger.LogInformation("Customer not found but email provided - credit note template generated but not sent");
-                return CreditNoteResult.NoRecipients();
-            }
+            return await DeliverEncryptedCreditNotesAsync(originalReceiptId, matchResponse, templateResponse, accessToken, cancellationToken);
         }
         catch (CheqiSDKException)
         {
@@ -262,11 +139,6 @@ public class CreditNoteService
     /// <summary>
     /// Decrypts and parses an encrypted credit note request.
     /// </summary>
-    /// <param name="encryptedCreditNote">The encrypted credit note from webhook or API</param>
-    /// <param name="privateKeyBase64">The merchant's private key in Base64 PKCS#8 format</param>
-    /// <returns>Parsed CreditNoteInitiationRequest object ready for processing</returns>
-    /// <exception cref="DecryptionException">if decryption fails</exception>
-    /// <exception cref="CheqiSDKException">if JSON parsing fails</exception>
     public CreditNoteInitiationRequest DecryptCreditNoteRequest(
         EncryptedCreditNoteInitiationRequest encryptedCreditNote,
         string privateKeyBase64)
@@ -278,21 +150,13 @@ public class CreditNoteService
 
         try
         {
-            // Step 1: Decrypt the credit note
-            var decryptedCreditNote = _decryptionService.DecryptCreditNote(
-                encryptedCreditNote,
-                privateKeyBase64
-            );
+            var decryptedCreditNote = _decryptionService.DecryptCreditNote(encryptedCreditNote, privateKeyBase64);
 
-            // Step 2: Parse JSON to CreditNoteInitiationRequest
             var creditNoteRequest = JsonSerializer.Deserialize<CreditNoteInitiationRequest>(
-                decryptedCreditNote.CreditNoteContentJson,
-                _jsonOptions
-            ) ?? throw new CheqiSDKException("Failed to deserialize credit note request", CheqiSDKException.ErrorCodes.INVALID_RESPONSE, 500, null);
+                decryptedCreditNote.CreditNoteContentJson, _jsonOptions)
+                ?? throw new CheqiSDKException("Failed to deserialize credit note request", CheqiSDKException.ErrorCodes.INVALID_RESPONSE, 500, null);
 
-            _logger.LogInformation("Successfully processed credit note request for receipt: {ReceiptId}",
-                creditNoteRequest.CheqiReceiptId);
-
+            _logger.LogInformation("Successfully processed credit note request for receipt: {ReceiptId}", creditNoteRequest.CheqiReceiptId);
             return creditNoteRequest;
         }
         catch (DecryptionException)
@@ -309,10 +173,6 @@ public class CreditNoteService
     /// <summary>
     /// Decrypts and parses an encrypted credit note request asynchronously.
     /// </summary>
-    /// <param name="encryptedCreditNote">The encrypted credit note from webhook or API</param>
-    /// <param name="privateKeyBase64">The merchant's private key in Base64 PKCS#8 format</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Parsed CreditNoteInitiationRequest object ready for processing</returns>
     public Task<CreditNoteInitiationRequest> DecryptCreditNoteRequestAsync(
         EncryptedCreditNoteInitiationRequest encryptedCreditNote,
         string privateKeyBase64,
@@ -345,88 +205,34 @@ public class CreditNoteService
     #region Generate Credit Note Template
 
     /// <summary>
-    /// Generates a credit note template using API key from SDK config.
-    /// Uses Bearer token authentication with the API key configured during SDK initialization.
+    /// Generates a credit note template (mirrors Java <c>generateCreditNoteTemplate</c>).
     /// </summary>
-    /// <param name="request">Credit note template request</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Generated credit note as JSON string</returns>
-    /// <exception cref="CheqiSDKException">if generation fails</exception>
-    public async Task<string> GenerateCreditNoteTemplateAsync(
+    public async Task<CreditNoteTemplateResponse> GenerateCreditNoteTemplateAsync(
         CreditNoteTemplateRequest request,
+        List<ReceiptFormat> formats,
+        RecipientResolutionResponse matchResponse,
+        string? accessToken = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (string.IsNullOrWhiteSpace(request.CreditNoteId))
-        {
-            throw new CheqiSDKException(
-                "Invalid credit note template request: CreditNoteId is required",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
-        }
+        _logger.LogDebug("Generating credit note template for: {DocumentNumber}", request.DocumentNumber);
 
-        _logger.LogDebug("Generating credit note template with API key for credit note: {CreditNoteId}", request.CreditNoteId);
+        var generationRequest = BuildGenerationRequest(request, formats, matchResponse);
 
         try
         {
-            string template = await _apiClient.GenerateCreditNoteTemplateAsync(request, null, cancellationToken);
+            var template = await _apiClient.GenerateCreditNoteTemplateAsync(generationRequest, accessToken, cancellationToken);
             _logger.LogDebug("Credit note template generated successfully");
             return template;
         }
-        catch (Exception e)
+        catch (CheqiApiException)
         {
-            _logger.LogError(e, "Unexpected error generating credit note template: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to generate credit note template: " + e.Message, e);
-        }
-    }
-
-    /// <summary>
-    /// Generates a credit note template using OAuth2 access token.
-    /// For third-party integrators accessing merchant data via OAuth2 authorization.
-    /// </summary>
-    /// <param name="request">Credit note template request</param>
-    /// <param name="accessToken">OAuth2 access token</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Generated credit note as JSON string</returns>
-    /// <exception cref="CheqiSDKException">if generation fails</exception>
-    public async Task<string> GenerateCreditNoteTemplateAsync(
-        CreditNoteTemplateRequest request,
-        string accessToken,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        if (string.IsNullOrWhiteSpace(request.CreditNoteId))
-        {
-            throw new CheqiSDKException(
-                "Invalid credit note template request: CreditNoteId is required",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
-        }
-
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            throw new CheqiSDKException(
-                "Access token is required for credit note template generation",
-                CheqiSDKException.ErrorCodes.AUTHENTICATION_FAILED,
-                401,
-                null);
-        }
-
-        _logger.LogDebug("Generating credit note template for credit note: {CreditNoteId}", request.CreditNoteId);
-
-        try
-        {
-            string template = await _apiClient.GenerateCreditNoteTemplateAsync(request, accessToken, cancellationToken);
-            _logger.LogDebug("Credit note template generated successfully");
-            return template;
+            throw;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Unexpected error generating credit note template: {Message}", e.Message);
+            _logger.LogError(e, "Failed to generate credit note template: {Message}", e.Message);
             throw new CheqiSDKException("Failed to generate credit note template: " + e.Message, e);
         }
     }
@@ -436,139 +242,37 @@ public class CreditNoteService
     #region Send Encrypted Credit Notes
 
     /// <summary>
-    /// Sends encrypted credit notes using API key from SDK config.
-    /// Uses Bearer token authentication with the API key configured during SDK initialization.
+    /// Sends encrypted credit notes to the backend for delivery.
     /// </summary>
-    /// <param name="parentCheqiReceiptId">Original receipt ID</param>
-    /// <param name="encryptedCreditNotes">Set of encrypted credit notes</param>
-    /// <param name="templateHash">SHA-256 hash of canonical credit note JSON</param>
-    /// <param name="recipientResolutionResponse">Customer match response</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Credit note creation response</returns>
-    /// <exception cref="CheqiSDKException">if sending fails</exception>
     public async Task<CreditNoteCreatedResponse> SendEncryptedCreditNotesAsync(
         string parentCheqiReceiptId,
         HashSet<EncryptedCreditNote> encryptedCreditNotes,
         string templateHash,
         RecipientResolutionResponse recipientResolutionResponse,
+        string? accessToken = null,
         CancellationToken cancellationToken = default)
     {
         if (encryptedCreditNotes == null || encryptedCreditNotes.Count == 0)
         {
-            throw new CheqiSDKException(
-                "Encrypted credit notes cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
+            throw new CheqiSDKException("Encrypted credit notes cannot be null or empty",
+                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
         }
 
         if (string.IsNullOrWhiteSpace(templateHash))
         {
-            throw new CheqiSDKException(
-                "Template hash cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
+            throw new CheqiSDKException("Template hash cannot be null or empty",
+                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
         }
 
         ArgumentNullException.ThrowIfNull(recipientResolutionResponse);
 
-        if (!recipientResolutionResponse.CustomerFound == true)
+        if (recipientResolutionResponse.RouteFound != true)
         {
-            throw new CheqiSDKException(
-                "Cannot send credit notes: customer was not found during matching",
-                CheqiSDKException.ErrorCodes.CUSTOMER_NOT_FOUND,
-                400,
-                null);
+            throw new CheqiSDKException("Cannot send credit notes: customer was not found during matching",
+                CheqiSDKException.ErrorCodes.CUSTOMER_NOT_FOUND, 400, null);
         }
 
-        _logger.LogDebug("Sending {Count} encrypted credit notes to backend with API key", encryptedCreditNotes.Count);
-
-        try
-        {
-            var request = new EncryptedCreditNotesRequest
-            {
-                MatchId = recipientResolutionResponse.MatchId,
-                ParentCheqiReceiptId = parentCheqiReceiptId,
-                EncryptedCreditNotes = encryptedCreditNotes,
-                TemplateHash = templateHash
-            };
-
-            var response = await _apiClient.SubmitEncryptedCreditNotesAsync(request, null, cancellationToken);
-            _logger.LogInformation("Successfully sent {Count} encrypted credit notes", encryptedCreditNotes.Count);
-            return response;
-        }
-        catch (CheqiApiException e)
-        {
-            _logger.LogError(e, "Failed to send encrypted credit notes: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to send encrypted credit notes: " + e.Message, e);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Unexpected error sending encrypted credit notes: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to send encrypted credit notes: " + e.Message, e);
-        }
-    }
-
-    /// <summary>
-    /// Sends encrypted credit notes using OAuth2 access token.
-    /// For third-party integrators accessing merchant data via OAuth2 authorization.
-    /// </summary>
-    /// <param name="parentCheqiReceiptId">Original receipt ID</param>
-    /// <param name="encryptedCreditNotes">Set of encrypted credit notes</param>
-    /// <param name="templateHash">SHA-256 hash of canonical credit note JSON</param>
-    /// <param name="recipientResolutionResponse">Customer match response</param>
-    /// <param name="accessToken">OAuth2 access token</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Credit note creation response</returns>
-    /// <exception cref="CheqiSDKException">if sending fails</exception>
-    public async Task<CreditNoteCreatedResponse> SendEncryptedCreditNotesAsync(
-        string parentCheqiReceiptId,
-        HashSet<EncryptedCreditNote> encryptedCreditNotes,
-        string templateHash,
-        RecipientResolutionResponse recipientResolutionResponse,
-        string accessToken,
-        CancellationToken cancellationToken = default)
-    {
-        if (encryptedCreditNotes == null || encryptedCreditNotes.Count == 0)
-        {
-            throw new CheqiSDKException(
-                "Encrypted credit notes cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
-        }
-
-        if (string.IsNullOrWhiteSpace(templateHash))
-        {
-            throw new CheqiSDKException(
-                "Template hash cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
-        }
-
-        ArgumentNullException.ThrowIfNull(recipientResolutionResponse);
-
-        if (!recipientResolutionResponse.CustomerFound == true)
-        {
-            throw new CheqiSDKException(
-                "Cannot send credit notes: customer was not found during matching",
-                CheqiSDKException.ErrorCodes.CUSTOMER_NOT_FOUND,
-                400,
-                null);
-        }
-
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            throw new CheqiSDKException(
-                "Access token cannot be null or empty",
-                CheqiSDKException.ErrorCodes.AUTHENTICATION_FAILED,
-                401,
-                null);
-        }
-
-        _logger.LogDebug("Sending {Count} encrypted credit notes to backend with access token", encryptedCreditNotes.Count);
+        _logger.LogDebug("Sending {Count} encrypted credit notes to backend", encryptedCreditNotes.Count);
 
         try
         {
@@ -601,51 +305,97 @@ public class CreditNoteService
     #region Create Encrypted Credit Notes
 
     /// <summary>
-    /// Creates encrypted credit notes for multiple customer devices.
-    /// 
-    /// This method takes a credit note template and encrypts it for each of the customer's
-    /// registered devices using their respective public keys. Each device will receive
-    /// its own encrypted version that can only be decrypted with its private key.
+    /// Creates an encrypted credit note for a single recipient.
     /// </summary>
-    /// <param name="creditNote">The credit note in canonical JSON format</param>
-    /// <param name="recipients">List of recipients with their public key information</param>
-    /// <returns>Set of encrypted credit notes, one per device</returns>
-    /// <exception cref="CheqiSDKException">if encryption fails or parameters are invalid</exception>
-    public HashSet<EncryptedCreditNote> CreateEncryptedCreditNotes(
-        string creditNote,
-        List<Recipient> recipients)
+    public EncryptedCreditNote CreateEncryptedCreditNote(string creditNoteEnvelope, Recipient recipient)
     {
-        if (string.IsNullOrWhiteSpace(creditNote))
+        if (string.IsNullOrWhiteSpace(creditNoteEnvelope))
         {
-            throw new CheqiSDKException(
-                "Credit note cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
+            throw new CheqiSDKException("Credit note envelope cannot be null or empty",
+                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
         }
 
-        if (recipients == null || recipients.Count == 0)
-        {
-            throw new CheqiSDKException(
-                "Recipients cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR,
-                400,
-                null);
-        }
-
-        _logger.LogDebug("Creating encrypted credit notes for {Count} recipients", recipients.Count);
+        ArgumentNullException.ThrowIfNull(recipient);
 
         try
         {
-            var encryptedCreditNotes = _encryptionService.EncryptCreditNoteForRecipients(creditNote, recipients);
-            _logger.LogDebug("Successfully created {Count} encrypted credit notes", encryptedCreditNotes.Count);
-            return encryptedCreditNotes;
+            return _encryptionService.EncryptCreditNoteForRecipient(creditNoteEnvelope, recipient);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Unexpected error creating encrypted credit notes: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to create encrypted credit notes: " + e.Message, e);
+            _logger.LogError(e, "Failed to create encrypted credit note: {Message}", e.Message);
+            throw new CheqiSDKException("Failed to create encrypted credit note: " + e.Message, e);
         }
+    }
+
+    #endregion
+
+    #region Private Helpers
+
+    private async Task<CreditNoteResult> DeliverEncryptedCreditNotesAsync(
+        string originalReceiptId,
+        RecipientResolutionResponse matchResponse,
+        CreditNoteTemplateResponse templateResponse,
+        string? accessToken,
+        CancellationToken cancellationToken)
+    {
+        var recipients = matchResponse.Recipients ?? new List<Recipient>();
+        _logger.LogDebug("Creating encrypted credit notes for {Count} recipients", recipients.Count);
+
+        var encryptedCreditNotes = new HashSet<EncryptedCreditNote>();
+        foreach (var recipient in recipients)
+        {
+            var envelope = BuildEnvelopeForRecipient(recipient, templateResponse);
+            var envelopeJson = JsonSerializer.Serialize(envelope, _jsonOptions);
+            encryptedCreditNotes.Add(_encryptionService.EncryptCreditNoteForRecipient(envelopeJson, recipient));
+        }
+
+        string templateContent = templateResponse.Cheqi != null
+            ? JsonSerializer.Serialize(templateResponse.Cheqi, _jsonOptions)
+            : (templateResponse.UblCreditNote ?? string.Empty);
+        string templateHash = HashUtils.Sha256Hex(templateContent);
+
+        _logger.LogDebug("Sending {Count} encrypted credit notes to backend", encryptedCreditNotes.Count);
+        var response = await SendEncryptedCreditNotesAsync(originalReceiptId, encryptedCreditNotes, templateHash, matchResponse, accessToken, cancellationToken);
+
+        _logger.LogInformation("Credit note processing completed successfully: {Count} credit notes created", encryptedCreditNotes.Count);
+        return CreditNoteResult.Success(response.CreditNoteId ?? string.Empty, response.RecipientCount);
+    }
+
+    private CreditNoteEnvelope BuildEnvelopeForRecipient(Recipient recipient, CreditNoteTemplateResponse templateResponse)
+    {
+        var envelope = new CreditNoteEnvelope();
+        var acceptedFormats = recipient.AcceptedFormats;
+
+        if (acceptedFormats != null && acceptedFormats.Contains(ReceiptFormat.CHEQI) && templateResponse.Cheqi != null)
+        {
+            envelope.CheqiCreditNote = templateResponse.Cheqi;
+        }
+        if (acceptedFormats != null && acceptedFormats.Contains(ReceiptFormat.UBLCREDITNOTE) && templateResponse.UblCreditNote != null)
+        {
+            envelope.UblCreditNote = templateResponse.UblCreditNote;
+        }
+        return envelope;
+    }
+
+    private List<ReceiptFormat> DetermineFormats(RecipientResolutionResponse matchResponse)
+    {
+        return (matchResponse.Recipients ?? new List<Recipient>())
+            .SelectMany(r => r.AcceptedFormats ?? new List<ReceiptFormat>())
+            .Distinct()
+            .ToList();
+    }
+
+    private CreditNoteTemplateGenerationRequest BuildGenerationRequest(
+        CreditNoteTemplateRequest request, List<ReceiptFormat> formats, RecipientResolutionResponse matchResponse)
+    {
+        // Java hardcodes taxesApplied = true for credit notes.
+        return new CreditNoteTemplateGenerationRequest(
+            request.ToGenerated(),
+            formats,
+            matchResponse.BuyerCountryCode ?? string.Empty,
+            matchResponse.BuyerType ?? default,
+            true);
     }
 
     #endregion

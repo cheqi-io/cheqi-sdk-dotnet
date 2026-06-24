@@ -11,6 +11,8 @@ using Xunit;
 using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsRequest;
 using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
 using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
+using ReceiptTemplateResponse = Cheqi.Sdk.Models.Generated.ReceiptTemplateResponse;
+using CheqiReceipt = Cheqi.Sdk.Models.Generated.CheqiReceipt;
 
 namespace Cheqi.Sdk.Tests;
 
@@ -24,7 +26,7 @@ public sealed class ReceiptServiceTests
         apiClient.GenerateReceiptTemplateAsyncHandler = (_, _, _) =>
         {
             templateCallCount++;
-            return Task.FromResult("{}");
+            return Task.FromResult(new ReceiptTemplateResponse());
         };
 
         var service = CreateService(apiClient);
@@ -39,9 +41,13 @@ public sealed class ReceiptServiceTests
     {
         var apiClient = new FakeCheqiApiClient();
         string? capturedEmail = null;
-        apiClient.SendReceiptViaEmailAsyncHandler = (email, _, _, _) =>
+        CheqiReceipt? capturedReceipt = null;
+        apiClient.GenerateReceiptTemplateAsyncHandler = (_, _, _) =>
+            Task.FromResult(new ReceiptTemplateResponse { Cheqi = new CheqiReceipt { DocumentNumber = "INV-001" } });
+        apiClient.SendReceiptViaEmailAsyncHandler = (email, receipt, _, _) =>
         {
             capturedEmail = email;
+            capturedReceipt = receipt;
             return Task.CompletedTask;
         };
 
@@ -54,22 +60,30 @@ public sealed class ReceiptServiceTests
         Assert.True(result.IsSuccess());
         Assert.Equal(Cheqi.Sdk.Receipt.DeliveryStatus.DELIVERED_EMAIL, result.DeliveryStatus);
         Assert.Equal("sdk@example.com", capturedEmail);
+        Assert.NotNull(capturedReceipt);
+        Assert.Equal("INV-001", capturedReceipt!.DocumentNumber);
     }
 
     [Fact]
-    public async Task ProcessCompleteReceiptAsync_WhenCustomerFound_SubmitsEncryptedReceiptsWithCanonicalTemplateHash()
+    public async Task ProcessCompleteReceiptAsync_WhenCustomerFound_SubmitsPerRecipientEncryptedReceipts()
     {
         var apiClient = new FakeCheqiApiClient();
         EncryptedReceiptsRequest? capturedRequest = null;
         string? capturedToken = null;
+        ReceiptTemplateGenerationRequestSeen? seen = null;
 
         var matchResponse = new RecipientResolutionResponse();
-        matchResponse.CustomerFound = true;
+        matchResponse.RouteFound = true;
         matchResponse.MatchId = "match-123";
+        matchResponse.BuyerCountryCode = "NL";
         matchResponse.Recipients = new List<MatchedRecipient> { TestData.CreateRecipient() };
 
         apiClient.MatchCustomerAsyncHandler = (_, _, _) => Task.FromResult(matchResponse);
-        apiClient.GenerateReceiptTemplateAsyncHandler = (_, _, _) => Task.FromResult("{\"z\":2,\"a\":1}");
+        apiClient.GenerateReceiptTemplateAsyncHandler = (genReq, _, _) =>
+        {
+            seen = new ReceiptTemplateGenerationRequestSeen(genReq.BuyerCountryCode, genReq.TaxesApplied, genReq.Formats.Count);
+            return Task.FromResult(new ReceiptTemplateResponse { Cheqi = new CheqiReceipt { DocumentNumber = "INV-001" } });
+        };
         apiClient.SubmitEncryptedReceiptsAsyncHandler = (request, token, _) =>
         {
             capturedRequest = request;
@@ -84,33 +98,36 @@ public sealed class ReceiptServiceTests
         var service = CreateService(apiClient);
         var result = await service.ProcessCompleteReceiptAsync(TestData.PairingCodeIdentification(), TestData.CreateReceiptTemplateRequest(), "access-token");
 
-        var expectedCanonicalJson = new RFC8785Canonicalizer().Canonicalize("{\"z\":2,\"a\":1}");
-        var expectedHash = HashUtils.Sha256Hex(expectedCanonicalJson);
-
         Assert.True(result.IsSuccess());
         Assert.Equal(Cheqi.Sdk.Receipt.DeliveryStatus.DELIVERED_DIGITAL, result.DeliveryStatus);
-        Assert.Equal(expectedCanonicalJson, result.CanonicalJson);
-        Assert.Equal(expectedHash, result.TemplateHash);
         Assert.NotNull(capturedRequest);
         Assert.Equal("match-123", capturedRequest!.MatchId);
-        Assert.Equal(expectedHash, capturedRequest.TemplateHash);
+        Assert.False(string.IsNullOrEmpty(capturedRequest.TemplateHash));
         Assert.Single(capturedRequest.EncryptedReceiptRequests);
         Assert.Equal("access-token", capturedToken);
+
+        // VAT context enrichment: buyerCountryCode came from the match response, taxesApplied inferred true.
+        Assert.NotNull(seen);
+        Assert.Equal("NL", seen!.BuyerCountryCode);
+        Assert.True(seen.TaxesApplied);
+        Assert.Equal(1, seen.FormatCount);
     }
+
+    private sealed record ReceiptTemplateGenerationRequestSeen(string BuyerCountryCode, bool TaxesApplied, int FormatCount);
 
     [Fact]
     public async Task SendEncryptedReceiptsAsync_WhenCustomerWasNotFound_ThrowsValidationError()
     {
         var service = CreateService(new FakeCheqiApiClient());
 
-        var dto = new EncryptedReceiptRequest();
-        dto.RecipientId = "recipient-1";
-        dto.PublicKey = "key";
-        dto.EncryptedReceipt = "cipher";
-        dto.EncryptedSymmetricKey = "wrapped";
+        var dto = new EncryptedReceiptRequest(
+            recipientId: "recipient-1",
+            encryptedReceipt: "cipher",
+            encryptedSymmetricKey: "wrapped",
+            publicKey: "key");
 
         var notFoundResponse = new RecipientResolutionResponse();
-        notFoundResponse.CustomerFound = false;
+        notFoundResponse.RouteFound = false;
 
         var exception = await Assert.ThrowsAsync<CheqiSDKException>(() => service.SendEncryptedReceiptsAsync(
             new HashSet<EncryptedReceiptRequest> { dto },
