@@ -18,7 +18,9 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.x"
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Restore SDK
         run: dotnet restore cheqi-sdk.csproj
@@ -39,4 +41,4 @@ jobs:
             user: ${{ secrets.NUGET_USER }}
         
       - name: Publish package to NuGet
-        run: dotnet nuget push artifacts/*.nupkg --api-key --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push artifacts/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json

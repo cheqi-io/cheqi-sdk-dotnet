@@ -1,409 +1,251 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Cheqi.Sdk.Download;
 using Cheqi.Sdk.Encryption;
 using Cheqi.Sdk.Exceptions;
 using Cheqi.Sdk.Http;
 using Cheqi.Sdk.Http.Exceptions;
 using Cheqi.Sdk.Matching;
-using Cheqi.Sdk.Models;
-using Cheqi.Sdk.Models.Ubl;
-using Cheqi.Sdk.Utils;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using EncryptedReceiptRequestDto = Cheqi.Sdk.Models.Generated.EncryptedReceiptRequest;
-using Recipient = Cheqi.Sdk.Models.Generated.MatchedRecipient;
-using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsRequest;
-using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
-using IdentificationDetails = Cheqi.Sdk.Models.Generated.IdentificationDetails;
-using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
-using ReceiptFormat = Cheqi.Sdk.Models.Generated.ReceiptFormat;
-using ReceiptTemplateResponse = Cheqi.Sdk.Models.Generated.ReceiptTemplateResponse;
-using ReceiptTemplateGenerationRequest = Cheqi.Sdk.Models.Generated.ReceiptTemplateGenerationRequest;
-using ReceiptEnvelope = Cheqi.Sdk.Models.Generated.ReceiptEnvelope;
-using CheqiReceipt = Cheqi.Sdk.Models.Generated.CheqiReceipt;
-using NotificationDisplayCode = Cheqi.Sdk.Models.Generated.NotificationDisplayCode;
+using Cheqi.Sdk.Models.Generated;
+using Cheqi.Sdk.Serialization;
+using Cheqi.Sdk.Verification;
+using Route = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse.DeliveryRouteTypeEnum;
 
 namespace Cheqi.Sdk.Receipt;
 
-/// <summary>
-/// Service for handling receipt operations in the Cheqi SDK.
-///
-/// This service mirrors the Java SDK receipt flow:
-/// - Customer matching / recipient resolution
-/// - VAT context enrichment from the match response
-/// - Receipt format determination from the matched recipients
-/// - Typed receipt template generation (CHEQI / UBL formats + VAT metadata)
-/// - Per-recipient encrypted receipt envelopes (only the formats each recipient accepts)
-/// - Email fallback when no Cheqi route is found
-/// </summary>
-public class ReceiptService
+/// <summary>Encrypts definitive caller-supplied values without calculating or enriching receipt amounts.</summary>
+public sealed class ReceiptService
 {
-    private readonly ILogger<ReceiptService> _logger;
-    private readonly ICheqiApiClient _apiClient;
-    private readonly EncryptionService _encryptionService;
-    private readonly MatchingService _matchingService;
-    private readonly JsonSerializerOptions _jsonOptions;
+    private readonly ICheqiApiClient _api;
+    private readonly EncryptionService _encryption;
+    private readonly MatchingService _matching;
+    private readonly DownloadService _downloads;
+    private readonly string? _downloadBaseUrl;
+    private readonly JsonSerializerOptions _json = CheqiJson.CreateOptions();
 
-    public ReceiptService(
-        ICheqiApiClient apiClient,
-        EncryptionService encryptionService,
-        MatchingService matchingService,
-        ILogger<ReceiptService>? logger = null)
+    public ReceiptService(ICheqiApiClient apiClient, EncryptionService encryptionService, MatchingService matchingService)
+        : this(apiClient, encryptionService, matchingService, new DownloadService(), DownloadService.ProductionBaseUrl) { }
+
+    public ReceiptService(ICheqiApiClient apiClient, EncryptionService encryptionService, MatchingService matchingService,
+        DownloadService downloadService, string? downloadBaseUrl)
     {
-        _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
-        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
-        _matchingService = matchingService ?? throw new ArgumentNullException(nameof(matchingService));
-        _logger = logger ?? NullLogger<ReceiptService>.Instance;
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            WriteIndented = false,
-            Converters = { new DecimalJsonConverter() }
-        };
-        _logger.LogInformation("ReceiptService initialized successfully");
+        _api = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+        _encryption = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _matching = matchingService ?? throw new ArgumentNullException(nameof(matchingService));
+        _downloads = downloadService ?? throw new ArgumentNullException(nameof(downloadService));
+        if (downloadBaseUrl != null) DownloadService.ValidateBaseUrl(downloadBaseUrl);
+        _downloadBaseUrl = downloadBaseUrl;
     }
 
-    /// <summary>
-    /// Complete receipt processing workflow (mirrors Java <c>processCompleteReceipt</c>):
-    /// 1. Matches the customer using payment details.
-    /// 2. If no route is found and no email is provided, returns early.
-    /// 3. Determines accepted formats and enriches VAT context from the match.
-    /// 4. Generates the receipt template.
-    /// 5. If a route is found: builds a per-recipient envelope, encrypts and submits.
-    /// 6. Otherwise: sends the receipt via email.
-    /// </summary>
-    /// <param name="identificationDetails">Payment information for customer matching.</param>
-    /// <param name="receiptRequest">Receipt template generation request.</param>
-    /// <param name="accessToken">OAuth access token, or null to use the API key from SDK config.</param>
-    /// <param name="notificationDisplayCode">Optional barcode/QR code for the push notification.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task<ReceiptResult> ProcessCompleteReceiptAsync(
-        IdentificationDetails identificationDetails,
-        ReceiptTemplateRequest receiptRequest,
-        string? accessToken = null,
-        NotificationDisplayCode? notificationDisplayCode = null,
-        CancellationToken cancellationToken = default)
+    public async Task<ReceiptResult> IssueReceiptAsync(IdentificationDetails identificationDetails, ReceiptPayload receiptPayload,
+        Guid? storeId = null, string? accessToken = null, CancellationToken cancellationToken = default)
     {
-        if (identificationDetails == null)
-            throw new CheqiSDKException("PaymentDetails cannot be null",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        if (receiptRequest == null)
-            throw new CheqiSDKException("ReceiptTemplateRequest cannot be null",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
+        ArgumentNullException.ThrowIfNull(identificationDetails);
+        ValidatePayload(receiptPayload);
+        ValidateToken(accessToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        RecipientResolutionResponse match;
         try
         {
-            _logger.LogDebug("Matching customer using payment details with {Auth}", accessToken != null ? "access token" : "API key");
-            var matchResponse = accessToken != null
-                ? await _matchingService.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken)
-                : await _matchingService.MatchCustomerAsync(identificationDetails, cancellationToken);
+            match = accessToken == null
+                ? await _matching.MatchCustomerAsync(identificationDetails, cancellationToken).ConfigureAwait(false)
+                : await _matching.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken).ConfigureAwait(false);
+        }
+        catch (CheqiApiException exception) when (IsRecoverable(exception))
+        { return ReceiptResult.DownloadPrepared(PrepareDownload(receiptPayload)); }
+        ValidateRoute(match);
+        switch (ResolveRoute(match))
+        {
+            case Route.DOWNLOADFALLBACK:
+                if (identificationDetails.PaymentType == null)
+                    return new ReceiptResult { State = ReceiptIssueState.DownloadFallback, MatchId = match.MatchId,
+                        DeliveryRouteType = Route.DOWNLOADFALLBACK, ExpiresAt = match.ExpiresAt, DownloadEnvelopeRequired = true };
+                return await DeliverDownloadAsync(match.MatchId, receiptPayload, identificationDetails, accessToken, cancellationToken).ConfigureAwait(false);
+            case Route.EMAILFALLBACK:
+                return new ReceiptResult { State = ReceiptIssueState.EmailFallback, MatchId = match.MatchId,
+                    DeliveryRouteType = Route.EMAILFALLBACK, ExpiresAt = match.ExpiresAt, EmailReceiptRequired = true };
+        }
+        var envelope = GenerateEncryptedReceiptEnvelope(match, receiptPayload, storeId);
+        try { return ReceiptResult.Accepted(await SubmitPayloadAsync(envelope, accessToken, cancellationToken).ConfigureAwait(false)); }
+        catch (CheqiApiException exception) when (exception.HttpStatusCode == 410)
+        { return ReceiptResult.Expired(match.MatchId!); }
+        catch (CheqiApiException exception) when (IsAmbiguous(exception))
+        { return ReceiptResult.Pending(match.MatchId!, PrepareDownload(receiptPayload), RetryAfter(exception)); }
+    }
 
-            if (matchResponse.RouteFound != true && string.IsNullOrEmpty(identificationDetails.RecipientEmail))
+    /// <summary>Retrieves only the original opaque match ID; never rematches the customer.</summary>
+    public Task<MatchStatusResponse> GetMatchAsync(string matchId, string? accessToken = null, CancellationToken cancellationToken = default)
+    {
+        RequireText(matchId, nameof(matchId));
+        ValidateToken(accessToken);
+        return _api.GetMatchAsync(matchId, accessToken, cancellationToken);
+    }
+
+    /// <summary>One recovery attempt. Retain the original persisted fallback URL and ciphertext.</summary>
+    public async Task<ReceiptResult> ResumeReceiptAsync(string matchId, ReceiptPayload receiptPayload, Guid? storeId = null,
+        string? accessToken = null, CancellationToken cancellationToken = default)
+    {
+        RequireText(matchId, nameof(matchId));
+        ValidateToken(accessToken);
+        ValidatePayload(receiptPayload);
+        try
+        {
+            var match = await _api.GetMatchAsync(matchId, accessToken, cancellationToken).ConfigureAwait(false);
+            if (match == null || match.State == null || match.MatchId != matchId)
+                throw new CheqiSdkException("Invalid match status response");
+            switch (match.State)
             {
-                _logger.LogInformation("Customer not found and no email provided - skipping template generation");
-                return ReceiptResult.CustomerNotFound();
+                case MatchState.SUBMITTED:
+                    ValidateSubmission(match.Submission, matchId);
+                    return ReceiptResult.Accepted(match.Submission!);
+                case MatchState.INPROGRESS:
+                    return ReceiptResult.Pending(matchId, null, match.RetryAfterSeconds);
+                case MatchState.EXPIRED:
+                    return ReceiptResult.Expired(matchId);
+                case MatchState.MATCHED:
+                    return ReceiptResult.Accepted(await SubmitPayloadAsync(
+                        GenerateEncryptedReceiptEnvelope(match, receiptPayload, storeId), accessToken, cancellationToken).ConfigureAwait(false));
+                default: throw new CheqiSdkException("Unknown match state");
             }
-
-            var formats = DetermineFormats(matchResponse);
-            var enrichedRequest = EnrichWithVatContext(receiptRequest, matchResponse);
-
-            _logger.LogDebug("Generating receipt template");
-            var templateResponse = await GenerateReceiptTemplateAsync(enrichedRequest, formats, accessToken, cancellationToken);
-
-            if (matchResponse.RouteFound == true)
-            {
-                return await DeliverEncryptedReceiptsAsync(matchResponse, templateResponse, notificationDisplayCode, accessToken, cancellationToken);
-            }
-
-            _logger.LogInformation("Customer not found, sending receipt via email");
-            return await SendReceiptViaEmailAsync(identificationDetails.RecipientEmail!, templateResponse.Cheqi!, accessToken, cancellationToken);
         }
-        catch (CheqiSDKException)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Unexpected error during receipt processing: {Message}", e.Message);
-            throw new CheqiSDKException("Receipt processing failed: " + e.Message, e);
-        }
+        catch (CheqiApiException exception) when (exception.HttpStatusCode == 410) { return ReceiptResult.Expired(matchId); }
+        catch (CheqiApiException exception) when (IsAmbiguous(exception)) { return ReceiptResult.Pending(matchId, null, RetryAfter(exception)); }
     }
 
-    /// <summary>
-    /// Generates a receipt template from transaction data (mirrors Java <c>generateReceiptTemplate</c>).
-    /// </summary>
-    public async Task<ReceiptTemplateResponse> GenerateReceiptTemplateAsync(
-        ReceiptTemplateRequest request,
-        List<ReceiptFormat> receiptFormats,
-        string? accessToken = null,
-        CancellationToken cancellationToken = default)
+    public EncryptedReceiptEnvelope GenerateEncryptedReceiptEnvelope(RecipientResolutionResponse match, ReceiptPayload receiptPayload, Guid? storeId = null)
     {
-        if (request == null)
-            throw new CheqiSDKException("Receipt template request cannot be null",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        _logger.LogDebug("Generating receipt template for receiptId: {DocumentNumber}", request.DocumentNumber);
-
-        var generationRequest = BuildGenerationRequest(request, receiptFormats);
-
-        try
-        {
-            var template = await _apiClient.GenerateReceiptTemplateAsync(generationRequest, accessToken, cancellationToken);
-            _logger.LogDebug("Receipt template generated successfully");
-            return template;
-        }
-        catch (CheqiApiException)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to generate receipt template: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to generate receipt template: " + e.Message, e);
-        }
+        ValidateRoute(match);
+        if (ResolveRoute(match) != Route.DIGITAL) throw new ArgumentException("Match must have a digital owner-device route", nameof(match));
+        return GenerateEnvelope(match.MatchId!, match.Recipients, receiptPayload, storeId);
     }
 
-    /// <summary>
-    /// Creates an encrypted receipt for a single recipient.
-    /// </summary>
-    public EncryptedReceiptRequestDto CreateEncryptedReceipts(string purchaseReceipt, Recipient matchedRecipient)
+    public EncryptedReceiptEnvelope GenerateEncryptedReceiptEnvelope(MatchStatusResponse match, ReceiptPayload receiptPayload, Guid? storeId = null)
     {
-        if (string.IsNullOrWhiteSpace(purchaseReceipt))
-            throw new CheqiSDKException("Purchase receipt cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        if (matchedRecipient == null)
-            throw new CheqiSDKException("matchedRecipient cannot be null",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        try
-        {
-            return _encryptionService.EncryptReceiptForRecipient(purchaseReceipt, matchedRecipient);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to create encrypted receipts: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to create encrypted receipts: " + e.Message, e);
-        }
+        ArgumentNullException.ThrowIfNull(match);
+        if (match.State != MatchState.MATCHED || match.Route != MatchStatusResponse.RouteEnum.DIGITAL)
+            throw new ArgumentException("Match must be MATCHED with a digital owner-device route", nameof(match));
+        return GenerateEnvelope(match.MatchId!, match.Recipients, receiptPayload, storeId);
     }
 
-    /// <summary>
-    /// Sends encrypted receipts to the backend for delivery to customer devices.
-    /// </summary>
-    public async Task<ReceiptCreatedResponse> SendEncryptedReceiptsAsync(
-        HashSet<EncryptedReceiptRequestDto> encryptedReceipts,
-        string templateHash,
-        RecipientResolutionResponse recipientResolutionResponse,
-        string? accessToken = null,
-        CancellationToken cancellationToken = default)
+    private EncryptedReceiptEnvelope GenerateEnvelope(string matchId, List<MatchedRecipient>? recipients, ReceiptPayload payload, Guid? storeId)
     {
-        if (encryptedReceipts == null || encryptedReceipts.Count == 0)
-            throw new CheqiSDKException("Encrypted receipts cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        if (string.IsNullOrWhiteSpace(templateHash))
-            throw new CheqiSDKException("Template hash cannot be null or empty",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        if (recipientResolutionResponse == null)
-            throw new CheqiSDKException("Customer match response cannot be null",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        if (recipientResolutionResponse.RouteFound != true)
-            throw new CheqiSDKException("Cannot send receipts: customer was not found during matching",
-                CheqiSDKException.ErrorCodes.CUSTOMER_NOT_FOUND, 400, null);
-
-        _logger.LogDebug("Sending {Count} encrypted receipts to backend", encryptedReceipts.Count);
-
-        try
-        {
-            var request = new EncryptedReceiptsRequest(
-                encryptedReceipts.ToList(),
-                recipientResolutionResponse.MatchId ?? throw new CheqiSDKException("MatchId is required", CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null),
-                templateHash);
-
-            var response = await _apiClient.SubmitEncryptedReceiptsAsync(request, accessToken, cancellationToken);
-            _logger.LogInformation("Successfully sent {Count} encrypted receipts", encryptedReceipts.Count);
-            return response;
-        }
-        catch (CheqiApiException e)
-        {
-            _logger.LogError(e, "Failed to send encrypted receipts: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to send encrypted receipts: " + e.Message, e);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Unexpected error sending encrypted receipts: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to send encrypted receipts: " + e.Message, e);
-        }
-    }
-
-    /// <summary>
-    /// Sends a receipt via email (fallback when the customer is not found in Cheqi).
-    /// </summary>
-    public async Task<ReceiptResult> SendReceiptViaEmailAsync(
-        string customerEmail,
-        CheqiReceipt cheqiReceipt,
-        string? accessToken = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(customerEmail) || !customerEmail.Contains("@"))
-            throw new CheqiSDKException("Valid customer email is required",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        if (cheqiReceipt == null)
-            throw new CheqiSDKException("Cheqi receipt cannot be null",
-                CheqiSDKException.ErrorCodes.VALIDATION_ERROR, 400, null);
-
-        _logger.LogDebug("Sending receipt via email to: {Email}", MaskEmail(customerEmail));
-
-        try
-        {
-            await _apiClient.SendReceiptViaEmailAsync(customerEmail, cheqiReceipt, accessToken, cancellationToken);
-            _logger.LogInformation("Successfully sent receipt via email to: {Email}", MaskEmail(customerEmail));
-            return ReceiptResult.DeliveredViaEmail(customerEmail);
-        }
-        catch (CheqiApiException e)
-        {
-            _logger.LogError(e, "Failed to send receipt via email: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to send receipt via email: " + e.Message, e);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Unexpected error sending receipt via email: {Message}", e.Message);
-            throw new CheqiSDKException("Failed to send receipt via email: " + e.Message, e);
-        }
-    }
-
-    // ===== PRIVATE HELPERS =====
-
-    private async Task<ReceiptResult> DeliverEncryptedReceiptsAsync(
-        RecipientResolutionResponse matchResponse,
-        ReceiptTemplateResponse templateResponse,
-        NotificationDisplayCode? notificationDisplayCode,
-        string? accessToken,
-        CancellationToken cancellationToken)
-    {
-        var recipients = matchResponse.Recipients ?? new List<Recipient>();
-        _logger.LogDebug("Creating encrypted receipts for {Count} recipients", recipients.Count);
-
-        var encryptedReceipts = new HashSet<EncryptedReceiptRequestDto>();
-        foreach (var recipient in recipients)
-        {
-            var envelope = BuildEnvelopeForRecipient(recipient, templateResponse);
-            var envelopeJson = JsonSerializer.Serialize(envelope, _jsonOptions);
-            var encryptedReceipt = _encryptionService.EncryptReceiptForRecipient(envelopeJson, recipient);
-            if (notificationDisplayCode != null)
-            {
-                encryptedReceipt.NotificationDisplayCode = notificationDisplayCode;
-            }
-            encryptedReceipts.Add(encryptedReceipt);
-        }
-
-        string templateContent = templateResponse.Cheqi != null
-            ? JsonSerializer.Serialize(templateResponse.Cheqi, _jsonOptions)
-            : (templateResponse.UblPurchaseReceipt ?? string.Empty);
-        string templateHash = HashUtils.Sha256Hex(templateContent);
-
-        _logger.LogDebug("Sending {Count} encrypted receipts to backend", encryptedReceipts.Count);
-        var response = await SendEncryptedReceiptsAsync(encryptedReceipts, templateHash, matchResponse, accessToken, cancellationToken);
-
-        _logger.LogInformation("Receipt processing completed successfully");
-        return ReceiptResult.DeliveredToApp(response, templateContent);
-    }
-
-    private ReceiptEnvelope BuildEnvelopeForRecipient(Recipient recipient, ReceiptTemplateResponse templateResponse)
-    {
-        var envelope = new ReceiptEnvelope();
-        var acceptedFormats = recipient.AcceptedFormats;
-
-        if (acceptedFormats != null && acceptedFormats.Contains(ReceiptFormat.CHEQI) && templateResponse.Cheqi != null)
-        {
-            envelope.Cheqi = templateResponse.Cheqi;
-        }
-        if (acceptedFormats != null && acceptedFormats.Contains(ReceiptFormat.UBLPURCHASERECEIPT) && templateResponse.UblPurchaseReceipt != null)
-        {
-            envelope.UblPurchaseReceipt = templateResponse.UblPurchaseReceipt;
-        }
-        if (acceptedFormats != null && acceptedFormats.Contains(ReceiptFormat.UBLINVOICE) && templateResponse.UblInvoice != null)
-        {
-            envelope.UblInvoice = templateResponse.UblInvoice;
-        }
-        if (templateResponse.VatMetadata != null)
-        {
-            envelope.VatMetaData = templateResponse.VatMetadata;
-        }
+        RequireText(matchId, nameof(matchId));
+        ValidatePayload(payload);
+        if (recipients == null || recipients.Count == 0 || recipients.Any(recipient => recipient == null))
+            throw new ArgumentException("Match must contain owner devices", nameof(recipients));
+        var envelope = new EncryptedReceiptEnvelope(matchId, _encryption.EncryptReceiptForRecipients(JsonSerializer.Serialize(payload, _json), recipients));
+        if (storeId.HasValue) envelope.StoreId = storeId;
         return envelope;
     }
 
-    private List<ReceiptFormat> DetermineFormats(RecipientResolutionResponse matchResponse)
+    public Task<ReceiptSubmissionResponse> SubmitEncryptedReceiptAsync(EncryptedReceiptEnvelope envelope, string? accessToken = null,
+        CancellationToken cancellationToken = default)
     {
-        return (matchResponse.Recipients ?? new List<Recipient>())
-            .SelectMany(r => r.AcceptedFormats ?? new List<ReceiptFormat>())
-            .Distinct()
-            .ToList();
+        ArgumentNullException.ThrowIfNull(envelope);
+        ValidateToken(accessToken);
+        return _api.SubmitEncryptedReceiptAsync(envelope, accessToken, cancellationToken);
     }
 
-    private ReceiptTemplateRequest EnrichWithVatContext(
-        ReceiptTemplateRequest request, RecipientResolutionResponse matchResponse)
+    private async Task<ReceiptSubmissionResponse> SubmitPayloadAsync(EncryptedReceiptEnvelope envelope, string? accessToken, CancellationToken cancellationToken)
     {
-        return ReceiptTemplateRequest.Builder()
-            .From(request)
-            .BuyerCountryCode(request.BuyerCountryCode ?? matchResponse.BuyerCountryCode)
-            .BuyerType(request.BuyerType ?? matchResponse.BuyerType)
-            .TaxesApplied(ResolveTaxesApplied(request))
-            .Build();
+        var response = await SubmitEncryptedReceiptAsync(envelope, accessToken, cancellationToken).ConfigureAwait(false);
+        ValidateSubmission(response, envelope.MatchId);
+        return response;
     }
 
-    private bool ResolveTaxesApplied(ReceiptTemplateRequest request)
+    public Task<ClientReceiptDownloadResponse> UploadPreparedDownloadAsync(PreparedReceiptDownload download, string? accessToken = null,
+        CancellationToken cancellationToken = default)
     {
-        if (request.TaxesApplied != null)
-        {
-            return request.TaxesApplied.Value;
-        }
-        if (request.TotalTaxAmount > 0)
-        {
-            return true;
-        }
-        return request.Taxes != null && request.Taxes.Count > 0;
+        ArgumentNullException.ThrowIfNull(download);
+        ValidateToken(accessToken);
+        return _api.UploadEncryptedDownloadReceiptAsync(download.UploadRequest, accessToken, cancellationToken);
     }
 
-    private ReceiptTemplateGenerationRequest BuildGenerationRequest(
-        ReceiptTemplateRequest request, List<ReceiptFormat> formats)
+    public Task<ReceiptResult> IssueDownloadReceiptAsync(IdentificationDetails identificationDetails, ReceiptPayload receiptPayload,
+        string? accessToken = null, CancellationToken cancellationToken = default)
     {
-        return new ReceiptTemplateGenerationRequest(
-            request,
-            formats,
-            request.BuyerCountryCode ?? string.Empty,
-            request.BuyerType ?? default,
-            request.TaxesApplied ?? false);
+        ArgumentNullException.ThrowIfNull(identificationDetails);
+        ValidatePayload(receiptPayload);
+        ValidateToken(accessToken);
+        if (identificationDetails.PaymentType == null) throw new ArgumentException("PaymentType is required", nameof(identificationDetails));
+        cancellationToken.ThrowIfCancellationRequested();
+        return DeliverDownloadAsync(null, receiptPayload, identificationDetails, accessToken, cancellationToken);
     }
 
-    /// <summary>
-    /// Masks an email address for logging purposes to protect privacy.
-    /// Example: john.doe@example.com becomes j***e@example.com
-    /// </summary>
-    private string MaskEmail(string email)
+    public async Task<ReceiptResult> CompleteDownloadFallbackAsync(ReceiptResult fallbackResult, ReceiptEnvelope receiptEnvelope,
+        string? templateHash = null, string? accessToken = null, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+        ArgumentNullException.ThrowIfNull(fallbackResult);
+        ArgumentNullException.ThrowIfNull(receiptEnvelope);
+        ValidateToken(accessToken);
+        if (!fallbackResult.DownloadEnvelopeRequired || fallbackResult.DeliveryRouteType != Route.DOWNLOADFALLBACK)
+            throw new ArgumentException("Result does not require a download envelope", nameof(fallbackResult));
+        cancellationToken.ThrowIfCancellationRequested();
+        var link = _downloads.GenerateDownloadLink(RequireDownloadBaseUrl());
+        var request = new ClientReceiptDownloadRequest(link.DownloadId, _downloads.EncryptDownloadEnvelope(receiptEnvelope, link.ContentKey));
+        if (templateHash != null) request.TemplateHash = templateHash;
+        var response = await _api.UploadEncryptedDownloadReceiptAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        return ReceiptResult.DownloadAccepted(fallbackResult.MatchId, response, link.Url);
+    }
+
+    public Task SendReceiptViaEmailAsync(string customerEmail, CheqiReceipt receipt, string? accessToken = null,
+        CancellationToken cancellationToken = default) => _api.SendReceiptViaEmailAsync(customerEmail, receipt, accessToken, cancellationToken);
+
+    private async Task<ReceiptResult> DeliverDownloadAsync(string? matchId, ReceiptPayload payload, IdentificationDetails identification,
+        string? accessToken, CancellationToken cancellationToken)
+    {
+        var prepared = PrepareDownload(payload, identification);
+        try
         {
-            return "***";
+            var response = await UploadPreparedDownloadAsync(prepared, accessToken, cancellationToken).ConfigureAwait(false);
+            return ReceiptResult.DownloadAccepted(matchId, response, prepared.DownloadUrl);
         }
+        catch (CheqiApiException exception) when (IsRecoverable(exception)) { return ReceiptResult.DownloadPrepared(prepared); }
+    }
 
-        var parts = email.Split('@');
-        var localPart = parts[0];
+    private PreparedReceiptDownload PrepareDownload(ReceiptPayload payload, IdentificationDetails? identification = null)
+    {
+        var link = _downloads.GenerateDownloadLink(RequireDownloadBaseUrl());
+        var document = JsonSerializer.SerializeToNode(payload, _json)!.AsObject();
+        if (identification != null) document["identificationDetails"] = JsonSerializer.SerializeToNode(identification, _json);
+        var plaintext = document.ToJsonString(_json);
+        var envelope = new ReceiptEnvelope(link.DownloadId,
+            new Dictionary<string, ReceiptEnvelopeDocument> { ["CHEQI"] = new(plaintext, ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson) },
+            1, "receipt-payload-v1", Guid.NewGuid());
+        var request = new ClientReceiptDownloadRequest(link.DownloadId, _downloads.EncryptDownloadEnvelope(envelope, link.ContentKey))
+        { TemplateHash = new VerificationService().CalculateCheqiReceiptHash(plaintext) };
+        return new PreparedReceiptDownload(link.Url, request);
+    }
 
-        if (localPart.Length <= 2)
-        {
-            return "***@" + parts[1];
-        }
-
-        return localPart[0] + "***" + localPart[^1] + "@" + parts[1];
+    private string RequireDownloadBaseUrl() => _downloadBaseUrl ?? throw new InvalidOperationException("Configure ReceiptDownloadBaseUrl for a custom API endpoint to prepare downloads");
+    internal static bool IsRecoverable(CheqiApiException exception) => exception.Retryable || exception.HttpStatusCode == 0 &&
+        (exception.ErrorCode is CheqiApiException.ErrorCodes.NETWORK_ERROR or CheqiApiException.ErrorCodes.TIMEOUT_ERROR || exception.InnerException is HttpRequestException);
+    private static bool IsAmbiguous(CheqiApiException exception) => IsRecoverable(exception) ||
+        exception.ErrorCode == CheqiApiException.ErrorCodes.INVALID_RESPONSE && (exception.HttpStatusCode == 0 || exception.HttpStatusCode is >= 200 and < 300);
+    private static int? RetryAfter(CheqiApiException exception) => (exception as SubmissionInProgressException)?.RetryAfterSeconds;
+    private static void ValidateSubmission(ReceiptSubmissionResponse? response, string matchId)
+    {
+        if (response == null || string.IsNullOrWhiteSpace(response.CheqiReceiptId) || response.MatchId != matchId)
+            throw new CheqiApiException("Invalid receipt submission response", 0, CheqiApiException.ErrorCodes.INVALID_RESPONSE, null);
+    }
+    private static void ValidateRoute(RecipientResolutionResponse match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+        if (match.RouteFound != true) throw new CheqiSdkException("No Cheqi owner-device route was found", CheqiSdkException.ErrorCodes.CUSTOMER_NOT_FOUND, 404, null);
+        RequireText(match.MatchId, "matchId");
+    }
+    private static Route ResolveRoute(RecipientResolutionResponse match) => match.DeliveryRouteType ??
+        (match.Recipients?.Count > 0 ? Route.DIGITAL : throw new CheqiSdkException("Resolution did not include deliveryRouteType"));
+    internal static void RequireText(string? value, string name)
+    { if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException($"{name} is required", name); }
+    internal static void ValidateToken(string? token)
+    { if (token != null && string.IsNullOrWhiteSpace(token)) throw new ArgumentException("accessToken cannot be empty", nameof(token)); }
+    private static void ValidatePayload(ReceiptPayload payload)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        RequireText(payload.DocumentNumber, "documentNumber");
+        RequireText(payload.Currency, "currency");
+        if (payload.Products == null || payload.Products.Count == 0 || payload.Products.Any(product => product == null))
+            throw new ArgumentException("Receipt must contain products", nameof(payload));
     }
 }

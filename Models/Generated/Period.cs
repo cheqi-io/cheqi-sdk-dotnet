@@ -145,10 +145,10 @@ namespace Cheqi.Sdk.Models.Generated
                     switch (localVarJsonPropertyName)
                     {
                         case "startDate":
-                            startDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            startDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "endDate":
-                            endDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            endDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "description":
                             description = new Option<string?>(utf8JsonReader.GetString()!);
@@ -204,9 +204,15 @@ namespace Cheqi.Sdk.Models.Generated
             if (period.DescriptionOption.IsSet && period.Description == null)
                 throw new ArgumentNullException(nameof(period.Description), "Property is required for class Period.");
 
-            writer.WriteString("startDate", period.StartDate.ToString(StartDateFormat));
+            {
+                writer.WritePropertyName("startDate");
+                JsonSerializer.Serialize(writer, period.StartDate, jsonSerializerOptions);
+            }
 
-            writer.WriteString("endDate", period.EndDate.ToString(EndDateFormat));
+            {
+                writer.WritePropertyName("endDate");
+                JsonSerializer.Serialize(writer, period.EndDate, jsonSerializerOptions);
+            }
 
             if (period.DescriptionOption.IsSet)
                 writer.WriteString("description", period.Description);

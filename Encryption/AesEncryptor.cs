@@ -31,7 +31,7 @@ public class AesEncryptor
             byte[] tag = new byte[GCM_TAG_LENGTH];
 
             // Encrypt with AES-GCM
-            using var aesGcm = new AesGcm(key);
+            using var aesGcm = new AesGcm(key, GCM_TAG_LENGTH);
             aesGcm.Encrypt(iv, plaintextBytes, ciphertext, tag);
 
             return new EncryptedData(ciphertext, iv, tag);

@@ -17,6 +17,7 @@ namespace Cheqi.Sdk.Config;
 public sealed class CheqiSdkConfig
 {
     public string ApiEndpoint { get; }
+    public string? ReceiptDownloadBaseUrl { get; }
     public string? ApiKey { get; }
     public string? SupplierClientId { get; }
     public string? SupplierClientSecret { get; }
@@ -33,6 +34,11 @@ public sealed class CheqiSdkConfig
     private CheqiSdkConfig(Builder builder)
     {
         ApiEndpoint = builder._apiEndpoint!;
+        ReceiptDownloadBaseUrl = builder._receiptDownloadBaseUrl ?? (ApiEndpoint.TrimEnd('/') == "https://api.cheqi.io"
+            ? Download.DownloadService.ProductionBaseUrl
+            : ApiEndpoint.TrimEnd('/') == "https://sandbox.api.cheqi.io"
+                ? Download.DownloadService.SandboxBaseUrl
+                : ApiEndpoint.TrimEnd('/') == "https://test.api.cheqi.io" ? "https://test.receipt.cheqi.io" : null);
         ApiKey = builder._apiKey;
         SupplierClientId = builder._supplierClientId;
         SupplierClientSecret = builder._supplierClientSecret;
@@ -81,6 +87,7 @@ public sealed class CheqiSdkConfig
             builder.EncryptionConfig(options.EncryptionConfig);
         }
 
+        builder.ReceiptDownloadBaseUrl(options.ReceiptDownloadBaseUrl);
         builder.TimeoutSeconds(options.TimeoutSeconds);
         builder.MaxRetries(options.MaxRetries);
 
@@ -90,6 +97,7 @@ public sealed class CheqiSdkConfig
     public sealed class Builder
     {
         internal string? _apiEndpoint;
+        internal string? _receiptDownloadBaseUrl;
         internal string? _apiKey;
         internal string? _supplierClientId;
         internal string? _supplierClientSecret;
@@ -126,6 +134,13 @@ public sealed class CheqiSdkConfig
         /// Sets the API key for direct company access.
         /// Use this for companies accessing their own data.
         /// </summary>
+        public Builder ReceiptDownloadBaseUrl(string? baseUrl)
+        {
+            if (baseUrl != null) Download.DownloadService.ValidateBaseUrl(baseUrl);
+            _receiptDownloadBaseUrl = baseUrl;
+            return this;
+        }
+
         public Builder ApiKey(string apiKey)
         {
             _apiKey = apiKey;

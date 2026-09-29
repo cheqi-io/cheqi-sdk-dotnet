@@ -15,7 +15,7 @@ public class CheqiApiException : Exception
     public int HttpStatusCode { get; }
     public string ErrorCode { get; }
     public string? CorrelationId { get; }
-    public bool Retryable { get; }
+    public virtual bool Retryable { get; }
     public long Timestamp { get; }
 
     /// <summary>

@@ -57,24 +57,14 @@ namespace Cheqi.Sdk.Models.Generated
             RECEIPTCREATED = 1,
 
             /// <summary>
-            /// Enum RECEIPTFINALIZED for value: RECEIPT_FINALIZED
-            /// </summary>
-            RECEIPTFINALIZED = 2,
-
-            /// <summary>
             /// Enum RETURNREQUESTED for value: RETURN_REQUESTED
             /// </summary>
-            RETURNREQUESTED = 3,
+            RETURNREQUESTED = 2,
 
             /// <summary>
             /// Enum CREDITNOTECREATED for value: CREDIT_NOTE_CREATED
             /// </summary>
-            CREDITNOTECREATED = 4,
-
-            /// <summary>
-            /// Enum CREDITNOTEFINALIZED for value: CREDIT_NOTE_FINALIZED
-            /// </summary>
-            CREDITNOTEFINALIZED = 5
+            CREDITNOTECREATED = 3
         }
 
         /// <summary>
@@ -88,17 +78,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("RECEIPT_CREATED"))
                 return EventsEnum.RECEIPTCREATED;
 
-            if (value.Equals("RECEIPT_FINALIZED"))
-                return EventsEnum.RECEIPTFINALIZED;
-
             if (value.Equals("RETURN_REQUESTED"))
                 return EventsEnum.RETURNREQUESTED;
 
             if (value.Equals("CREDIT_NOTE_CREATED"))
                 return EventsEnum.CREDITNOTECREATED;
-
-            if (value.Equals("CREDIT_NOTE_FINALIZED"))
-                return EventsEnum.CREDITNOTEFINALIZED;
 
             throw new NotImplementedException($"Could not convert value to type EventsEnum: '{value}'");
         }
@@ -113,17 +97,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("RECEIPT_CREATED"))
                 return EventsEnum.RECEIPTCREATED;
 
-            if (value.Equals("RECEIPT_FINALIZED"))
-                return EventsEnum.RECEIPTFINALIZED;
-
             if (value.Equals("RETURN_REQUESTED"))
                 return EventsEnum.RETURNREQUESTED;
 
             if (value.Equals("CREDIT_NOTE_CREATED"))
                 return EventsEnum.CREDITNOTECREATED;
-
-            if (value.Equals("CREDIT_NOTE_FINALIZED"))
-                return EventsEnum.CREDITNOTEFINALIZED;
 
             return null;
         }
@@ -139,17 +117,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (value == EventsEnum.RECEIPTCREATED)
                 return "RECEIPT_CREATED";
 
-            if (value == EventsEnum.RECEIPTFINALIZED)
-                return "RECEIPT_FINALIZED";
-
             if (value == EventsEnum.RETURNREQUESTED)
                 return "RETURN_REQUESTED";
 
             if (value == EventsEnum.CREDITNOTECREATED)
                 return "CREDIT_NOTE_CREATED";
-
-            if (value == EventsEnum.CREDITNOTEFINALIZED)
-                return "CREDIT_NOTE_FINALIZED";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }

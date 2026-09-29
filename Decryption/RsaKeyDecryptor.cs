@@ -55,11 +55,14 @@ public class RsaKeyDecryptor
     {
         try
         {
-            byte[] keyBytes = Convert.FromBase64String(privateKeyBase64);
-
             var rsa = RSA.Create();
-            rsa.ImportPkcs8PrivateKey(keyBytes, out _);
-            return rsa;
+            try
+            {
+                if (privateKeyBase64.Contains("-----BEGIN")) rsa.ImportFromPem(privateKeyBase64);
+                else rsa.ImportPkcs8PrivateKey(Convert.FromBase64String(privateKeyBase64), out _);
+                return rsa;
+            }
+            catch { rsa.Dispose(); throw; }
         }
         catch (Exception e)
         {

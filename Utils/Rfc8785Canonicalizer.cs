@@ -8,10 +8,10 @@ using System.Text.Json.Nodes;
 namespace Cheqi.Sdk.Utils;
 
 /// <summary>
-/// RFC 8785 compliant JSON canonicalization implementation.
+/// Cheqi JSON canonicalization compatible with the Java SDK.
 /// 
 /// Provides deterministic JSON serialization for consistent hashing and signing.
-/// This implementation follows the RFC 8785 specification which defines:
+/// Uses ordinal key ordering and JSON escaping, with the Java SDK's plain-decimal number representation:
 /// - Lexicographic ordering of object keys
 /// - Specific string escaping rules
 /// - Consistent number representation
@@ -30,10 +30,7 @@ public class RFC8785Canonicalizer
     public RFC8785Canonicalizer(ILogger<RFC8785Canonicalizer>? logger = null)
     {
         _logger = logger ?? NullLogger<RFC8785Canonicalizer>.Instance;
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
+        _jsonOptions = Serialization.CheqiJson.CreateOptions();
         _logger.LogDebug("RFC8785Canonicalizer initialized");
     }
 
@@ -218,35 +215,16 @@ public class RFC8785Canonicalizer
 
     private void WriteNumber(JsonElement element, StringBuilder sb)
     {
-        // RFC 8785 requires specific number formatting
-        if (element.TryGetInt64(out var longValue))
+        var raw = element.GetRawText();
+        if (raw.IndexOfAny(new[] { '.', 'e', 'E' }) < 0)
         {
-            sb.Append(longValue);
-        }
-        else if (element.TryGetDouble(out var doubleValue))
-        {
-            // Use G17 format for full precision, then clean up
-            var formatted = doubleValue.ToString("G17", System.Globalization.CultureInfo.InvariantCulture);
-
-            // Ensure no trailing zeros after decimal point (except required by RFC)
-            if (formatted.Contains('.') && !formatted.Contains('E') && !formatted.Contains('e'))
-            {
-                formatted = formatted.TrimEnd('0').TrimEnd('.');
-                if (!formatted.Contains('.'))
-                {
-                    // Ensure at least one decimal for non-integers that had decimals
-                    if (doubleValue != Math.Floor(doubleValue))
-                    {
-                        formatted += ".0";
-                    }
-                }
-            }
-
-            sb.Append(formatted);
+            // Integral tokens may exceed Int64; preserve Java's arbitrary-precision integers.
+            sb.Append(System.Numerics.BigInteger.Parse(raw, System.Globalization.CultureInfo.InvariantCulture)
+                .ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
         else
         {
-            sb.Append(element.GetRawText());
+            sb.Append(Serialization.CheqiNumber.PlainDouble(element.GetDouble(), retainFloatingScale: true));
         }
     }
 

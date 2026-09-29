@@ -41,7 +41,7 @@ public sealed class XmlCanonicalService
     {
         for (var i = node.ChildNodes.Count - 1; i >= 0; i--)
         {
-            var child = node.ChildNodes[i];
+            var child = node.ChildNodes[i]!;
             if ((child.NodeType == XmlNodeType.Text
                     || child.NodeType == XmlNodeType.Whitespace
                     || child.NodeType == XmlNodeType.SignificantWhitespace)

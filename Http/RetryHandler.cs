@@ -1,167 +1,67 @@
 using System.Net;
-using Cheqi.Sdk.Http.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Cheqi.Sdk.Http;
 
-/// <summary>
-/// Delegating handler that implements retry logic with exponential backoff.
-/// </summary>
+/// <summary>Retries transient failures; encrypted submissions use explicit match recovery.</summary>
 public sealed class RetryHandler : DelegatingHandler
 {
+    public static readonly HttpRequestOptionsKey<bool> DisableRetries = new("Cheqi.DisableRetries");
     private readonly int _maxRetries;
     private readonly TimeSpan _baseDelay;
     private readonly ILogger? _logger;
-
-    private static readonly HashSet<HttpStatusCode> RetryableStatusCodes = new()
-    {
-        HttpStatusCode.RequestTimeout,
-        HttpStatusCode.TooManyRequests,
-        HttpStatusCode.InternalServerError,
-        HttpStatusCode.BadGateway,
-        HttpStatusCode.ServiceUnavailable,
-        HttpStatusCode.GatewayTimeout
-    };
-
     public RetryHandler(int maxRetries = 3, TimeSpan? baseDelay = null, ILogger? logger = null)
-        : base(new HttpClientHandler())
-    {
-        _maxRetries = maxRetries;
-        _baseDelay = baseDelay ?? TimeSpan.FromMilliseconds(500);
-        _logger = logger;
-    }
-
+        : this(new HttpClientHandler(), maxRetries, baseDelay, logger) { }
     public RetryHandler(HttpMessageHandler innerHandler, int maxRetries = 3, TimeSpan? baseDelay = null, ILogger? logger = null)
         : base(innerHandler)
     {
+        if (maxRetries < 0) throw new ArgumentOutOfRangeException(nameof(maxRetries));
         _maxRetries = maxRetries;
-        _baseDelay = baseDelay ?? TimeSpan.FromMilliseconds(500);
+        _baseDelay = baseDelay ?? TimeSpan.FromSeconds(1);
         _logger = logger;
     }
 
-    protected override async Task<HttpResponseMessage> SendAsync(
-        HttpRequestMessage request,
-        CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var attempt = 0;
-        HttpResponseMessage? response = null;
-
-        while (true)
+        if (request.Options.TryGetValue(DisableRetries, out var disabled) && disabled)
+            return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        // Buffer before the initial send, so every retry has identical content and headers.
+        var content = request.Content == null ? null : await request.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+        for (var attempt = 0; ; attempt++)
         {
-            attempt++;
-
+            using var retry = attempt == 0 ? null : CloneRequest(request, content);
+            HttpResponseMessage? response = null;
             try
             {
-                response = await base.SendAsync(request, cancellationToken);
-
-                if (response.IsSuccessStatusCode || !ShouldRetry(response.StatusCode) || attempt > _maxRetries)
-                {
-                    return response;
-                }
-
-                _logger?.LogWarning(
-                    "Request to {Url} failed with status {StatusCode}, attempt {Attempt} of {MaxRetries}",
-                    request.RequestUri,
-                    response.StatusCode,
-                    attempt,
-                    _maxRetries);
+                response = await base.SendAsync(retry ?? request, cancellationToken).ConfigureAwait(false);
+                if (attempt >= _maxRetries || !IsRetryable(response.StatusCode)) return response;
             }
-            catch (HttpRequestException ex) when (attempt <= _maxRetries)
-            {
-                _logger?.LogWarning(
-                    ex,
-                    "Request to {Url} failed with exception, attempt {Attempt} of {MaxRetries}",
-                    request.RequestUri,
-                    attempt,
-                    _maxRetries);
-            }
-            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested && attempt <= _maxRetries)
-            {
-                _logger?.LogWarning(
-                    ex,
-                    "Request to {Url} timed out, attempt {Attempt} of {MaxRetries}",
-                    request.RequestUri,
-                    attempt,
-                    _maxRetries);
-            }
-
-            if (attempt > _maxRetries)
-            {
-                throw new CheqiApiException(
-                    $"Request failed after {_maxRetries} retries",
-                    (int)(response?.StatusCode ?? HttpStatusCode.InternalServerError),
-                    "MAX_RETRIES_EXCEEDED",
-                    null);
-            }
-
-            var delay = CalculateDelay(attempt, response);
-            _logger?.LogDebug("Waiting {Delay}ms before retry", delay.TotalMilliseconds);
-            await Task.Delay(delay, cancellationToken);
-
-            // Clone the request for retry (original request cannot be reused)
-            request = await CloneRequestAsync(request);
+            catch (HttpRequestException) when (attempt < _maxRetries) { }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && attempt < _maxRetries) { }
+            var delay = Delay(attempt, response);
+            response?.Dispose();
+            _logger?.LogDebug("Retry attempt {Attempt} in {Delay}ms", attempt + 1, delay.TotalMilliseconds);
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
         }
     }
-
-    private bool ShouldRetry(HttpStatusCode statusCode)
+    private static bool IsRetryable(HttpStatusCode code) => code is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests || (int)code is >= 500 and < 600;
+    private TimeSpan Delay(int attempt, HttpResponseMessage? response)
     {
-        return RetryableStatusCodes.Contains(statusCode);
+        if (response?.Headers.RetryAfter?.Delta is TimeSpan delta) return delta > TimeSpan.Zero ? delta : TimeSpan.Zero;
+        if (response?.Headers.RetryAfter?.Date is DateTimeOffset date) return date > DateTimeOffset.UtcNow ? date - DateTimeOffset.UtcNow : TimeSpan.Zero;
+        var baseMs = response?.StatusCode == HttpStatusCode.TooManyRequests ? _baseDelay.TotalMilliseconds * 5 : _baseDelay.TotalMilliseconds;
+        return TimeSpan.FromMilliseconds(Math.Min(30000, baseMs * Math.Pow(2, attempt) * (0.75 + Random.Shared.NextDouble() * 0.5)));
     }
-
-    private TimeSpan CalculateDelay(int attempt, HttpResponseMessage? response)
+    private static HttpRequestMessage CloneRequest(HttpRequestMessage source, byte[]? content)
     {
-        // Check for Retry-After header
-        if (response?.Headers.RetryAfter?.Delta != null)
+        var clone = new HttpRequestMessage(source.Method, source.RequestUri) { Version = source.Version, VersionPolicy = source.VersionPolicy };
+        foreach (var header in source.Headers) clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        foreach (var option in source.Options) clone.Options.Set(new HttpRequestOptionsKey<object?>(option.Key), option.Value);
+        if (content != null)
         {
-            return response.Headers.RetryAfter.Delta.Value;
-        }
-
-        if (response?.Headers.RetryAfter?.Date != null)
-        {
-            var delay = response.Headers.RetryAfter.Date.Value - DateTimeOffset.UtcNow;
-            if (delay > TimeSpan.Zero)
-            {
-                return delay;
-            }
-        }
-
-        // Exponential backoff with jitter, matching the Java SDK:
-        // base 5s for rate-limit (429), 1s otherwise; jitter 0.75-1.25; capped at 30s.
-        double baseDelayMs = response?.StatusCode == HttpStatusCode.TooManyRequests ? 5000 : 1000;
-        double exponentialMs = baseDelayMs * Math.Pow(2, attempt - 1);
-        double jitter = 0.75 + (Random.Shared.NextDouble() * 0.5);
-        double delayWithJitterMs = Math.Min(exponentialMs * jitter, 30000);
-        return TimeSpan.FromMilliseconds(delayWithJitterMs);
-    }
-
-    private static async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage request)
-    {
-        var clone = new HttpRequestMessage(request.Method, request.RequestUri);
-
-        // Copy headers
-        foreach (var header in request.Headers)
-        {
-            clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
-        }
-
-        // Copy content if present
-        if (request.Content != null)
-        {
-            var content = await request.Content.ReadAsByteArrayAsync();
             clone.Content = new ByteArrayContent(content);
-
-            foreach (var header in request.Content.Headers)
-            {
-                clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
-            }
+            foreach (var header in source.Content!.Headers) clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
         }
-
-        // Copy properties
-        foreach (var prop in request.Options)
-        {
-            clone.Options.TryAdd(prop.Key, prop.Value);
-        }
-
         return clone;
     }
 }

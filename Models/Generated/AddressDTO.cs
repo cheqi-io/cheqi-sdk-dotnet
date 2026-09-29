@@ -322,7 +322,10 @@ namespace Cheqi.Sdk.Models.Generated
             writer.WriteString("countryIsoCode", addressDTO.CountryIsoCode);
 
             if (addressDTO.IdOption.IsSet)
-                writer.WriteNumber("id", addressDTO.IdOption.Value!.Value);
+                {
+                    writer.WritePropertyName("id");
+                    JsonSerializer.Serialize(writer, addressDTO.IdOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (addressDTO.AdditionalStreetNameOption.IsSet)
                 writer.WriteString("additionalStreetName", addressDTO.AdditionalStreetName);

@@ -20,7 +20,7 @@ public class DecimalJsonConverter : JsonConverter<decimal>
         if (reader.TokenType == JsonTokenType.String)
         {
             var stringValue = reader.GetString();
-            if (decimal.TryParse(stringValue, out var result))
+            if (decimal.TryParse(stringValue, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var result))
             {
                 return result;
             }
@@ -31,18 +31,8 @@ public class DecimalJsonConverter : JsonConverter<decimal>
 
     public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
     {
-        // Strip trailing zeros by converting to string and removing them
-        // Use InvariantCulture to ensure JSON-compatible output (dot as decimal separator, no thousand separators)
-        var stringValue = value.ToString("G29", CultureInfo.InvariantCulture); // G29 uses general format with max precision
-        
-        // Remove trailing zeros after decimal point
-        if (stringValue.Contains('.'))
-        {
-            stringValue = stringValue.TrimEnd('0').TrimEnd('.');
-        }
-        
-        // Write as raw number (not quoted string)
-        writer.WriteRawValue(stringValue);
+        // Decimal's fixed-point form preserves money exactly and avoids trimming exponent digits.
+        writer.WriteRawValue(value.ToString("0.############################", CultureInfo.InvariantCulture));
     }
 }
 

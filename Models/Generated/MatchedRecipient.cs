@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// The list of recipients found for the given recipient
+    /// MatchedRecipient
     /// </summary>
     public partial class MatchedRecipient
     {

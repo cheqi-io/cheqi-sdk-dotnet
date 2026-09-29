@@ -32,43 +32,33 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="Identifier" /> class.
         /// </summary>
-        /// <param name="name">name</param>
-        /// <param name="value">value</param>
+        /// <param name="type">The canonical receipt identifier type.</param>
+        /// <param name="value">The issuer-supplied identifier value.</param>
         [JsonConstructor]
-        public Identifier(Option<string?> name = default, Option<string?> value = default)
+        public Identifier(string type, string value)
         {
-            NameOption = name;
-            ValueOption = value;
+            Type = type;
+            Value = value;
             OnCreated();
         }
 
         partial void OnCreated();
 
         /// <summary>
-        /// Used to track the state of Name
+        /// The canonical receipt identifier type.
         /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> NameOption { get; private set; }
+        /// <value>The canonical receipt identifier type.</value>
+        /* <example>PAYMENT_SERVICE_PROVIDER_REFERENCE</example> */
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
 
         /// <summary>
-        /// Gets or Sets Name
+        /// The issuer-supplied identifier value.
         /// </summary>
-        [JsonPropertyName("name")]
-        public string? Name { get { return this.NameOption; } set { this.NameOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of Value
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> ValueOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets Value
-        /// </summary>
+        /// <value>The issuer-supplied identifier value.</value>
+        /* <example>PSP-123</example> */
         [JsonPropertyName("value")]
-        public string? Value { get { return this.ValueOption; } set { this.ValueOption = new(value); } }
+        public string Value { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -78,7 +68,7 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class Identifier {\n");
-            sb.Append("  Name: ").Append(Name).Append("\n");
+            sb.Append("  Type: ").Append(Type).Append("\n");
             sb.Append("  Value: ").Append(Value).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -107,7 +97,7 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<string?> name = default;
+            Option<string?> type = default;
             Option<string?> value = default;
 
             while (utf8JsonReader.Read())
@@ -125,8 +115,8 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
-                        case "name":
-                            name = new Option<string?>(utf8JsonReader.GetString()!);
+                        case "type":
+                            type = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "value":
                             value = new Option<string?>(utf8JsonReader.GetString()!);
@@ -137,13 +127,19 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
-            if (name.IsSet && name.Value == null)
-                throw new ArgumentNullException(nameof(name), "Property is not nullable for class Identifier.");
+            if (!type.IsSet)
+                throw new ArgumentException("Property is required for class Identifier.", nameof(type));
+
+            if (!value.IsSet)
+                throw new ArgumentException("Property is required for class Identifier.", nameof(value));
+
+            if (type.IsSet && type.Value == null)
+                throw new ArgumentNullException(nameof(type), "Property is not nullable for class Identifier.");
 
             if (value.IsSet && value.Value == null)
                 throw new ArgumentNullException(nameof(value), "Property is not nullable for class Identifier.");
 
-            return new Identifier(name, value);
+            return new Identifier(type.Value!, value.Value!);
         }
 
         /// <summary>
@@ -170,17 +166,15 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, Identifier identifier, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (identifier.NameOption.IsSet && identifier.Name == null)
-                throw new ArgumentNullException(nameof(identifier.Name), "Property is required for class Identifier.");
+            if (identifier.Type == null)
+                throw new ArgumentNullException(nameof(identifier.Type), "Property is required for class Identifier.");
 
-            if (identifier.ValueOption.IsSet && identifier.Value == null)
+            if (identifier.Value == null)
                 throw new ArgumentNullException(nameof(identifier.Value), "Property is required for class Identifier.");
 
-            if (identifier.NameOption.IsSet)
-                writer.WriteString("name", identifier.Name);
+            writer.WriteString("type", identifier.Type);
 
-            if (identifier.ValueOption.IsSet)
-                writer.WriteString("value", identifier.Value);
+            writer.WriteString("value", identifier.Value);
         }
     }
 }

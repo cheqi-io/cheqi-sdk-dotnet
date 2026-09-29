@@ -2,14 +2,14 @@ namespace Cheqi.Sdk.Exceptions;
 
 /// <summary>
 /// Main exception class for Cheqi SDK operations.
-/// 
+///
 /// This exception is thrown when SDK operations fail due to:
 /// - Invalid input parameters or configuration
 /// - Network connectivity issues
 /// - Backend API errors
 /// - Encryption/decryption failures
 /// - Authentication or authorization problems
-/// 
+///
 /// The exception provides detailed error information including:
 /// - Human-readable error messages
 /// - Error codes for programmatic handling
@@ -17,17 +17,17 @@ namespace Cheqi.Sdk.Exceptions;
 /// - Correlation IDs for debugging
 /// - Underlying cause exceptions
 /// </summary>
-public class CheqiSDKException : Exception
+public class CheqiSdkException : Exception
 {
     public string ErrorCode { get; }
     public int HttpStatusCode { get; }
     public string? CorrelationId { get; }
 
     /// <summary>
-    /// Creates a new CheqiSDKException with a message.
+    /// Creates a new CheqiSdkException with a message.
     /// </summary>
     /// <param name="message">Human-readable error message</param>
-    public CheqiSDKException(string message) : base(message)
+    public CheqiSdkException(string message) : base(message)
     {
         ErrorCode = ErrorCodes.UNKNOWN_ERROR;
         HttpStatusCode = 0;
@@ -35,11 +35,11 @@ public class CheqiSDKException : Exception
     }
 
     /// <summary>
-    /// Creates a new CheqiSDKException with a message and cause.
+    /// Creates a new CheqiSdkException with a message and cause.
     /// </summary>
     /// <param name="message">Human-readable error message</param>
     /// <param name="cause">Underlying exception that caused this error</param>
-    public CheqiSDKException(string message, Exception cause) : base(message, cause)
+    public CheqiSdkException(string message, Exception cause) : base(message, cause)
     {
         ErrorCode = ErrorCodes.UNKNOWN_ERROR;
         HttpStatusCode = 0;
@@ -47,13 +47,13 @@ public class CheqiSDKException : Exception
     }
 
     /// <summary>
-    /// Creates a new CheqiSDKException with detailed error information.
+    /// Creates a new CheqiSdkException with detailed error information.
     /// </summary>
     /// <param name="message">Human-readable error message</param>
     /// <param name="errorCode">SDK-specific error code for programmatic handling</param>
     /// <param name="httpStatusCode">HTTP status code if this error originated from an API call</param>
     /// <param name="correlationId">Correlation ID for debugging and tracing</param>
-    public CheqiSDKException(string message, string errorCode, int httpStatusCode, string? correlationId) : base(message)
+    public CheqiSdkException(string message, string errorCode, int httpStatusCode, string? correlationId) : base(message)
     {
         ErrorCode = errorCode;
         HttpStatusCode = httpStatusCode;
@@ -61,14 +61,14 @@ public class CheqiSDKException : Exception
     }
 
     /// <summary>
-    /// Creates a new CheqiSDKException with detailed error information and cause.
+    /// Creates a new CheqiSdkException with detailed error information and cause.
     /// </summary>
     /// <param name="message">Human-readable error message</param>
     /// <param name="cause">Underlying exception that caused this error</param>
     /// <param name="errorCode">SDK-specific error code for programmatic handling</param>
     /// <param name="httpStatusCode">HTTP status code if this error originated from an API call</param>
     /// <param name="correlationId">Correlation ID for debugging and tracing</param>
-    public CheqiSDKException(string message, Exception cause, string errorCode, int httpStatusCode, string? correlationId) 
+    public CheqiSdkException(string message, Exception cause, string errorCode, int httpStatusCode, string? correlationId)
         : base(message, cause)
     {
         ErrorCode = errorCode;
@@ -104,38 +104,38 @@ public class CheqiSDKException : Exception
     /// Checks if this is an authentication error.
     /// </summary>
     /// <returns>true if error code indicates authentication failure</returns>
-    public bool IsAuthenticationError() => 
-        ErrorCode == ErrorCodes.AUTHENTICATION_FAILED || 
+    public bool IsAuthenticationError() =>
+        ErrorCode == ErrorCodes.AUTHENTICATION_FAILED ||
         ErrorCode == ErrorCodes.INVALID_ACCESS_TOKEN;
 
     /// <summary>
     /// Checks if this is an authorization error.
     /// </summary>
     /// <returns>true if error code indicates authorization failure</returns>
-    public bool IsAuthorizationError() => 
-        ErrorCode == ErrorCodes.AUTHORIZATION_FAILED || 
+    public bool IsAuthorizationError() =>
+        ErrorCode == ErrorCodes.AUTHORIZATION_FAILED ||
         ErrorCode == ErrorCodes.INSUFFICIENT_PERMISSIONS;
 
     /// <summary>
     /// Checks if this is a validation error.
     /// </summary>
     /// <returns>true if error code indicates validation failure</returns>
-    public bool IsValidationError() => 
-        ErrorCode == ErrorCodes.VALIDATION_ERROR || 
+    public bool IsValidationError() =>
+        ErrorCode == ErrorCodes.VALIDATION_ERROR ||
         ErrorCode == ErrorCodes.INVALID_REQUEST;
 
     /// <summary>
     /// Checks if this is a network-related error.
     /// </summary>
     /// <returns>true if error code indicates network issues</returns>
-    public bool IsNetworkError() => 
-        ErrorCode == ErrorCodes.NETWORK_ERROR || 
+    public bool IsNetworkError() =>
+        ErrorCode == ErrorCodes.NETWORK_ERROR ||
         ErrorCode == ErrorCodes.TIMEOUT_ERROR;
 
     public override string ToString()
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append("CheqiSDKException{");
+        sb.Append("CheqiSdkException{");
         sb.Append($"message='{Message}'");
         sb.Append($", errorCode='{ErrorCode}'");
         if (HttpStatusCode > 0)

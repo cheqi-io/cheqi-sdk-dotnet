@@ -32,29 +32,123 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="RecipientResolutionResponse" /> class.
         /// </summary>
-        /// <param name="recipients">recipients</param>
         /// <param name="routeFound">Indicates if Cheqi found a delivery route for the receipt</param>
+        /// <param name="deliveryRouteType">The selected receipt delivery route</param>
         /// <param name="matchId">The unique identifier for the matching process</param>
-        /// <param name="matchedRecipients">The list of recipients found for the given recipient</param>
+        /// <param name="recipients">The list of recipients found for the given recipient</param>
         /// <param name="expiresAt">The expiration time for the matching process</param>
-        /// <param name="instructions">Instructions on what to do with this response</param>
         /// <param name="buyerCountryCode">The country code of the buyer</param>
         /// <param name="buyerType">buyerType</param>
         [JsonConstructor]
-        public RecipientResolutionResponse(Option<List<MatchedRecipient>?> recipients = default, Option<bool?> routeFound = default, Option<string?> matchId = default, Option<List<MatchedRecipient>?> matchedRecipients = default, Option<DateTimeOffset?> expiresAt = default, Option<string?> instructions = default, Option<string?> buyerCountryCode = default, Option<BuyerType?> buyerType = default)
+        public RecipientResolutionResponse(Option<bool?> routeFound = default, Option<DeliveryRouteTypeEnum?> deliveryRouteType = default, Option<string?> matchId = default, Option<List<MatchedRecipient>?> recipients = default, Option<DateTimeOffset?> expiresAt = default, Option<string?> buyerCountryCode = default, Option<BuyerType?> buyerType = default)
         {
-            RecipientsOption = recipients;
             RouteFoundOption = routeFound;
+            DeliveryRouteTypeOption = deliveryRouteType;
             MatchIdOption = matchId;
-            MatchedRecipientsOption = matchedRecipients;
+            RecipientsOption = recipients;
             ExpiresAtOption = expiresAt;
-            InstructionsOption = instructions;
             BuyerCountryCodeOption = buyerCountryCode;
             BuyerTypeOption = buyerType;
             OnCreated();
         }
 
         partial void OnCreated();
+
+        /// <summary>
+        /// The selected receipt delivery route
+        /// </summary>
+        /// <value>The selected receipt delivery route</value>
+        public enum DeliveryRouteTypeEnum
+        {
+            /// <summary>
+            /// Enum DIGITAL for value: DIGITAL
+            /// </summary>
+            DIGITAL = 1,
+
+            /// <summary>
+            /// Enum EMAILFALLBACK for value: EMAIL_FALLBACK
+            /// </summary>
+            EMAILFALLBACK = 2,
+
+            /// <summary>
+            /// Enum DOWNLOADFALLBACK for value: DOWNLOAD_FALLBACK
+            /// </summary>
+            DOWNLOADFALLBACK = 3
+        }
+
+        /// <summary>
+        /// Returns a <see cref="DeliveryRouteTypeEnum"/>
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public static DeliveryRouteTypeEnum DeliveryRouteTypeEnumFromString(string value)
+        {
+            if (value.Equals("DIGITAL"))
+                return DeliveryRouteTypeEnum.DIGITAL;
+
+            if (value.Equals("EMAIL_FALLBACK"))
+                return DeliveryRouteTypeEnum.EMAILFALLBACK;
+
+            if (value.Equals("DOWNLOAD_FALLBACK"))
+                return DeliveryRouteTypeEnum.DOWNLOADFALLBACK;
+
+            throw new NotImplementedException($"Could not convert value to type DeliveryRouteTypeEnum: '{value}'");
+        }
+
+        /// <summary>
+        /// Returns a <see cref="DeliveryRouteTypeEnum"/>
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static DeliveryRouteTypeEnum? DeliveryRouteTypeEnumFromStringOrDefault(string value)
+        {
+            if (value.Equals("DIGITAL"))
+                return DeliveryRouteTypeEnum.DIGITAL;
+
+            if (value.Equals("EMAIL_FALLBACK"))
+                return DeliveryRouteTypeEnum.EMAILFALLBACK;
+
+            if (value.Equals("DOWNLOAD_FALLBACK"))
+                return DeliveryRouteTypeEnum.DOWNLOADFALLBACK;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Converts the <see cref="DeliveryRouteTypeEnum"/> to the json value
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public static string DeliveryRouteTypeEnumToJsonValue(DeliveryRouteTypeEnum? value)
+        {
+            if (value == DeliveryRouteTypeEnum.DIGITAL)
+                return "DIGITAL";
+
+            if (value == DeliveryRouteTypeEnum.EMAILFALLBACK)
+                return "EMAIL_FALLBACK";
+
+            if (value == DeliveryRouteTypeEnum.DOWNLOADFALLBACK)
+                return "DOWNLOAD_FALLBACK";
+
+            throw new NotImplementedException($"Value could not be handled: '{value}'");
+        }
+
+        /// <summary>
+        /// Used to track the state of DeliveryRouteType
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<DeliveryRouteTypeEnum?> DeliveryRouteTypeOption { get; private set; }
+
+        /// <summary>
+        /// The selected receipt delivery route
+        /// </summary>
+        /// <value>The selected receipt delivery route</value>
+        /* <example>DIGITAL</example> */
+        [JsonPropertyName("deliveryRouteType")]
+        public DeliveryRouteTypeEnum? DeliveryRouteType { get { return this.DeliveryRouteTypeOption; } set { this.DeliveryRouteTypeOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of BuyerType
@@ -68,19 +162,6 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         [JsonPropertyName("buyerType")]
         public BuyerType? BuyerType { get { return this.BuyerTypeOption; } set { this.BuyerTypeOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of Recipients
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<List<MatchedRecipient>?> RecipientsOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets Recipients
-        /// </summary>
-        [JsonPropertyName("recipients")]
-        public List<MatchedRecipient>? Recipients { get { return this.RecipientsOption; } set { this.RecipientsOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of RouteFound
@@ -112,18 +193,18 @@ namespace Cheqi.Sdk.Models.Generated
         public string? MatchId { get { return this.MatchIdOption; } set { this.MatchIdOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of MatchedRecipients
+        /// Used to track the state of Recipients
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<List<MatchedRecipient>?> MatchedRecipientsOption { get; private set; }
+        public Option<List<MatchedRecipient>?> RecipientsOption { get; private set; }
 
         /// <summary>
         /// The list of recipients found for the given recipient
         /// </summary>
         /// <value>The list of recipients found for the given recipient</value>
-        [JsonPropertyName("matchedRecipients")]
-        public List<MatchedRecipient>? MatchedRecipients { get { return this.MatchedRecipientsOption; } set { this.MatchedRecipientsOption = new(value); } }
+        [JsonPropertyName("recipients")]
+        public List<MatchedRecipient>? Recipients { get { return this.RecipientsOption; } set { this.RecipientsOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of ExpiresAt
@@ -139,20 +220,6 @@ namespace Cheqi.Sdk.Models.Generated
         /* <example>2023-01-01T00:00Z</example> */
         [JsonPropertyName("expiresAt")]
         public DateTimeOffset? ExpiresAt { get { return this.ExpiresAtOption; } set { this.ExpiresAtOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of Instructions
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> InstructionsOption { get; private set; }
-
-        /// <summary>
-        /// Instructions on what to do with this response
-        /// </summary>
-        /// <value>Instructions on what to do with this response</value>
-        [JsonPropertyName("instructions")]
-        public string? Instructions { get { return this.InstructionsOption; } set { this.InstructionsOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of BuyerCountryCode
@@ -177,12 +244,11 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class RecipientResolutionResponse {\n");
-            sb.Append("  Recipients: ").Append(Recipients).Append("\n");
             sb.Append("  RouteFound: ").Append(RouteFound).Append("\n");
+            sb.Append("  DeliveryRouteType: ").Append(DeliveryRouteType).Append("\n");
             sb.Append("  MatchId: ").Append(MatchId).Append("\n");
-            sb.Append("  MatchedRecipients: ").Append(MatchedRecipients).Append("\n");
+            sb.Append("  Recipients: ").Append(Recipients).Append("\n");
             sb.Append("  ExpiresAt: ").Append(ExpiresAt).Append("\n");
-            sb.Append("  Instructions: ").Append(Instructions).Append("\n");
             sb.Append("  BuyerCountryCode: ").Append(BuyerCountryCode).Append("\n");
             sb.Append("  BuyerType: ").Append(BuyerType).Append("\n");
             sb.Append("}\n");
@@ -217,12 +283,11 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<List<MatchedRecipient>?> recipients = default;
             Option<bool?> routeFound = default;
+            Option<RecipientResolutionResponse.DeliveryRouteTypeEnum?> deliveryRouteType = default;
             Option<string?> matchId = default;
-            Option<List<MatchedRecipient>?> matchedRecipients = default;
+            Option<List<MatchedRecipient>?> recipients = default;
             Option<DateTimeOffset?> expiresAt = default;
-            Option<string?> instructions = default;
             Option<string?> buyerCountryCode = default;
             Option<BuyerType?> buyerType = default;
 
@@ -241,23 +306,22 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
-                        case "recipients":
-                            recipients = new Option<List<MatchedRecipient>?>(JsonSerializer.Deserialize<List<MatchedRecipient>>(ref utf8JsonReader, jsonSerializerOptions)!);
-                            break;
                         case "routeFound":
                             routeFound = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
+                            break;
+                        case "deliveryRouteType":
+                            string? deliveryRouteTypeRawValue = utf8JsonReader.GetString();
+                            if (deliveryRouteTypeRawValue != null)
+                                deliveryRouteType = new Option<RecipientResolutionResponse.DeliveryRouteTypeEnum?>(RecipientResolutionResponse.DeliveryRouteTypeEnumFromStringOrDefault(deliveryRouteTypeRawValue));
                             break;
                         case "matchId":
                             matchId = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
-                        case "matchedRecipients":
-                            matchedRecipients = new Option<List<MatchedRecipient>?>(JsonSerializer.Deserialize<List<MatchedRecipient>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                        case "recipients":
+                            recipients = new Option<List<MatchedRecipient>?>(JsonSerializer.Deserialize<List<MatchedRecipient>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "expiresAt":
-                            expiresAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
-                            break;
-                        case "instructions":
-                            instructions = new Option<string?>(utf8JsonReader.GetString()!);
+                            expiresAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "buyerCountryCode":
                             buyerCountryCode = new Option<string?>(utf8JsonReader.GetString()!);
@@ -273,23 +337,20 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
-            if (recipients.IsSet && recipients.Value == null)
-                throw new ArgumentNullException(nameof(recipients), "Property is not nullable for class RecipientResolutionResponse.");
-
             if (routeFound.IsSet && routeFound.Value == null)
                 throw new ArgumentNullException(nameof(routeFound), "Property is not nullable for class RecipientResolutionResponse.");
+
+            if (deliveryRouteType.IsSet && deliveryRouteType.Value == null)
+                throw new ArgumentNullException(nameof(deliveryRouteType), "Property is not nullable for class RecipientResolutionResponse.");
 
             if (matchId.IsSet && matchId.Value == null)
                 throw new ArgumentNullException(nameof(matchId), "Property is not nullable for class RecipientResolutionResponse.");
 
-            if (matchedRecipients.IsSet && matchedRecipients.Value == null)
-                throw new ArgumentNullException(nameof(matchedRecipients), "Property is not nullable for class RecipientResolutionResponse.");
+            if (recipients.IsSet && recipients.Value == null)
+                throw new ArgumentNullException(nameof(recipients), "Property is not nullable for class RecipientResolutionResponse.");
 
             if (expiresAt.IsSet && expiresAt.Value == null)
                 throw new ArgumentNullException(nameof(expiresAt), "Property is not nullable for class RecipientResolutionResponse.");
-
-            if (instructions.IsSet && instructions.Value == null)
-                throw new ArgumentNullException(nameof(instructions), "Property is not nullable for class RecipientResolutionResponse.");
 
             if (buyerCountryCode.IsSet && buyerCountryCode.Value == null)
                 throw new ArgumentNullException(nameof(buyerCountryCode), "Property is not nullable for class RecipientResolutionResponse.");
@@ -297,7 +358,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (buyerType.IsSet && buyerType.Value == null)
                 throw new ArgumentNullException(nameof(buyerType), "Property is not nullable for class RecipientResolutionResponse.");
 
-            return new RecipientResolutionResponse(recipients, routeFound, matchId, matchedRecipients, expiresAt, instructions, buyerCountryCode, buyerType);
+            return new RecipientResolutionResponse(routeFound, deliveryRouteType, matchId, recipients, expiresAt, buyerCountryCode, buyerType);
         }
 
         /// <summary>
@@ -324,42 +385,36 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, RecipientResolutionResponse recipientResolutionResponse, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (recipientResolutionResponse.RecipientsOption.IsSet && recipientResolutionResponse.Recipients == null)
-                throw new ArgumentNullException(nameof(recipientResolutionResponse.Recipients), "Property is required for class RecipientResolutionResponse.");
-
             if (recipientResolutionResponse.MatchIdOption.IsSet && recipientResolutionResponse.MatchId == null)
                 throw new ArgumentNullException(nameof(recipientResolutionResponse.MatchId), "Property is required for class RecipientResolutionResponse.");
 
-            if (recipientResolutionResponse.MatchedRecipientsOption.IsSet && recipientResolutionResponse.MatchedRecipients == null)
-                throw new ArgumentNullException(nameof(recipientResolutionResponse.MatchedRecipients), "Property is required for class RecipientResolutionResponse.");
-
-            if (recipientResolutionResponse.InstructionsOption.IsSet && recipientResolutionResponse.Instructions == null)
-                throw new ArgumentNullException(nameof(recipientResolutionResponse.Instructions), "Property is required for class RecipientResolutionResponse.");
+            if (recipientResolutionResponse.RecipientsOption.IsSet && recipientResolutionResponse.Recipients == null)
+                throw new ArgumentNullException(nameof(recipientResolutionResponse.Recipients), "Property is required for class RecipientResolutionResponse.");
 
             if (recipientResolutionResponse.BuyerCountryCodeOption.IsSet && recipientResolutionResponse.BuyerCountryCode == null)
                 throw new ArgumentNullException(nameof(recipientResolutionResponse.BuyerCountryCode), "Property is required for class RecipientResolutionResponse.");
+
+            if (recipientResolutionResponse.RouteFoundOption.IsSet)
+                writer.WriteBoolean("routeFound", recipientResolutionResponse.RouteFoundOption.Value!.Value);
+
+            if (recipientResolutionResponse.DeliveryRouteTypeOption.IsSet)
+            {
+    var deliveryRouteTypeRawValue = RecipientResolutionResponse.DeliveryRouteTypeEnumToJsonValue(recipientResolutionResponse.DeliveryRouteTypeOption.Value!.Value);
+                writer.WriteString("deliveryRouteType", deliveryRouteTypeRawValue);
+            }
+            if (recipientResolutionResponse.MatchIdOption.IsSet)
+                writer.WriteString("matchId", recipientResolutionResponse.MatchId);
 
             if (recipientResolutionResponse.RecipientsOption.IsSet)
             {
                 writer.WritePropertyName("recipients");
                 JsonSerializer.Serialize(writer, recipientResolutionResponse.Recipients, jsonSerializerOptions);
             }
-            if (recipientResolutionResponse.RouteFoundOption.IsSet)
-                writer.WriteBoolean("routeFound", recipientResolutionResponse.RouteFoundOption.Value!.Value);
-
-            if (recipientResolutionResponse.MatchIdOption.IsSet)
-                writer.WriteString("matchId", recipientResolutionResponse.MatchId);
-
-            if (recipientResolutionResponse.MatchedRecipientsOption.IsSet)
-            {
-                writer.WritePropertyName("matchedRecipients");
-                JsonSerializer.Serialize(writer, recipientResolutionResponse.MatchedRecipients, jsonSerializerOptions);
-            }
             if (recipientResolutionResponse.ExpiresAtOption.IsSet)
-                writer.WriteString("expiresAt", recipientResolutionResponse.ExpiresAtOption.Value!.Value.ToString(ExpiresAtFormat));
-
-            if (recipientResolutionResponse.InstructionsOption.IsSet)
-                writer.WriteString("instructions", recipientResolutionResponse.Instructions);
+                {
+                    writer.WritePropertyName("expiresAt");
+                    JsonSerializer.Serialize(writer, recipientResolutionResponse.ExpiresAtOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (recipientResolutionResponse.BuyerCountryCodeOption.IsSet)
                 writer.WriteString("buyerCountryCode", recipientResolutionResponse.BuyerCountryCode);

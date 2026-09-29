@@ -33,12 +33,10 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="CreditNoteContextEnvelope" /> class.
         /// </summary>
         /// <param name="receivingParty">receivingParty</param>
-        /// <param name="paymentMeans">paymentMeans</param>
         [JsonConstructor]
-        public CreditNoteContextEnvelope(Option<ReceivingPartyEnvelope?> receivingParty = default, Option<PaymentMeansEnvelope?> paymentMeans = default)
+        public CreditNoteContextEnvelope(Option<ReceivingPartyEnvelope?> receivingParty = default)
         {
             ReceivingPartyOption = receivingParty;
-            PaymentMeansOption = paymentMeans;
             OnCreated();
         }
 
@@ -58,19 +56,6 @@ namespace Cheqi.Sdk.Models.Generated
         public ReceivingPartyEnvelope? ReceivingParty { get { return this.ReceivingPartyOption; } set { this.ReceivingPartyOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of PaymentMeans
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<PaymentMeansEnvelope?> PaymentMeansOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets PaymentMeans
-        /// </summary>
-        [JsonPropertyName("paymentMeans")]
-        public PaymentMeansEnvelope? PaymentMeans { get { return this.PaymentMeansOption; } set { this.PaymentMeansOption = new(value); } }
-
-        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -79,7 +64,6 @@ namespace Cheqi.Sdk.Models.Generated
             StringBuilder sb = new StringBuilder();
             sb.Append("class CreditNoteContextEnvelope {\n");
             sb.Append("  ReceivingParty: ").Append(ReceivingParty).Append("\n");
-            sb.Append("  PaymentMeans: ").Append(PaymentMeans).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -108,7 +92,6 @@ namespace Cheqi.Sdk.Models.Generated
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
             Option<ReceivingPartyEnvelope?> receivingParty = default;
-            Option<PaymentMeansEnvelope?> paymentMeans = default;
 
             while (utf8JsonReader.Read())
             {
@@ -128,9 +111,6 @@ namespace Cheqi.Sdk.Models.Generated
                         case "receivingParty":
                             receivingParty = new Option<ReceivingPartyEnvelope?>(JsonSerializer.Deserialize<ReceivingPartyEnvelope>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
-                        case "paymentMeans":
-                            paymentMeans = new Option<PaymentMeansEnvelope?>(JsonSerializer.Deserialize<PaymentMeansEnvelope>(ref utf8JsonReader, jsonSerializerOptions)!);
-                            break;
                         default:
                             break;
                     }
@@ -140,10 +120,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (receivingParty.IsSet && receivingParty.Value == null)
                 throw new ArgumentNullException(nameof(receivingParty), "Property is not nullable for class CreditNoteContextEnvelope.");
 
-            if (paymentMeans.IsSet && paymentMeans.Value == null)
-                throw new ArgumentNullException(nameof(paymentMeans), "Property is not nullable for class CreditNoteContextEnvelope.");
-
-            return new CreditNoteContextEnvelope(receivingParty, paymentMeans);
+            return new CreditNoteContextEnvelope(receivingParty);
         }
 
         /// <summary>
@@ -173,18 +150,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (creditNoteContextEnvelope.ReceivingPartyOption.IsSet && creditNoteContextEnvelope.ReceivingParty == null)
                 throw new ArgumentNullException(nameof(creditNoteContextEnvelope.ReceivingParty), "Property is required for class CreditNoteContextEnvelope.");
 
-            if (creditNoteContextEnvelope.PaymentMeansOption.IsSet && creditNoteContextEnvelope.PaymentMeans == null)
-                throw new ArgumentNullException(nameof(creditNoteContextEnvelope.PaymentMeans), "Property is required for class CreditNoteContextEnvelope.");
-
             if (creditNoteContextEnvelope.ReceivingPartyOption.IsSet)
             {
                 writer.WritePropertyName("receivingParty");
                 JsonSerializer.Serialize(writer, creditNoteContextEnvelope.ReceivingParty, jsonSerializerOptions);
-            }
-            if (creditNoteContextEnvelope.PaymentMeansOption.IsSet)
-            {
-                writer.WritePropertyName("paymentMeans");
-                JsonSerializer.Serialize(writer, creditNoteContextEnvelope.PaymentMeans, jsonSerializerOptions);
             }
         }
     }

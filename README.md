@@ -1,1204 +1,217 @@
 # Cheqi .NET SDK
 
-[![.NET](https://img.shields.io/badge/.NET-6.0+-purple.svg)](https://dotnet.microsoft.com/)
-[![NuGet](https://img.shields.io/badge/NuGet-1.1.0-blue.svg)](https://www.nuget.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 2.5.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
 
-The Cheqi .NET SDK provides end-to-end encrypted receipt and credit note processing capabilities for suppliers, enabling secure digital receipt delivery to customers through the Cheqi platform.
+Version 2.0 is a breaking migration from the old server-generated template flow. The library targets .NET 8 and is tested on .NET 8 and .NET 10.
 
-## Features
+## Installation and initialization
 
-- **End-to-End Encryption**: Hybrid RSA+AES encryption for secure receipt delivery
-- **Customer Matching**: Match customers using payment identifiers (cards, IBANs, email)
-- **Receipt Processing**: Create and deliver encrypted receipts
-- **Credit Note Processing**: Handle returns and refunds with encryption
-- **RFC8785 Canonical JSON**: Deterministic JSON canonicalization for hash consistency
-- **Cross-Platform Hash Verification**: Consistent hashing across .NET, Java, and iOS
-- **Company Provisioning**: Provision companies and receive API credentials
-- **Store Management**: Full CRUD operations for store/location management
-- **Multi-Environment Support**: Sandbox, Test, and Production environments
-- **Automatic Retry Logic**: Built-in retry with exponential backoff
-- **Async/Await**: Modern asynchronous programming throughout
-- **.NET-Friendly Entry Points**: Options-based construction and DI registration support
-
-## Installation
-
-### NuGet Package Manager
-
-```bash
-Install-Package cheqi-sdk -Version 1.1.0
+```sh
+dotnet add package cheqi-sdk --version 2.0.0
 ```
-
-### .NET CLI
-
-```bash
-dotnet add package cheqi-sdk --version 1.1.0
-```
-
-### PackageReference
-
-Add to your `.csproj` file:
-
-```xml
-<PackageReference Include="cheqi-sdk" Version="1.1.0" />
-```
-
-## Quick Start
 
 ```csharp
 using Cheqi.Sdk;
 using Cheqi.Sdk.Config;
-using Cheqi.Sdk.Models;
-using Cheqi.Sdk.Models.Enums;
 
-// 1. Initialize the SDK
 using var sdk = CheqiSdk.Create(new CheqiSdkOptions
 {
     Environment = CheqiApiEnvironment.Sandbox,
-    ApiKey = "your-api-key"
+    ApiKey = "your-api-key",
+    TimeoutSeconds = 30,
+    MaxRetries = 3
 });
+```
 
-// 2. Create customer identification details
-var customer = IdentificationDetails.ForCard(
-    PaymentType.CARD_PAYMENT,
-    new CardDetails(CardProvider.VISA, paymentAccountReference: "PAR123456789"));
+Reuse the SDK instance. An injected `HttpClient` and `ILoggerFactory` remain owned by the caller. A client created internally is disposed with the SDK. An injected client can have its own handlers and retry policy; the SDK sets a request option to disable retries for encrypted digital submissions, which `RetryHandler` honors.
 
-// 3. Build the receipt request
-var receipt = new ReceiptTemplateRequest(
-    documentNumber: "INV-001",
+API-key authentication is the default. Supply an OAuth token through the optional `accessToken` parameter on any HTTP operation. The .NET convenience configuration also supports `SupplierClientId` and `SupplierClientSecret`: it exchanges and caches a token using `/oauth/exchange`.
+
+Register the SDK with dependency injection:
+
+```csharp
+using Cheqi.Sdk.Extensions;
+
+services.AddCheqiSdk(options =>
+{
+    options.Environment = CheqiApiEnvironment.Production;
+    options.ApiKey = configuration["Cheqi:ApiKey"];
+});
+```
+
+Use `CustomApiEndpoint` for a local or private API. Set `ReceiptDownloadBaseUrl` for its customer-facing download frontend. Standard API environments configure these frontend origins automatically:
+
+| Environment | API | Receipt downloads |
+| --- | --- | --- |
+| Sandbox | `https://sandbox.api.cheqi.io` | `https://sandbox.receipt.cheqi.io` |
+| Test | `https://test.api.cheqi.io` | `https://test.receipt.cheqi.io` |
+| Production | `https://api.cheqi.io` | `https://receipt.cheqi.io` |
+
+## Issue a receipt
+
+Use models from `Cheqi.Sdk.Models.Generated`. They represent the published OpenAPI contract, including payment context, fiscalization and jurisdictional metadata, taxes, discounts, charges, and product identifiers.
+
+```csharp
+using Cheqi.Sdk.Models.Generated;
+
+var identification = new IdentificationDetails
+{
+    PaymentType = PaymentType.CARDPAYMENT,
+    CardDetails = new CardDetails("payment-account-reference")
+};
+
+var payload = new ReceiptPayload(
+    documentNumber: "POS-001",
     issueDate: DateTimeOffset.UtcNow,
     currency: "EUR",
-    receiptSubtotal: 10.00m,
-    totalBeforeTax: 10.00m,
+    receiptSubtotal: 10m,
+    totalBeforeTax: 10m,
     totalTaxAmount: 2.10m,
     totalAmount: 12.10m,
-    products: new[]
+    taxesApplied: true,
+    products: new List<Product>
     {
-        Product.Builder()
-            .Name("Coffee")
-            .Quantity(1)
-            .BaseQuantity(1)
-            .UnitCode(UnitCode.ONE)
-            .UnitPrice(10.00m)
-            .Subtotal(10.00m)
-            .Total(12.10m)
-            .AddTax(21.0, "VAT", 2.10m)
-            .Build()
-    },
-    taxes: new[]
-    {
-        Tax.Builder()
-            .Rate(21.0)
-            .Type("VAT")
-            .Amount(2.10m)
-            .Build()
+        new("Coffee", "coffee-1", 1, UnitCode.C62, 10m, 10m, 12.10m)
     });
 
-// 4. Process the receipt (matches customer, encrypts, and delivers)
-var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, receipt);
+var result = await sdk.ReceiptService.IssueReceiptAsync(
+    identification, payload, cancellationToken: cancellationToken);
+```
 
-if (result.IsSuccess)
+The SDK resolves a route, serializes the definitive values you supply, independently encrypts the same payload for each owner device with AES-256-GCM and RSA-OAEP-SHA256, and submits only ciphertext. It performs no receipt calculations or template enrichment. An accepted job can still be awaiting device processing; `result.Status` reports that backend status.
+
+Pairing codes, card PARs, payment accounts, email addresses, and original Cheqi receipt IDs can identify customers. A payment type alone is valid anonymous payment context and can resolve a download fallback.
+
+## Outcomes and recovery
+
+| `result.State` | Meaning | Integration action |
+| --- | --- | --- |
+| `DigitalSubmitted` | Cheqi accepted the processing job | Save `CheqiReceiptId` and the submission |
+| `DigitalPending` | Acceptance is uncertain or the original match is processing | Persist the prepared download, upload it, then resume the original match |
+| `DigitalExpired` | An unsubmitted match expired | Follow the integration's expired-checkout policy |
+| `DownloadFallback` | Download route accepted, prepared for later upload, or awaiting an envelope | Check `IsAccepted`, `PreparedDownload`, and `DownloadEnvelopeRequired` |
+| `EmailFallback` | Explicit email route | Generate the final receipt locally and send it through `SendReceiptViaEmailAsync` |
+
+`IsAccepted` and `IsSuccess` become true only after Cheqi acknowledges a submission or download upload. `Retryable` and `RetryAfterSeconds` guide recovery scheduling.
+
+Network failures during matching prepare a download locally. Network failures, transient errors, in-progress responses, and malformed success responses during digital submission return `DigitalPending`. Permanent API errors propagate as `CheqiApiException`. Cancellation propagates as `OperationCanceledException`.
+
+Persist the original fallback before displaying its URL or QR code. Storage, scheduling, retries, and retention belong to your integration:
+
+```csharp
+using System.Text.Json;
+using Cheqi.Sdk.Receipt;
+using Cheqi.Sdk.Serialization;
+
+var jsonOptions = CheqiJson.CreateOptions();
+if (result.PreparedDownload is { } prepared)
 {
-    Console.WriteLine($"Receipt delivered to {result.ReceiptCount} devices");
+    // Persist this JSON with appropriate protection: its URL includes the secret key.
+    var persistedJson = JsonSerializer.Serialize(prepared, jsonOptions);
+
+    // In a later worker:
+    var restored = JsonSerializer.Deserialize<PreparedReceiptDownload>(persistedJson, jsonOptions)!;
+    await sdk.ReceiptService.UploadPreparedDownloadAsync(restored, cancellationToken: cancellationToken);
 }
-else if (!result.RecipientsFound)
+
+if (result.State == ReceiptIssueState.DigitalPending)
 {
-    Console.WriteLine("No Cheqi users found for this customer");
-}
-else
-{
-    Console.WriteLine($"Failed: {result.ErrorMessage}");
-}
-```
-
-## Environment Configuration
-
-| Environment | URL | Description |
-|-------------|-----|-------------|
-| `CheqiApiEnvironment.Sandbox` | `https://sandbox.api.cheqi.io` | Development |
-| `CheqiApiEnvironment.Test` | `https://test.api.cheqi.io` | Testing |
-| `CheqiApiEnvironment.Production` | `https://api.cheqi.io` | Production |
-
-## Authentication
-
-The SDK supports two authentication methods:
-
-### API Key
-
-```csharp
-using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-{
-    Environment = CheqiApiEnvironment.Production,
-    ApiKey = "sk_live_your_api_key"
-});
-```
-
-### OAuth Client Credentials
-
-```csharp
-using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-{
-    Environment = CheqiApiEnvironment.Production,
-    SupplierClientId = "client-id",
-    SupplierClientSecret = "client-secret"
-});
-```
-
-## Configuration Options
-
-```csharp
-using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-{
-    Environment = CheqiApiEnvironment.Production,
-    ApiKey = "your-api-key",
-    TimeoutSeconds = 60,
-    MaxRetries = 5
-});
-```
-
-## Customer Matching
-
-Match customers using various payment identifiers:
-
-```csharp
-var byCard = IdentificationDetails.ForCard(
-    PaymentType.CARD_PAYMENT,
-    new CardDetails(CardProvider.VISA, paymentAccountReference: "PAR123456789"));
-
-var byIban = IdentificationDetails.ForPaymentAccount(
-    PaymentType.BANK_TRANSFER,
-    new PaymentAccountDetails("NL91ABNA0417164300", AccountIdentifierType.IBAN));
-
-var byEmail = IdentificationDetails.ForEmail(
-    PaymentType.CARD_PAYMENT,
-    "customer@example.com");
-
-var byReceiptId = IdentificationDetails.ForReceiptId(
-    PaymentType.CARD_PAYMENT,
-    "original-receipt-id");
-
-var byPairingCode = IdentificationDetails.ForPairingCode(
-    PaymentType.CARD_PAYMENT,
-    "84739201");
-
-var matchResult = await sdk.MatchingService.MatchCustomerAsync(byCard);
-if (matchResult.IsCustomerFound)
-{
-    Console.WriteLine($"Found {matchResult.Recipients?.Count ?? 0} devices");
+    var resumed = await sdk.ReceiptService.ResumeReceiptAsync(
+        result.MatchId!, payload, cancellationToken: cancellationToken);
 }
 ```
 
-## Receipt Processing
+`ResumeReceiptAsync` makes one recovery attempt using only the original opaque `matchId` and definitive payload. It retrieves the original device snapshot, returns the original submission if already accepted, or submits for a still-matched digital route. It never rematches, retains matching identifiers, or generates replacement fallback credentials. Keep the original prepared download and URL across recovery attempts. Persist `storeId` as well when it was supplied for issuance.
 
-### Complete Receipt Flow
+Encrypted digital submissions bypass automatic retries. Matching, downloads, and store operations retain the configured retry policy. A raw in-progress submission raises `SubmissionInProgressException` with its retry delay.
 
-The `ProcessCompleteReceiptAsync` method handles the entire flow:
+For manual control, use `GetMatchAsync`, `GenerateEncryptedReceiptEnvelope` (accepts a resolution or a retrieved `MATCHED` status), and `SubmitEncryptedReceiptAsync`.
 
-1. Matches the customer using identification details
-2. Generates a receipt template
-3. Encrypts the receipt for each recipient device
-4. Delivers the encrypted receipts
+## Encrypted receipt downloads
 
-```csharp
-var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
-    identificationDetails,
-    receiptRequest
-);
-
-// With explicit access token
-var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
-    identificationDetails,
-    receiptRequest,
-    accessToken
-);
-```
-
-### Building Products
+For an explicit customer-without-Cheqi flow, skip matching:
 
 ```csharp
-var product = Product.Builder()
-    .Name("MacBook Pro 14\"")
-    .Identifier("MBP-14-2024")
-    .Description("Apple M3 Pro chip")
-    .Quantity(1)
-    .BaseQuantity(1)
-    .UnitCode(UnitCode.ONE)
-    .UnitPrice(2499.00m)
-    .Subtotal(2499.00m)
-    .Total(3023.79m)
-    .AddTax(21.0, "VAT", 524.79m)
-    .Build();
+var download = await sdk.ReceiptService.IssueDownloadReceiptAsync(
+    new IdentificationDetails { PaymentType = PaymentType.CASH },
+    payload,
+    cancellationToken: cancellationToken);
 ```
 
-### Receipt Request
+The SDK builds a `ReceiptEnvelope` containing the supplied payload and payment identification context, creates a random download ID and AES-256 key, and uploads ciphertext. The secret key stays in the URL fragment. Prepared recovery downloads contain the definitive payload without the matching identifiers.
+
+When a resolved download route has no local payment type, `DownloadEnvelopeRequired` is true. Build the final `ReceiptEnvelope` locally and complete it:
 
 ```csharp
-var receipt = new ReceiptTemplateRequest(
-    documentNumber: "INV-2024-001",
-    issueDate: DateTimeOffset.UtcNow,
-    currency: "EUR",
-    receiptSubtotal: 100.00m,
-    totalBeforeTax: 100.00m,
-    totalTaxAmount: 21.00m,
-    totalAmount: 121.00m,
-    products: products,
-    taxes: new[]
-    {
-        Tax.Builder()
-            .Rate(21.0)
-            .Type("VAT")
-            .TaxableAmount(100.00m)
-            .Amount(21.00m)
-            .Build()
-    },
-    note: "Thank you for your purchase!");
+var completed = await sdk.ReceiptService.CompleteDownloadFallbackAsync(
+    result, finalReceiptEnvelope, cancellationToken: cancellationToken);
 ```
 
-## Credit Note Processing
+`DownloadService` also exposes `GenerateDownloadLink`, `BuildDownloadUrl`, `ParseDownloadUrl`, `EncryptDownloadEnvelope`, and `DecryptDownloadEnvelope`. It uses unpadded base64url credentials and `Base64(iv || ciphertext || tag)` encryption framing shared with Java and JavaScript. Download credentials and prepared requests redact secrets in `ToString()`.
 
-Process returns and refunds with the same encryption:
+## Credit notes and customer returns
+
+Issue definitive credit-note values through the separate encrypted endpoint:
 
 ```csharp
-using Cheqi.Sdk.CreditNote;
-
-var creditNote = CreditNoteTemplateRequest.Builder()
-    .DocumentNumber("CN-2024-001")
-    .OriginatorDocumentReference("INV-2024-001")
-    .IssueDate(DateTimeOffset.UtcNow)
-    .Currency("EUR")
-    .CreditNoteSubTotal(-100.00m)
-    .TotalBeforeTax(-100.00m)
-    .TotalTaxAmount(-21.00m)
-    .TotalAmount(-121.00m)
-    .Products(returnedProducts)
-    .AddTax(21.0, "VAT", "-21.00")
-    .Note("Product return - defective item")
-    .Build();
-
-var result = await sdk.CreditNoteService.ProcessCompleteCreditNoteAsync(
-    identificationDetails,
-    creditNote
-);
+var creditNote = await sdk.CreditNoteService.IssueCreditNoteAsync(
+    identification,
+    parentCheqiReceiptId: "original-cheqi-receipt-id",
+    creditNotePayload: new { documentNumber = "CN-001", totalAmount = -12.10m },
+    cancellationToken: cancellationToken);
 ```
 
-## Company Provisioning
+The payload can be a serializable object, `JsonElement`, or an already serialized JSON string. Amounts are not recalculated. Credit-note issuance requires owner devices and preserves the parent receipt reference.
 
-Provision new companies (requires partner credentials):
+Decrypt API or webhook receipts into a complete generated `ReceiptEnvelope`:
 
 ```csharp
-using Cheqi.Sdk.Models.Company;
-
-var company = new Company
-{
-    Name = "My Store BV",
-    TradingName = "My Store",
-    RegistrationNumber = "12345678",
-    VatNumber = "NL123456789B01",
-    Email = "info@mystore.nl",
-    Address = new Address
-    {
-        StreetAddress = "Hoofdstraat 123",
-        City = "Amsterdam",
-        PostalCode = "1012AB",
-        CountryCode = "NL"
-    }
-};
-
-var response = await sdk.CompanyService.ProvisionCompanyAsync(
-    new ProvisionCompanyRequest
-    {
-        Company = company,
-        AdminEmail = "admin@mystore.nl"
-    }
-);
-
-if (response.Success)
-{
-    Console.WriteLine($"Company ID: {response.Company?.Id}");
-    Console.WriteLine($"API Key: {response.ApiKey}");
-}
+var envelope = sdk.DecryptionService.DecryptReceipt(receiptDelivery, privateKey);
 ```
 
-## Store Management
+`DecryptCreditNoteInitiation` returns plaintext customer-return JSON; `DecryptCreditNoteInitiationRequest` decrypts, deserializes, and validates the current return contract. Both accept generated API request/response and webhook models. Private keys support PKCS#8 PEM or base64 DER; public keys support PEM, SPKI DER, and raw PKCS#1 DER.
 
-Manage stores for a company:
+Validated customer returns use `customerNote`, line items with `productId`, `quantity`, `reasonCode`, and `reasonDescription`, plus `refundPreference` and optional `refundBankAccount`. Bank-transfer refunds require an IBAN and account holder; other methods reject a supplied bank account.
 
-```csharp
-// Create a store
-var store = await sdk.StoreService.CreateStoreAsync(
-    companyId,
-    new CreateStoreRequest
-    {
-        Name = "Amsterdam Central",
-        StoreCode = "AMS-001",
-        Email = "amsterdam@mystore.nl",
-        Phone = "+31201234567",
-        Address = new Address
-        {
-            StreetAddress = "Kalverstraat 1",
-            City = "Amsterdam",
-            PostalCode = "1012NX",
-            CountryCode = "NL"
-        }
-    }
-);
+## Stores and verification
 
-// List all stores
-var stores = await sdk.StoreService.GetStoresAsync(companyId);
+`StoreService` provides create, list, active list, get, update, delete, activate, and deactivate operations. IDs are `Guid`, requests are generated `CreateStoreRequest`, and results are generated `StoreDTO`. Activation and deactivation return `Task` and accept no-content responses. Active-only filtering is performed by the server.
 
-// Get a specific store
-var store = await sdk.StoreService.GetStoreAsync(companyId, storeId);
+`VerificationService` retains the Java SDK’s canonical JSON format and SHA-256 hashing, UBL XML canonicalization, and cross-platform hash verification. Use `CheqiJson.CreateOptions()` whenever serializing generated models or persisted results to preserve wire enum values, explicit zero amounts, false booleans, optional field presence, plain-decimal money formatting, and ISO date offsets. Object and wire JSON hashing use the same serializer.
 
-// Update a store
-var updated = await sdk.StoreService.UpdateStoreAsync(companyId, storeId, updateRequest);
+## Migration from 1.x
 
-// Activate/Deactivate
-await sdk.StoreService.ActivateStoreAsync(companyId, storeId);
-await sdk.StoreService.DeactivateStoreAsync(companyId, storeId);
+.NET 8 or later is required. .NET 6 is no longer supported; its macOS AES-GCM implementation cannot run this encryption flow.
 
-// Delete a store
-await sdk.StoreService.DeleteStoreAsync(companyId, storeId);
+- Replace `ProcessCompleteReceiptAsync` and remote template generation with `IssueReceiptAsync` and generated `ReceiptPayload`.
+- Replace credit-note template generation with `IssueCreditNoteAsync` and definitive caller-supplied values.
+- Replace legacy encrypted receipt/credit-note DTOs with generated encrypted envelopes and deliveries.
+- Replace template response merges and `ProcessEncryptedReceipt` with complete envelope decryption through `DecryptionService`.
+- Replace `Models.Company` store models and string IDs with generated store models and `Guid` IDs.
+- Company provisioning and server template endpoints were retired from the current API and are removed, matching Java.
+- Replace old `lineItemId`, `quantityReturned`, and condition-based return fields with the current product, quantity, and reason contract.
+- The SDK exception is named `CheqiSdkException`. Use async store operations instead of synchronous wrappers.
+- Configure `ReceiptDownloadBaseUrl` for custom API endpoints that need offline fallback.
+
+## Development
+
+```sh
+dotnet build cheqi-sdk.csproj --configuration Release
+dotnet test tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj --configuration Release
+dotnet pack cheqi-sdk.csproj --configuration Release --no-build
 ```
 
-## Direct Service Access
+The test suite simulates HTTP responses without platform credentials and covers routing, ambiguous acceptance, original-match recovery, encryption interoperability, downloads, customer-return validation, store wire models, DI, cancellation, and hashing.
 
-Access individual services for advanced operations:
+To update the API contract, install OpenAPI Generator and Python's development dependencies, then run:
 
-```csharp
-var encryption = sdk.EncryptionService;
-var decryption = sdk.DecryptionService;
-var matching = sdk.MatchingService;
-var receipts = sdk.ReceiptService;
-var creditNotes = sdk.CreditNoteService;
-var companies = sdk.CompanyService;
-var stores = sdk.StoreService;
+```sh
+python3 -m pip install -r requirements-dev.txt
+make fetch-spec ENV=prod
+make generate
+make spec-check ENV=prod
 ```
 
-## Error Handling
+Model generation uses OpenAPI Generator 7.14.0 and runs `scripts/prepare-generated-models.py` to register generated JSON converters, preserve optional enum absence, normalize numeric and date serialization, and fix the model-only generator's submission-response union. Schema drift checks compare parsed YAML so mapping-order changes do not cause false failures.
 
-```csharp
-using Cheqi.Sdk.Exceptions;
-using Cheqi.Sdk.Http;
-
-try
-{
-    var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, receipt);
-}
-catch (CheqiApiException ex)
-{
-    Console.WriteLine($"API Error: {ex.Message}");
-    Console.WriteLine($"Status Code: {ex.StatusCode}");
-    Console.WriteLine($"Response: {ex.ResponseBody}");
-}
-catch (ReceiptProcessingException ex)
-{
-    Console.WriteLine($"Receipt Error: {ex.Message}");
-}
-catch (MatchingException ex)
-{
-    Console.WriteLine($"Matching Error: {ex.Message}");
-}
-catch (CheqiSdkException ex)
-{
-    Console.WriteLine($"SDK Error: {ex.Message}");
-}
-```
-
-## Security
-
-### Encryption
-
-- **Hybrid Encryption**: RSA-OAEP for key exchange + AES-256-GCM for data
-- **Forward Secrecy**: Unique AES key generated for each receipt
-- **Integrity Protection**: GCM authentication tags
-- **Multi-Device Support**: Encrypt once per recipient device
-
-### Receipt Integrity & Hash Verification
-
-The SDK implements RFC8785 canonical JSON to ensure consistent hash generation across all platforms:
-
-- **Deterministic JSON**: Receipt data is canonicalized using RFC8785 standard
-- **Cross-Platform Consistency**: Identical hashes generated by .NET, Java, and iOS SDKs
-- **Tamper Detection**: Any modification to receipt data changes the hash
-- **Third-Party Verification**: External parties can verify receipt authenticity
-
-```csharp
-// The SDK automatically handles canonicalization and hashing
-var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, receipt);
-
-// Hash is calculated from RFC8785 canonical JSON
-// This ensures the same receipt produces identical hashes across platforms
-```
-
-**Key Implementation Details:**
-
-1. **Compact JSON**: All JSON is serialized without whitespace or indentation
-2. **Null Exclusion**: Backend configured to exclude null fields from responses
-3. **Invariant Culture**: Decimal numbers use dot (`.`) as decimal separator
-4. **Original JSON Preservation**: Receipt template from backend is preserved to avoid re-serialization differences
-5. **Direct JSON Manipulation**: Payment means are injected directly into JSON without full deserialization
-
-### Decryption (for receiving encrypted data)
-
-```csharp
-using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-{
-    Environment = CheqiApiEnvironment.Production,
-    ApiKey = "your-api-key",
-    PrivateKey = privateKeyPem
-});
-
-var decryptedReceipt = sdk.ProcessEncryptedReceipt(encryptedData, privateKeyPem);
-```
-
-## Technical Details
-
-### JSON Serialization
-
-The SDK uses `System.Text.Json` with custom configuration for RFC8785 compliance:
-
-```csharp
-var jsonOptions = new JsonSerializerOptions
-{
-    PropertyNameCaseInsensitive = true,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-    WriteIndented = false, // Compact JSON for canonicalization
-    Converters = { new DecimalJsonConverter() } // Culture-invariant decimals
-};
-```
-
-### Decimal Handling
-
-Custom `DecimalJsonConverter` ensures consistent number formatting:
-
-- Uses `CultureInfo.InvariantCulture` for all decimal serialization
-- Prevents locale-specific formatting (e.g., comma as decimal separator)
-- Strips trailing zeros while preserving precision
-- Ensures JSON-compatible output across all cultures
-
-### Canonical JSON Process
-
-1. **Receipt Template**: Fetched from backend as compact JSON
-2. **Payment Means Injection**: Added using `JsonDocument.Parse` and `Utf8JsonWriter`
-3. **Canonicalization**: RFC8785 standard applied (key sorting, number normalization)
-4. **Hash Generation**: SHA-256 hash of canonical JSON
-5. **Verification**: Hash submitted to backend for integrity tracking
-
-## Requirements
-
-- **.NET**: 6.0 or higher
-- **Dependencies**: Managed via NuGet
-  - `Microsoft.Extensions.Logging.Abstractions`
-  - `Microsoft.Extensions.Http`
-
-## Building from Source
-
-```bash
-git clone https://github.com/cheqi/cheqi-sdk-dotnet.git
-cd cheqi-sdk-dotnet
-
-dotnet restore cheqi-sdk/cheqi-sdk.csproj
-dotnet build cheqi-sdk/cheqi-sdk.csproj
-dotnet test cheqi-sdk/tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj
-dotnet pack
-```
-
-## Email Delivery
-
-When customers don't have the Cheqi app, receipts can be sent via email:
-
-```csharp
-// Email delivery with API key
-var result = await sdk.ReceiptService.SendReceiptViaEmailAsync(
-    "customer@example.com",
-    purchaseReceipt
-);
-
-// Email delivery with OAuth token
-var result = await sdk.ReceiptService.SendReceiptViaEmailAsync(
-    "customer@example.com",
-    purchaseReceipt,
-    accessToken
-);
-
-if (result.DeliveryMethod == DeliveryMethod.Email)
-{
-    Console.WriteLine($"Receipt sent to {result.EmailAddress}");
-}
-```
-
-## Advanced Usage Patterns
-
-### Dependency Injection
-
-Integrate the SDK with ASP.NET Core DI:
-
-```csharp
-// Startup.cs or Program.cs
-services.AddSingleton<CheqiSdk>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-
-    return CheqiSdk.Create(new CheqiSdkOptions
-    {
-        Environment = CheqiApiEnvironment.Production,
-        ApiKey = config["Cheqi:ApiKey"],
-        TimeoutSeconds = 60,
-        MaxRetries = 3,
-        LoggerFactory = sp.GetRequiredService<ILoggerFactory>()
-    });
-});
-
-// Use in controllers
-public class ReceiptController : ControllerBase
-{
-    private readonly CheqiSdk _cheqiSdk;
-    
-    public ReceiptController(CheqiSdk cheqiSdk)
-    {
-        _cheqiSdk = cheqiSdk;
-    }
-    
-    [HttpPost("receipts")]
-    public async Task<IActionResult> CreateReceipt([FromBody] ReceiptRequest request)
-    {
-        var result = await _cheqiSdk.ReceiptService.ProcessCompleteReceiptAsync(
-            request.Customer,
-            request.Receipt
-        );
-        
-        return Ok(result);
-    }
-}
-```
-
-### Batch Processing
-
-Process multiple receipts efficiently:
-
-```csharp
-var receipts = GetPendingReceipts(); // Your data source
-
-var tasks = receipts.Select(async receipt =>
-{
-    try
-    {
-        var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
-            receipt.Customer,
-            receipt.Data
-        );
-        
-        return new { Receipt = receipt, Result = result, Success = true };
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Failed to process receipt {Id}", receipt.Id);
-        return new { Receipt = receipt, Result = (ReceiptResult)null, Success = false };
-    }
-});
-
-var results = await Task.WhenAll(tasks);
-
-var successful = results.Count(r => r.Success);
-var failed = results.Count(r => !r.Success);
-
-Console.WriteLine($"Processed {successful} receipts, {failed} failed");
-```
-
-### Custom Logging
-
-Integrate with your logging framework:
-
-```csharp
-using Microsoft.Extensions.Logging;
-
-var loggerFactory = LoggerFactory.Create(builder =>
-{
-    builder
-        .AddConsole()
-        .AddDebug()
-        .SetMinimumLevel(LogLevel.Debug);
-});
-
-using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-{
-    Environment = CheqiApiEnvironment.Production,
-    ApiKey = "your-api-key",
-    LoggerFactory = loggerFactory
-});
-
-// SDK automatically uses ILogger<T> for all services
-```
-
-### Cancellation Token Support
-
-All async methods support cancellation:
-
-```csharp
-using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-
-try
-{
-    var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
-        customer,
-        receipt,
-        cts.Token
-    );
-}
-catch (OperationCanceledException)
-{
-    Console.WriteLine("Operation timed out after 30 seconds");
-}
-```
-
-### Manual Workflow Control
-
-For advanced scenarios, control each step manually:
-
-```csharp
-// Step 1: Match customer
-var matchResponse = await sdk.MatchingService.MatchCustomerAsync(customer);
-
-if (!matchResponse.IsCustomerFound)
-{
-    // Fallback to email
-    return await sdk.ReceiptService.SendReceiptViaEmailAsync(
-        customer.RecipientEmail!,
-        receipt
-    );
-}
-
-// Step 2: Generate template
-var template = await sdk.ReceiptService.GenerateReceiptTemplateAsync(receiptRequest);
-
-// Step 3: Parse and canonicalize
-var purchaseReceipt = JsonSerializer.Deserialize<PurchaseReceipt>(template);
-var canonicalJson = sdk.VerificationService.CanonicalizeCheqiReceipt(template);
-var templateHash = sdk.VerificationService.CalculateCheqiReceiptHash(template);
-
-// Step 4: Create encrypted receipts
-var encryptedReceipts = sdk.ReceiptService.CreateEncryptedReceipts(
-    canonicalJson,
-    matchResponse.Recipients
-);
-
-// Step 5: Send to backend
-var response = await sdk.ReceiptService.SendEncryptedReceiptsAsync(
-    encryptedReceipts,
-    templateHash,
-    matchResponse
-);
-
-Console.WriteLine($"Delivered to {response.RecipientCount} devices");
-```
-
-## Testing
-
-The SDK test project lives inside the repository:
-
-```text
-cheqi-sdk/tests/cheqi-sdk.Tests
-```
-
-Run the SDK tests with:
-
-```bash
-dotnet test cheqi-sdk/tests/cheqi-sdk.Tests/cheqi-sdk.Tests.csproj
-```
-
-### Integration Testing
-
-Test against sandbox environment:
-
-```csharp
-[Fact]
-public async Task IntegrationTest_ProcessReceipt()
-{
-    using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-    {
-        Environment = CheqiApiEnvironment.Sandbox,
-        ApiKey = System.Environment.GetEnvironmentVariable("CHEQI_TEST_API_KEY")
-    });
-
-    var customer = IdentificationDetails.ForEmail(
-        PaymentType.CARD_PAYMENT,
-        "test@example.com");
-    
-    var receipt = CreateTestReceipt();
-    
-    var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
-        customer,
-        receipt
-    );
-    
-    Assert.NotNull(result);
-}
-```
-
-## Best Practices
-
-### 1. Reuse SDK Instance
-
-Create one SDK instance and reuse it throughout your application:
-
-```csharp
-// ✅ Good - Singleton pattern
-public class ReceiptService
-{
-    private static readonly CheqiSdk _sdk = CheqiSdk.Create(new CheqiSdkOptions
-    {
-        Environment = CheqiApiEnvironment.Production,
-        ApiKey = "your-api-key"
-    });
-}
-
-// ❌ Bad - Creating new instances
-public async Task ProcessReceipt()
-{
-    using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-    {
-        Environment = CheqiApiEnvironment.Production,
-        ApiKey = "your-api-key"
-    }); // Don't do this repeatedly
-}
-```
-
-### 2. Handle All Result Cases
-
-Always check result status:
-
-```csharp
-var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, receipt);
-
-if (result.IsSuccess)
-{
-    // Receipt delivered successfully
-    await UpdateDatabase(receipt.DocumentNumber, "delivered");
-}
-else if (!result.RecipientsFound)
-{
-    // No Cheqi users found - consider email fallback
-    await SendEmailReceipt(customer.RecipientEmail, receipt);
-}
-else if (result.HasError)
-{
-    // Processing error occurred
-    _logger.LogError("Receipt processing failed: {Error}", result.ErrorMessage);
-    await QueueForRetry(receipt);
-}
-```
-
-### 3. Use Appropriate Identifiers
-
-Choose the most reliable identifier available:
-
-```csharp
-// Priority order (most to least reliable):
-// 1. Pairing code - best for e-commerce handoff
-// 2. PAR (Payment Account Reference) - strongest card identifier
-// 3. IBAN - good for bank transfers
-// 4. PAN - weaker fallback when PAR is unavailable
-// 5. Email - last resort
-
-var customer = IdentificationDetails.ForCard(
-    PaymentType.CARD_PAYMENT,
-    new CardDetails(
-        CardProvider.VISA,
-        paymentAccountNumber: transaction.Pan,
-        paymentAccountReference: transaction.Par),
-    transaction.CustomerEmail);
-```
-
-### 4. Implement Retry Logic
-
-For transient failures, implement retry with exponential backoff:
-
-```csharp
-public async Task<ReceiptResult> ProcessWithRetry(
-    IdentificationDetails customer,
-    ReceiptTemplateRequest receipt,
-    int maxRetries = 3)
-{
-    for (int attempt = 1; attempt <= maxRetries; attempt++)
-    {
-        try
-        {
-            return await sdk.ReceiptService.ProcessCompleteReceiptAsync(
-                customer,
-                receipt
-            );
-        }
-        catch (CheqiApiException ex) when (ex.HttpStatusCode >= 500)
-        {
-            if (attempt == maxRetries) throw;
-            
-            var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt));
-            _logger.LogWarning("Attempt {Attempt} failed, retrying in {Delay}s", 
-                attempt, delay.TotalSeconds);
-            
-            await Task.Delay(delay);
-        }
-    }
-    
-    throw new InvalidOperationException("Should not reach here");
-}
-```
-
-### 5. Validate Data Before Sending
-
-Ensure data quality before API calls:
-
-```csharp
-public async Task<ReceiptResult> ProcessReceipt(
-    IdentificationDetails customer,
-    ReceiptTemplateRequest receipt)
-{
-    // Validate customer has at least one identifier
-    if (string.IsNullOrWhiteSpace(customer.RecipientEmail) &&
-        customer.CardDetails == null &&
-        customer.PaymentAccountDetails == null)
-    {
-        throw new ArgumentException("Customer must have at least one identifier");
-    }
-    
-    // Validate receipt data
-    if (receipt.Products == null || !receipt.Products.Any())
-    {
-        throw new ArgumentException("Receipt must contain at least one product");
-    }
-    
-    if (receipt.TotalAmount <= 0)
-    {
-        throw new ArgumentException("Total amount must be positive");
-    }
-    
-    // Validate tax calculations
-    var calculatedTax = receipt.Products.Sum(p => p.Tax?.TaxAmount ?? 0);
-    if (Math.Abs(calculatedTax - receipt.TotalTaxAmount) > 0.01m)
-    {
-        _logger.LogWarning("Tax mismatch: calculated {Calculated}, provided {Provided}",
-            calculatedTax, receipt.TotalTaxAmount);
-    }
-    
-    return await sdk.ReceiptService.ProcessCompleteReceiptAsync(customer, receipt);
-}
-```
-
-### 6. Secure API Key Storage
-
-Never hardcode API keys:
-
-```csharp
-// ✅ Good - Use configuration
-var apiKey = configuration["Cheqi:ApiKey"];
-var apiKey = System.Environment.GetEnvironmentVariable("CHEQI_API_KEY");
-
-// ❌ Bad - Hardcoded
-var apiKey = "sk_live_abc123"; // Never do this!
-```
-
-### 7. Understand Hash Consistency
-
-Receipt hashes must be identical across platforms for verification:
-
-```csharp
-// The SDK ensures hash consistency by:
-// 1. Using compact JSON (no whitespace)
-// 2. Preserving backend JSON structure
-// 3. Using culture-invariant number formatting
-// 4. Following RFC8785 canonicalization
-
-// Same receipt data will produce identical hashes on:
-// - .NET SDK
-// - Java SDK  
-// - iOS SDK
-
-// This enables:
-// - Cross-platform verification
-// - Tamper detection
-// - Third-party validation
-```
-
-### 8. Monitor and Log
-
-Implement comprehensive logging:
-
-```csharp
-public async Task<ReceiptResult> ProcessReceipt(
-    IdentificationDetails customer,
-    ReceiptTemplateRequest receipt)
-{
-    var sw = Stopwatch.StartNew();
-    
-    _logger.LogInformation("Processing receipt {ReceiptId} for customer", 
-        receipt.DocumentNumber);
-    
-    try
-    {
-        var result = await sdk.ReceiptService.ProcessCompleteReceiptAsync(
-            customer,
-            receipt
-        );
-        
-        sw.Stop();
-        
-        _logger.LogInformation(
-            "Receipt {ReceiptId} processed successfully in {Duration}ms. " +
-            "Delivered to {Count} devices",
-            receipt.DocumentNumber,
-            sw.ElapsedMilliseconds,
-            result.ReceiptCount
-        );
-        
-        return result;
-    }
-    catch (Exception ex)
-    {
-        sw.Stop();
-        
-        _logger.LogError(ex,
-            "Failed to process receipt {ReceiptId} after {Duration}ms",
-            receipt.DocumentNumber,
-            sw.ElapsedMilliseconds
-        );
-        
-        throw;
-    }
-}
-```
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. Authentication Failures
-
-```
-Error: Invalid or expired access token
-```
-
-**Solution**: Ensure your API key is valid and not expired:
-
-```csharp
-// Check API key format
-if (!apiKey.StartsWith("sk_live_") && !apiKey.StartsWith("sk_test_"))
-{
-    throw new InvalidOperationException("Invalid API key format");
-}
-```
-
-#### 2. Customer Not Found
-
-```
-Result: RecipientsFound = false
-```
-
-**Solution**: Customer doesn't have Cheqi app. Use email fallback:
-
-```csharp
-if (!result.RecipientsFound && !string.IsNullOrEmpty(customer.RecipientEmail))
-{
-    return await sdk.ReceiptService.SendReceiptViaEmailAsync(
-        customer.RecipientEmail,
-        receipt
-    );
-}
-```
-
-#### 3. Timeout Errors
-
-```
-Error: The operation was canceled
-```
-
-**Solution**: Increase timeout or check network connectivity:
-
-```csharp
-using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-{
-    Environment = CheqiApiEnvironment.Production,
-    ApiKey = "your-api-key",
-    TimeoutSeconds = 120
-});
-```
-
-#### 4. Validation Errors
-
-```
-Error: Total amount must be positive
-```
-
-**Solution**: Validate data before sending:
-
-```csharp
-// Ensure amounts are positive
-receipt.TotalAmount = Math.Abs(receipt.TotalAmount);
-
-// Ensure product quantities are valid
-foreach (var product in receipt.Products)
-{
-    if (product.Quantity <= 0)
-        product.Quantity = 1;
-}
-```
-
-#### 5. Encryption Errors
-
-```
-Error: Failed to encrypt receipt
-```
-
-**Solution**: Ensure recipient has valid public key:
-
-```csharp
-var matchResponse = await sdk.MatchingService.MatchCustomerAsync(customer);
-
-if (matchResponse.Recipients.Any(r => string.IsNullOrEmpty(r.PublicKey)))
-{
-    _logger.LogWarning("Some recipients missing public keys");
-}
-```
-
-#### 6. Hash Mismatch Errors
-
-```
-Error: Hash verification failed
-```
-
-**Solution**: This indicates JSON canonicalization differences. The SDK has been updated to prevent this:
-
-- Ensure you're using the latest SDK version
-- Backend must be configured with `default-property-inclusion: non_null`
-- Decimal values use invariant culture formatting
-- JSON is compact (no whitespace)
-
-If issues persist, check that:
-
-```csharp
-using var sdk = CheqiSdk.Create(new CheqiSdkOptions
-{
-    Environment = CheqiApiEnvironment.Production,
-    ApiKey = "your-api-key"
-});
-
-var verification = sdk.VerificationService;
-var jsonHash = verification.CalculateCheqiReceiptHash(receiptJson);
-var xmlHash = verification.CalculateUblXmlHash(ublXml);
-```
-
-### Debug Mode
-
-Enable detailed logging for troubleshooting:
-
-```csharp
-var loggerFactory = LoggerFactory.Create(builder =>
-{
-    builder
-        .AddConsole()
-        .SetMinimumLevel(LogLevel.Debug) // Enable debug logs
-        .AddFilter("Cheqi.Sdk", LogLevel.Trace); // Trace SDK internals
-});
-```
-
-### Network Diagnostics
-
-Test connectivity to Cheqi API:
-
-```csharp
-public async Task<bool> TestConnectivity()
-{
-    try
-    {
-        using var client = new HttpClient();
-        var response = await client.GetAsync("https://api.cheqi.io/health");
-        return response.IsSuccessStatusCode;
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Connectivity test failed");
-        return false;
-    }
-}
-```
-
-## Performance Optimization
-
-### Connection Pooling
-
-The SDK automatically uses connection pooling via `HttpClient`. Reuse the SDK instance:
-
-```csharp
-// ✅ Singleton - connections are pooled
-private static readonly CheqiSdk _sdk = CreateSdk();
-
-// ❌ Multiple instances - connections not pooled
-public async Task Process()
-{
-    var sdk = CreateSdk(); // Don't create new instances
-}
-```
-
-### Parallel Processing
-
-Process multiple receipts in parallel:
-
-```csharp
-var receipts = GetBatchReceipts();
-
-var options = new ParallelOptions
-{
-    MaxDegreeOfParallelism = 10 // Limit concurrent requests
-};
-
-await Parallel.ForEachAsync(receipts, options, async (receipt, ct) =>
-{
-    try
-    {
-        await sdk.ReceiptService.ProcessCompleteReceiptAsync(
-            receipt.Customer,
-            receipt.Data,
-            ct
-        );
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Failed to process receipt {Id}", receipt.Id);
-    }
-});
-```
-
-### Caching
-
-Cache customer matching results:
-
-```csharp
-private readonly MemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
-
-public async Task<RecipientResolutionResponse> GetOrMatchCustomer(
-    IdentificationDetails customer)
-{
-    var cacheKey = $"customer_{customer.GetHashCode()}";
-    
-    if (_cache.TryGetValue(cacheKey, out RecipientResolutionResponse cached))
-    {
-        return cached;
-    }
-    
-    var result = await sdk.MatchingService.MatchCustomerAsync(customer);
-    
-    _cache.Set(cacheKey, result, TimeSpan.FromMinutes(15));
-    
-    return result;
-}
-```
-
-## Support
-
-- **Documentation**: [https://docs.cheqi.io](https://docs.cheqi.io)
-- **API Reference**: [https://docs.cheqi.io/api-reference/](https://api.cheqi.io/docs)
-- **Email**: support@cheqi.io
-- **GitHub Issues**: [https://github.com/cheqi/cheqi-sdk-dotnet/issues](https://github.com/cheqi/cheqi-sdk-dotnet/issues)
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
+MIT licensed. Support: support@cheqi.io.

@@ -30,12 +30,12 @@ public static class ReceiptTransformationService
     /// </summary>
     /// <param name="jsonReceipt">JSON string representation of a PurchaseReceipt</param>
     /// <returns>UBL-compliant XML string</returns>
-    /// <exception cref="CheqiSDKException">if JSON parsing or XML marshalling fails</exception>
+    /// <exception cref="CheqiSdkException">if JSON parsing or XML marshalling fails</exception>
     public static string TransformJsonToXml(string jsonReceipt)
     {
         if (string.IsNullOrWhiteSpace(jsonReceipt))
         {
-            throw new CheqiSDKException("JSON receipt string cannot be null or empty");
+            throw new CheqiSdkException("JSON receipt string cannot be null or empty");
         }
 
         try
@@ -43,17 +43,17 @@ public static class ReceiptTransformationService
             var receipt = JsonSerializer.Deserialize<PurchaseReceipt>(jsonReceipt, JsonOptions);
             if (receipt == null)
             {
-                throw new CheqiSDKException("Failed to deserialize JSON to PurchaseReceipt");
+                throw new CheqiSdkException("Failed to deserialize JSON to PurchaseReceipt");
             }
             return TransformReceiptToXml(receipt);
         }
-        catch (CheqiSDKException)
+        catch (CheqiSdkException)
         {
             throw;
         }
         catch (Exception e)
         {
-            throw new CheqiSDKException("Failed to transform JSON to XML: " + e.Message, e);
+            throw new CheqiSdkException("Failed to transform JSON to XML: " + e.Message, e);
         }
     }
 
@@ -62,12 +62,12 @@ public static class ReceiptTransformationService
     /// </summary>
     /// <param name="receipt">PurchaseReceipt object to transform</param>
     /// <returns>UBL-compliant XML string</returns>
-    /// <exception cref="CheqiSDKException">if XML marshalling fails</exception>
+    /// <exception cref="CheqiSdkException">if XML marshalling fails</exception>
     public static string TransformReceiptToXml(PurchaseReceipt receipt)
     {
         if (receipt == null)
         {
-            throw new CheqiSDKException("PurchaseReceipt cannot be null");
+            throw new CheqiSdkException("PurchaseReceipt cannot be null");
         }
 
         try
@@ -87,7 +87,7 @@ public static class ReceiptTransformationService
         }
         catch (Exception e)
         {
-            throw new CheqiSDKException("Failed to marshal PurchaseReceipt to XML: " + e.Message, e);
+            throw new CheqiSdkException("Failed to marshal PurchaseReceipt to XML: " + e.Message, e);
         }
     }
 
@@ -96,12 +96,12 @@ public static class ReceiptTransformationService
     /// </summary>
     /// <param name="jsonReceipt">JSON string representation of a PurchaseReceipt</param>
     /// <returns>PurchaseReceipt object</returns>
-    /// <exception cref="CheqiSDKException">if JSON parsing fails</exception>
+    /// <exception cref="CheqiSdkException">if JSON parsing fails</exception>
     public static PurchaseReceipt ParseJsonToReceipt(string jsonReceipt)
     {
         if (string.IsNullOrWhiteSpace(jsonReceipt))
         {
-            throw new CheqiSDKException("JSON receipt string cannot be null or empty");
+            throw new CheqiSdkException("JSON receipt string cannot be null or empty");
         }
 
         try
@@ -109,17 +109,17 @@ public static class ReceiptTransformationService
             var receipt = JsonSerializer.Deserialize<PurchaseReceipt>(jsonReceipt, JsonOptions);
             if (receipt == null)
             {
-                throw new CheqiSDKException("Failed to deserialize JSON to PurchaseReceipt");
+                throw new CheqiSdkException("Failed to deserialize JSON to PurchaseReceipt");
             }
             return receipt;
         }
-        catch (CheqiSDKException)
+        catch (CheqiSdkException)
         {
             throw;
         }
         catch (Exception e)
         {
-            throw new CheqiSDKException("Failed to parse JSON to PurchaseReceipt: " + e.Message, e);
+            throw new CheqiSdkException("Failed to parse JSON to PurchaseReceipt: " + e.Message, e);
         }
     }
 
@@ -128,12 +128,12 @@ public static class ReceiptTransformationService
     /// </summary>
     /// <param name="xmlReceipt">XML string representation of a PurchaseReceipt</param>
     /// <returns>JSON string representation</returns>
-    /// <exception cref="CheqiSDKException">if XML parsing fails</exception>
+    /// <exception cref="CheqiSdkException">if XML parsing fails</exception>
     public static string ParseXmlToJson(string xmlReceipt)
     {
         if (string.IsNullOrWhiteSpace(xmlReceipt))
         {
-            throw new CheqiSDKException("XML receipt string cannot be null or empty");
+            throw new CheqiSdkException("XML receipt string cannot be null or empty");
         }
 
         try
@@ -144,18 +144,18 @@ public static class ReceiptTransformationService
             
             if (receipt == null)
             {
-                throw new CheqiSDKException("Failed to deserialize XML to PurchaseReceipt");
+                throw new CheqiSdkException("Failed to deserialize XML to PurchaseReceipt");
             }
 
             return JsonSerializer.Serialize(receipt, JsonOptions);
         }
-        catch (CheqiSDKException)
+        catch (CheqiSdkException)
         {
             throw;
         }
         catch (Exception e)
         {
-            throw new CheqiSDKException("Failed to parse XML to JSON: " + e.Message, e);
+            throw new CheqiSdkException("Failed to parse XML to JSON: " + e.Message, e);
         }
     }
 
@@ -164,12 +164,12 @@ public static class ReceiptTransformationService
     /// </summary>
     /// <param name="receipt">PurchaseReceipt object to serialize</param>
     /// <returns>JSON string representation</returns>
-    /// <exception cref="CheqiSDKException">if JSON serialization fails</exception>
+    /// <exception cref="CheqiSdkException">if JSON serialization fails</exception>
     public static string SerializeReceiptToJson(PurchaseReceipt receipt)
     {
         if (receipt == null)
         {
-            throw new CheqiSDKException("PurchaseReceipt cannot be null");
+            throw new CheqiSdkException("PurchaseReceipt cannot be null");
         }
 
         try
@@ -178,7 +178,7 @@ public static class ReceiptTransformationService
         }
         catch (Exception e)
         {
-            throw new CheqiSDKException("Failed to serialize PurchaseReceipt to JSON: " + e.Message, e);
+            throw new CheqiSdkException("Failed to serialize PurchaseReceipt to JSON: " + e.Message, e);
         }
     }
 }

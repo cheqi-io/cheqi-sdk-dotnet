@@ -24,7 +24,7 @@ internal sealed class ListLoggerProvider : ILoggerProvider
             _messages = messages;
         }
 
-        public IDisposable BeginScope<TState>(TState state)
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull
         {
             return NullScope.Instance;
         }

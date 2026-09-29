@@ -33,37 +33,37 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="Product" /> class.
         /// </summary>
         /// <param name="name">The product name</param>
-        /// <param name="brandName">The brand name</param>
         /// <param name="identifier">The identifier or article number of the product, this can for example also be a SKU/EAN code.</param>
         /// <param name="quantity">The quantity of this item</param>
         /// <param name="unitCode">unitCode</param>
         /// <param name="unitPrice">The unit price of this item</param>
-        /// <param name="taxes">The taxes applied to this line item</param>
         /// <param name="subtotal">The line subtotal, before tax. Typically: quantity * unitPrice - discounts + charges (net).</param>
         /// <param name="total">The line total, after tax. Typically: subtotal + tax amounts (gross).</param>
+        /// <param name="brandName">The brand name</param>
         /// <param name="description">The description of the product</param>
         /// <param name="baseQuantity">The base quantity of this item</param>
         /// <param name="period">period</param>
         /// <param name="discounts">The discounts applied to this line item</param>
         /// <param name="charges">The extra charges applied to this line item</param>
+        /// <param name="taxes">The taxes applied to this line item</param>
         /// <param name="barcodes">barcodes</param>
         [JsonConstructor]
-        public Product(string name, string brandName, string identifier, double quantity, UnitCode unitCode, decimal unitPrice, List<Tax> taxes, decimal subtotal, decimal total, Option<string?> description = default, Option<double?> baseQuantity = default, Option<Period?> period = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Barcode>?> barcodes = default)
+        public Product(string name, string identifier, double quantity, UnitCode unitCode, decimal unitPrice, decimal subtotal, decimal total, Option<string?> brandName = default, Option<string?> description = default, Option<double?> baseQuantity = default, Option<Period?> period = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Tax>?> taxes = default, Option<List<Barcode>?> barcodes = default)
         {
             Name = name;
-            BrandName = brandName;
             Identifier = identifier;
             Quantity = quantity;
             UnitCode = unitCode;
             UnitPrice = unitPrice;
-            Taxes = taxes;
             Subtotal = subtotal;
             Total = total;
+            BrandNameOption = brandName;
             DescriptionOption = description;
             BaseQuantityOption = baseQuantity;
             PeriodOption = period;
             DiscountsOption = discounts;
             ChargesOption = charges;
+            TaxesOption = taxes;
             BarcodesOption = barcodes;
             OnCreated();
         }
@@ -83,14 +83,6 @@ namespace Cheqi.Sdk.Models.Generated
         /* <example>Product Name</example> */
         [JsonPropertyName("name")]
         public string Name { get; set; }
-
-        /// <summary>
-        /// The brand name
-        /// </summary>
-        /// <value>The brand name</value>
-        /* <example>Brand Name</example> */
-        [JsonPropertyName("brandName")]
-        public string BrandName { get; set; }
 
         /// <summary>
         /// The identifier or article number of the product, this can for example also be a SKU/EAN code.
@@ -117,13 +109,6 @@ namespace Cheqi.Sdk.Models.Generated
         public decimal UnitPrice { get; set; }
 
         /// <summary>
-        /// The taxes applied to this line item
-        /// </summary>
-        /// <value>The taxes applied to this line item</value>
-        [JsonPropertyName("taxes")]
-        public List<Tax> Taxes { get; set; }
-
-        /// <summary>
         /// The line subtotal, before tax. Typically: quantity * unitPrice - discounts + charges (net).
         /// </summary>
         /// <value>The line subtotal, before tax. Typically: quantity * unitPrice - discounts + charges (net).</value>
@@ -138,6 +123,21 @@ namespace Cheqi.Sdk.Models.Generated
         /* <example>10.0</example> */
         [JsonPropertyName("total")]
         public decimal Total { get; set; }
+
+        /// <summary>
+        /// Used to track the state of BrandName
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> BrandNameOption { get; private set; }
+
+        /// <summary>
+        /// The brand name
+        /// </summary>
+        /// <value>The brand name</value>
+        /* <example>Brand Name</example> */
+        [JsonPropertyName("brandName")]
+        public string? BrandName { get { return this.BrandNameOption; } set { this.BrandNameOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Description
@@ -210,6 +210,20 @@ namespace Cheqi.Sdk.Models.Generated
         public List<Charge>? Charges { get { return this.ChargesOption; } set { this.ChargesOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of Taxes
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<List<Tax>?> TaxesOption { get; private set; }
+
+        /// <summary>
+        /// The taxes applied to this line item
+        /// </summary>
+        /// <value>The taxes applied to this line item</value>
+        [JsonPropertyName("taxes")]
+        public List<Tax>? Taxes { get { return this.TaxesOption; } set { this.TaxesOption = new(value); } }
+
+        /// <summary>
         /// Used to track the state of Barcodes
         /// </summary>
         [JsonIgnore]
@@ -231,19 +245,19 @@ namespace Cheqi.Sdk.Models.Generated
             StringBuilder sb = new StringBuilder();
             sb.Append("class Product {\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
-            sb.Append("  BrandName: ").Append(BrandName).Append("\n");
             sb.Append("  Identifier: ").Append(Identifier).Append("\n");
             sb.Append("  Quantity: ").Append(Quantity).Append("\n");
             sb.Append("  UnitCode: ").Append(UnitCode).Append("\n");
             sb.Append("  UnitPrice: ").Append(UnitPrice).Append("\n");
-            sb.Append("  Taxes: ").Append(Taxes).Append("\n");
             sb.Append("  Subtotal: ").Append(Subtotal).Append("\n");
             sb.Append("  Total: ").Append(Total).Append("\n");
+            sb.Append("  BrandName: ").Append(BrandName).Append("\n");
             sb.Append("  Description: ").Append(Description).Append("\n");
             sb.Append("  BaseQuantity: ").Append(BaseQuantity).Append("\n");
             sb.Append("  Period: ").Append(Period).Append("\n");
             sb.Append("  Discounts: ").Append(Discounts).Append("\n");
             sb.Append("  Charges: ").Append(Charges).Append("\n");
+            sb.Append("  Taxes: ").Append(Taxes).Append("\n");
             sb.Append("  Barcodes: ").Append(Barcodes).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -273,19 +287,19 @@ namespace Cheqi.Sdk.Models.Generated
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
             Option<string?> name = default;
-            Option<string?> brandName = default;
             Option<string?> identifier = default;
             Option<double?> quantity = default;
             Option<UnitCode?> unitCode = default;
             Option<decimal?> unitPrice = default;
-            Option<List<Tax>?> taxes = default;
             Option<decimal?> subtotal = default;
             Option<decimal?> total = default;
+            Option<string?> brandName = default;
             Option<string?> description = default;
             Option<double?> baseQuantity = default;
             Option<Period?> period = default;
             Option<List<Discount>?> discounts = default;
             Option<List<Charge>?> charges = default;
+            Option<List<Tax>?> taxes = default;
             Option<List<Barcode>?> barcodes = default;
 
             while (utf8JsonReader.Read())
@@ -306,9 +320,6 @@ namespace Cheqi.Sdk.Models.Generated
                         case "name":
                             name = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
-                        case "brandName":
-                            brandName = new Option<string?>(utf8JsonReader.GetString()!);
-                            break;
                         case "identifier":
                             identifier = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
@@ -323,14 +334,14 @@ namespace Cheqi.Sdk.Models.Generated
                         case "unitPrice":
                             unitPrice = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
-                        case "taxes":
-                            taxes = new Option<List<Tax>?>(JsonSerializer.Deserialize<List<Tax>>(ref utf8JsonReader, jsonSerializerOptions)!);
-                            break;
                         case "subtotal":
                             subtotal = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "total":
                             total = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
+                            break;
+                        case "brandName":
+                            brandName = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "description":
                             description = new Option<string?>(utf8JsonReader.GetString()!);
@@ -347,6 +358,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "charges":
                             charges = new Option<List<Charge>?>(JsonSerializer.Deserialize<List<Charge>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
+                        case "taxes":
+                            taxes = new Option<List<Tax>?>(JsonSerializer.Deserialize<List<Tax>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
                         case "barcodes":
                             barcodes = new Option<List<Barcode>?>(JsonSerializer.Deserialize<List<Barcode>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
@@ -358,9 +372,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (!name.IsSet)
                 throw new ArgumentException("Property is required for class Product.", nameof(name));
-
-            if (!brandName.IsSet)
-                throw new ArgumentException("Property is required for class Product.", nameof(brandName));
 
             if (!identifier.IsSet)
                 throw new ArgumentException("Property is required for class Product.", nameof(identifier));
@@ -374,9 +385,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (!unitPrice.IsSet)
                 throw new ArgumentException("Property is required for class Product.", nameof(unitPrice));
 
-            if (!taxes.IsSet)
-                throw new ArgumentException("Property is required for class Product.", nameof(taxes));
-
             if (!subtotal.IsSet)
                 throw new ArgumentException("Property is required for class Product.", nameof(subtotal));
 
@@ -385,9 +393,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (name.IsSet && name.Value == null)
                 throw new ArgumentNullException(nameof(name), "Property is not nullable for class Product.");
-
-            if (brandName.IsSet && brandName.Value == null)
-                throw new ArgumentNullException(nameof(brandName), "Property is not nullable for class Product.");
 
             if (identifier.IsSet && identifier.Value == null)
                 throw new ArgumentNullException(nameof(identifier), "Property is not nullable for class Product.");
@@ -401,14 +406,14 @@ namespace Cheqi.Sdk.Models.Generated
             if (unitPrice.IsSet && unitPrice.Value == null)
                 throw new ArgumentNullException(nameof(unitPrice), "Property is not nullable for class Product.");
 
-            if (taxes.IsSet && taxes.Value == null)
-                throw new ArgumentNullException(nameof(taxes), "Property is not nullable for class Product.");
-
             if (subtotal.IsSet && subtotal.Value == null)
                 throw new ArgumentNullException(nameof(subtotal), "Property is not nullable for class Product.");
 
             if (total.IsSet && total.Value == null)
                 throw new ArgumentNullException(nameof(total), "Property is not nullable for class Product.");
+
+            if (brandName.IsSet && brandName.Value == null)
+                throw new ArgumentNullException(nameof(brandName), "Property is not nullable for class Product.");
 
             if (description.IsSet && description.Value == null)
                 throw new ArgumentNullException(nameof(description), "Property is not nullable for class Product.");
@@ -425,10 +430,13 @@ namespace Cheqi.Sdk.Models.Generated
             if (charges.IsSet && charges.Value == null)
                 throw new ArgumentNullException(nameof(charges), "Property is not nullable for class Product.");
 
+            if (taxes.IsSet && taxes.Value == null)
+                throw new ArgumentNullException(nameof(taxes), "Property is not nullable for class Product.");
+
             if (barcodes.IsSet && barcodes.Value == null)
                 throw new ArgumentNullException(nameof(barcodes), "Property is not nullable for class Product.");
 
-            return new Product(name.Value!, brandName.Value!, identifier.Value!, quantity.Value!.Value!, unitCode.Value!.Value!, unitPrice.Value!.Value!, taxes.Value!, subtotal.Value!.Value!, total.Value!.Value!, description, baseQuantity, period, discounts, charges, barcodes);
+            return new Product(name.Value!, identifier.Value!, quantity.Value!.Value!, unitCode.Value!.Value!, unitPrice.Value!.Value!, subtotal.Value!.Value!, total.Value!.Value!, brandName, description, baseQuantity, period, discounts, charges, taxes, barcodes);
         }
 
         /// <summary>
@@ -458,14 +466,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (product.Name == null)
                 throw new ArgumentNullException(nameof(product.Name), "Property is required for class Product.");
 
-            if (product.BrandName == null)
-                throw new ArgumentNullException(nameof(product.BrandName), "Property is required for class Product.");
-
             if (product.Identifier == null)
                 throw new ArgumentNullException(nameof(product.Identifier), "Property is required for class Product.");
 
-            if (product.Taxes == null)
-                throw new ArgumentNullException(nameof(product.Taxes), "Property is required for class Product.");
+            if (product.BrandNameOption.IsSet && product.BrandName == null)
+                throw new ArgumentNullException(nameof(product.BrandName), "Property is required for class Product.");
 
             if (product.DescriptionOption.IsSet && product.Description == null)
                 throw new ArgumentNullException(nameof(product.Description), "Property is required for class Product.");
@@ -479,33 +484,50 @@ namespace Cheqi.Sdk.Models.Generated
             if (product.ChargesOption.IsSet && product.Charges == null)
                 throw new ArgumentNullException(nameof(product.Charges), "Property is required for class Product.");
 
+            if (product.TaxesOption.IsSet && product.Taxes == null)
+                throw new ArgumentNullException(nameof(product.Taxes), "Property is required for class Product.");
+
             if (product.BarcodesOption.IsSet && product.Barcodes == null)
                 throw new ArgumentNullException(nameof(product.Barcodes), "Property is required for class Product.");
 
             writer.WriteString("name", product.Name);
 
-            writer.WriteString("brandName", product.BrandName);
-
             writer.WriteString("identifier", product.Identifier);
 
-            writer.WriteNumber("quantity", product.Quantity);
+            {
+                writer.WritePropertyName("quantity");
+                JsonSerializer.Serialize(writer, product.Quantity, jsonSerializerOptions);
+            }
 
             var unitCodeRawValue = UnitCodeValueConverter.ToJsonValue(product.UnitCode);
             writer.WriteString("unitCode", unitCodeRawValue);
 
-            writer.WriteNumber("unitPrice", product.UnitPrice);
+            {
+                writer.WritePropertyName("unitPrice");
+                JsonSerializer.Serialize(writer, product.UnitPrice, jsonSerializerOptions);
+            }
 
-            writer.WritePropertyName("taxes");
-            JsonSerializer.Serialize(writer, product.Taxes, jsonSerializerOptions);
-            writer.WriteNumber("subtotal", product.Subtotal);
+            {
+                writer.WritePropertyName("subtotal");
+                JsonSerializer.Serialize(writer, product.Subtotal, jsonSerializerOptions);
+            }
 
-            writer.WriteNumber("total", product.Total);
+            {
+                writer.WritePropertyName("total");
+                JsonSerializer.Serialize(writer, product.Total, jsonSerializerOptions);
+            }
+
+            if (product.BrandNameOption.IsSet)
+                writer.WriteString("brandName", product.BrandName);
 
             if (product.DescriptionOption.IsSet)
                 writer.WriteString("description", product.Description);
 
             if (product.BaseQuantityOption.IsSet)
-                writer.WriteNumber("baseQuantity", product.BaseQuantityOption.Value!.Value);
+                {
+                    writer.WritePropertyName("baseQuantity");
+                    JsonSerializer.Serialize(writer, product.BaseQuantityOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (product.PeriodOption.IsSet)
             {
@@ -521,6 +543,11 @@ namespace Cheqi.Sdk.Models.Generated
             {
                 writer.WritePropertyName("charges");
                 JsonSerializer.Serialize(writer, product.Charges, jsonSerializerOptions);
+            }
+            if (product.TaxesOption.IsSet)
+            {
+                writer.WritePropertyName("taxes");
+                JsonSerializer.Serialize(writer, product.Taxes, jsonSerializerOptions);
             }
             if (product.BarcodesOption.IsSet)
             {

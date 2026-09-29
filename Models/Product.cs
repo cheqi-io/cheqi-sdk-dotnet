@@ -24,7 +24,7 @@ namespace Cheqi.Sdk.Models;
 /// </summary>
 public sealed class Product : GeneratedModels.Product
 {
-    public Product() : base("", "", "", 0, default, 0, new List<GeneratedModels.Tax>(), 0, 0) { }
+    public Product() : base("", "", 0, default, 0, 0, 0) { }
 
     // ===== BUILDER =====
 

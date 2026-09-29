@@ -198,10 +198,16 @@ namespace Cheqi.Sdk.Models.Generated
             if (charge.LabelOption.IsSet && charge.Label == null)
                 throw new ArgumentNullException(nameof(charge.Label), "Property is required for class Charge.");
 
-            writer.WriteNumber("amount", charge.Amount);
+            {
+                writer.WritePropertyName("amount");
+                JsonSerializer.Serialize(writer, charge.Amount, jsonSerializerOptions);
+            }
 
             if (charge.PercentageOption.IsSet)
-                writer.WriteNumber("percentage", charge.PercentageOption.Value!.Value);
+                {
+                    writer.WritePropertyName("percentage");
+                    JsonSerializer.Serialize(writer, charge.PercentageOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (charge.LabelOption.IsSet)
                 writer.WriteString("label", charge.Label);

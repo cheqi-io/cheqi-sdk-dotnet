@@ -2,6 +2,8 @@ using Cheqi.Sdk.Config;
 using Cheqi.Sdk.Tests.TestSupport;
 using Microsoft.Extensions.Logging;
 using Xunit;
+using Microsoft.Extensions.DependencyInjection;
+using Cheqi.Sdk.Extensions;
 
 namespace Cheqi.Sdk.Tests;
 
@@ -56,5 +58,35 @@ public sealed class CheqiSdkOptionsTests
 
         var combinedLogs = string.Join("\n", loggerProvider.Messages);
         Assert.DoesNotContain("API key does not match expected format", combinedLogs);
+    }
+    [Fact]
+    public void DependencyInjectionCallbackCanConfigureOptionsAndCreatesSingleton()
+    {
+        var services = new ServiceCollection();
+        services.AddCheqiSdk(options =>
+        {
+            options.Environment = CheqiApiEnvironment.Test;
+            options.ApiKey = "configured";
+        });
+        using var provider = services.BuildServiceProvider();
+        var sdk = provider.GetRequiredService<CheqiSdk>();
+        Assert.Same(sdk, provider.GetRequiredService<CheqiSdk>());
+        Assert.Equal("configured", sdk.Config.ApiKey);
+        Assert.Equal("https://test.receipt.cheqi.io", sdk.Config.ReceiptDownloadBaseUrl);
+    }
+
+    [Theory]
+    [InlineData(CheqiApiEnvironment.Production, "https://receipt.cheqi.io")]
+    [InlineData(CheqiApiEnvironment.Sandbox, "https://sandbox.receipt.cheqi.io")]
+    [InlineData(CheqiApiEnvironment.Test, "https://test.receipt.cheqi.io")]
+    public void StandardApiEnvironmentsSelectReceiptFrontend(CheqiApiEnvironment environment, string expected)
+        => Assert.Equal(expected, CheqiSdkConfig.FromOptions(new CheqiSdkOptions { Environment = environment }).ReceiptDownloadBaseUrl);
+
+    [Fact]
+    public void CustomApiDoesNotGuessDownloadOrigin()
+    {
+        Assert.Null(CheqiSdkConfig.FromOptions(new CheqiSdkOptions { CustomApiEndpoint = "http://localhost:8080" }).ReceiptDownloadBaseUrl);
+        Assert.Equal("http://localhost:3000", CheqiSdkConfig.FromOptions(new CheqiSdkOptions
+        { CustomApiEndpoint = "http://localhost:8080", ReceiptDownloadBaseUrl = "http://localhost:3000" }).ReceiptDownloadBaseUrl);
     }
 }

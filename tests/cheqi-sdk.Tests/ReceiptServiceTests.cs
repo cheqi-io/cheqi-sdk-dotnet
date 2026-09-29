@@ -1,147 +1,236 @@
-using Cheqi.Sdk.Encryption;
-using Cheqi.Sdk.Exceptions;
-using Cheqi.Sdk.Matching;
-using Cheqi.Sdk.Models;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text.Json;
+using Cheqi.Sdk.Http.Exceptions;
+using Cheqi.Sdk.Models.Generated;
 using Cheqi.Sdk.Receipt;
-using MatchedRecipient = Cheqi.Sdk.Models.Generated.MatchedRecipient;
-using EncryptedReceiptRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptRequest;
+using Cheqi.Sdk.Serialization;
 using Cheqi.Sdk.Tests.TestSupport;
-using Cheqi.Sdk.Utils;
 using Xunit;
-using EncryptedReceiptsRequest = Cheqi.Sdk.Models.Generated.EncryptedReceiptsRequest;
-using RecipientResolutionResponse = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse;
-using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
-using ReceiptTemplateResponse = Cheqi.Sdk.Models.Generated.ReceiptTemplateResponse;
-using CheqiReceipt = Cheqi.Sdk.Models.Generated.CheqiReceipt;
 
 namespace Cheqi.Sdk.Tests;
 
 public sealed class ReceiptServiceTests
 {
     [Fact]
-    public async Task ProcessCompleteReceiptAsync_WhenCustomerNotFoundAndNoEmail_SkipsTemplateGeneration()
+    public async Task DigitalEncryptsIdenticalDefinitivePayloadIndependentlyForEveryDevice()
     {
-        var apiClient = new FakeCheqiApiClient();
-        var templateCallCount = 0;
-        apiClient.GenerateReceiptTemplateAsyncHandler = (_, _, _) =>
-        {
-            templateCallCount++;
-            return Task.FromResult(new ReceiptTemplateResponse());
-        };
+        using var rsa = RSA.Create(2048);
+        using var harness = new SdkHarness();
+        harness.Enqueue(200, SdkHarness.Match(rsa: rsa));
+        harness.Enqueue(202, SdkHarness.Submitted);
+        var payload = SdkHarness.Payload();
+        var store = Guid.NewGuid();
+        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), payload, store, "explicit-token");
+        Assert.True(result.IsAccepted);
+        Assert.Equal(ReceiptIssueState.DigitalSubmitted, result.State);
+        Assert.Equal(new[] { "/recipient/resolve", "/receipt/encrypted" }, harness.Requests.Select(r => r.Path));
+        Assert.All(harness.Requests, request => Assert.Equal("Bearer explicit-token", request.Authorization));
+        var envelope = SdkHarness.Read<EncryptedReceiptEnvelope>(harness.Requests[1].Body);
+        Assert.Equal(store, envelope.StoreId);
+        Assert.Equal(2, envelope.DeviceDeliveries.Count);
+        var expected = JsonSerializer.Serialize(payload, CheqiJson.CreateOptions());
+        Assert.All(envelope.DeviceDeliveries, delivery => Assert.Equal(expected, SdkHarness.Decrypt(delivery, rsa)));
+        Assert.NotEqual(envelope.DeviceDeliveries[0].EncryptedContent, envelope.DeviceDeliveries[1].EncryptedContent);
+        Assert.DoesNotContain("POS-001", harness.Requests[1].Body);
+        Assert.DoesNotContain("private-locator", harness.Requests[1].Body);
+    }
 
-        var service = CreateService(apiClient);
-        var result = await service.ProcessCompleteReceiptAsync(TestData.PairingCodeIdentification(), TestData.CreateReceiptTemplateRequest(), "token");
-
-        Assert.True(result.IsCustomerNotFound());
-        Assert.Equal(0, templateCallCount);
+    [Theory]
+    [InlineData("DOWNLOAD_FALLBACK", ReceiptIssueState.DownloadFallback)]
+    [InlineData("EMAIL_FALLBACK", ReceiptIssueState.EmailFallback)]
+    public async Task ExplicitFallbackReturnsIntegrationAction(string route, ReceiptIssueState expected)
+    {
+        using var harness = new SdkHarness();
+        harness.Enqueue(200, SdkHarness.Match(route));
+        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(new IdentificationDetails { PairingCode = "pair" }, SdkHarness.Payload());
+        Assert.Equal(expected, result.State);
+        Assert.False(result.IsAccepted);
+        Assert.Equal(route == "DOWNLOAD_FALLBACK", result.DownloadEnvelopeRequired);
+        Assert.Equal(route == "EMAIL_FALLBACK", result.EmailReceiptRequired);
+        Assert.Single(harness.Requests);
     }
 
     [Fact]
-    public async Task ProcessCompleteReceiptAsync_WhenCustomerNotFoundButEmailPresent_SendsViaEmail()
+    public async Task DownloadFallbackPreservesPaymentContextAndUploadsOnlyCiphertext()
     {
-        var apiClient = new FakeCheqiApiClient();
-        string? capturedEmail = null;
-        CheqiReceipt? capturedReceipt = null;
-        apiClient.GenerateReceiptTemplateAsyncHandler = (_, _, _) =>
-            Task.FromResult(new ReceiptTemplateResponse { Cheqi = new CheqiReceipt { DocumentNumber = "INV-001" } });
-        apiClient.SendReceiptViaEmailAsyncHandler = (email, receipt, _, _) =>
-        {
-            capturedEmail = email;
-            capturedReceipt = receipt;
-            return Task.CompletedTask;
-        };
+        using var harness = new SdkHarness();
+        harness.Enqueue(200, SdkHarness.Match("DOWNLOAD_FALLBACK"));
+        harness.Enqueue(201, SdkHarness.DownloadAccepted);
+        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload());
+        Assert.True(result.IsAccepted);
+        Assert.Equal("/receipt/download", harness.Requests[1].Path);
+        var request = SdkHarness.Read<ClientReceiptDownloadRequest>(harness.Requests[1].Body);
+        var link = harness.Sdk.DownloadService.ParseDownloadUrl(result.DownloadUrl!);
+        Assert.DoesNotContain(link.ContentKey, harness.Requests[1].Body);
+        Assert.DoesNotContain("private-locator", harness.Requests[1].Body);
+        var envelope = harness.Sdk.DownloadService.DecryptDownloadEnvelope(request.Ciphertext, link.ContentKey);
+        using var document = JsonDocument.Parse(envelope.Documents["CHEQI"].Content);
+        Assert.Equal("private-locator", document.RootElement.GetProperty("identificationDetails").GetProperty("pairingCode").GetString());
+        Assert.Equal("CARD_PAYMENT", document.RootElement.GetProperty("identificationDetails").GetProperty("paymentType").GetString());
+    }
 
-        var service = CreateService(apiClient);
-        var result = await service.ProcessCompleteReceiptAsync(
-            TestData.EmailIdentification("sdk@example.com"),
-            TestData.CreateReceiptTemplateRequest(),
-            "token");
-
-        Assert.True(result.IsSuccess());
-        Assert.Equal(Cheqi.Sdk.Receipt.DeliveryStatus.DELIVERED_EMAIL, result.DeliveryStatus);
-        Assert.Equal("sdk@example.com", capturedEmail);
-        Assert.NotNull(capturedReceipt);
-        Assert.Equal("INV-001", capturedReceipt!.DocumentNumber);
+    [Theory]
+    [InlineData(503, "{}", null)]
+    [InlineData(202, "{\"state\":\"IN_PROGRESS\",\"retryAfterSeconds\":2}", 2)]
+    [InlineData(202, "invalid-json", null)]
+    [InlineData(202, "{}", null)]
+    [InlineData(202, "[]", null)]
+    [InlineData(202, "null", null)]
+    public async Task AmbiguousDigitalSubmissionPreparesFallbackWithoutRetryOrRematch(int status, string body, int? retryAfter)
+    {
+        using var rsa = RSA.Create(2048);
+        using var harness = new SdkHarness(retries: true);
+        harness.Enqueue(200, SdkHarness.Match(rsa: rsa));
+        harness.Enqueue(status, body);
+        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload());
+        Assert.Equal(ReceiptIssueState.DigitalPending, result.State);
+        Assert.False(result.IsAccepted);
+        Assert.True(result.Retryable);
+        Assert.Equal("match-original", result.MatchId);
+        Assert.Equal(retryAfter, result.RetryAfterSeconds);
+        Assert.Equal(2, harness.Requests.Count);
+        Assert.NotNull(result.PreparedDownload);
+        var link = harness.Sdk.DownloadService.ParseDownloadUrl(result.DownloadUrl!);
+        var envelope = harness.Sdk.DownloadService.DecryptDownloadEnvelope(result.PreparedDownload!.Ciphertext, link.ContentKey);
+        Assert.DoesNotContain("private-locator", envelope.Documents["CHEQI"].Content);
+        Assert.DoesNotContain("identificationDetails", envelope.Documents["CHEQI"].Content);
     }
 
     [Fact]
-    public async Task ProcessCompleteReceiptAsync_WhenCustomerFound_SubmitsPerRecipientEncryptedReceipts()
+    public async Task MatchingNetworkFailureCreatesPersistableFallbackAndCanUploadLater()
     {
-        var apiClient = new FakeCheqiApiClient();
-        EncryptedReceiptsRequest? capturedRequest = null;
-        string? capturedToken = null;
-        ReceiptTemplateGenerationRequestSeen? seen = null;
-
-        var matchResponse = new RecipientResolutionResponse();
-        matchResponse.RouteFound = true;
-        matchResponse.MatchId = "match-123";
-        matchResponse.BuyerCountryCode = "NL";
-        matchResponse.Recipients = new List<MatchedRecipient> { TestData.CreateRecipient() };
-
-        apiClient.MatchCustomerAsyncHandler = (_, _, _) => Task.FromResult(matchResponse);
-        apiClient.GenerateReceiptTemplateAsyncHandler = (genReq, _, _) =>
-        {
-            seen = new ReceiptTemplateGenerationRequestSeen(genReq.BuyerCountryCode, genReq.TaxesApplied, genReq.Formats.Count);
-            return Task.FromResult(new ReceiptTemplateResponse { Cheqi = new CheqiReceipt { DocumentNumber = "INV-001" } });
-        };
-        apiClient.SubmitEncryptedReceiptsAsyncHandler = (request, token, _) =>
-        {
-            capturedRequest = request;
-            capturedToken = token;
-            var resp = new ReceiptCreatedResponse();
-            resp.CheqiReceiptId = "receipt-123";
-            resp.CreatedAt = DateTimeOffset.Parse("2026-03-15T10:00:00Z");
-            resp.TemplateHash = request.TemplateHash;
-            return Task.FromResult(resp);
-        };
-
-        var service = CreateService(apiClient);
-        var result = await service.ProcessCompleteReceiptAsync(TestData.PairingCodeIdentification(), TestData.CreateReceiptTemplateRequest(), "access-token");
-
-        Assert.True(result.IsSuccess());
-        Assert.Equal(Cheqi.Sdk.Receipt.DeliveryStatus.DELIVERED_DIGITAL, result.DeliveryStatus);
-        Assert.NotNull(capturedRequest);
-        Assert.Equal("match-123", capturedRequest!.MatchId);
-        Assert.False(string.IsNullOrEmpty(capturedRequest.TemplateHash));
-        Assert.Single(capturedRequest.EncryptedReceiptRequests);
-        Assert.Equal("access-token", capturedToken);
-
-        // VAT context enrichment: buyerCountryCode came from the match response, taxesApplied inferred true.
-        Assert.NotNull(seen);
-        Assert.Equal("NL", seen!.BuyerCountryCode);
-        Assert.True(seen.TaxesApplied);
-        Assert.Equal(1, seen.FormatCount);
+        using var harness = new SdkHarness();
+        harness.Fail(new HttpRequestException("offline"));
+        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload());
+        Assert.Equal(ReceiptIssueState.DownloadFallback, result.State);
+        var serialized = JsonSerializer.Serialize(result.PreparedDownload, CheqiJson.CreateOptions());
+        var restored = SdkHarness.Read<PreparedReceiptDownload>(serialized);
+        Assert.Equal(result.DownloadUrl, restored.DownloadUrl);
+        var originalCiphertext = restored.Ciphertext;
+        restored.UploadRequest.Ciphertext = "changed";
+        Assert.Equal(originalCiphertext, restored.Ciphertext);
+        harness.Enqueue(201, SdkHarness.DownloadAccepted);
+        await harness.Sdk.ReceiptService.UploadPreparedDownloadAsync(restored);
+        Assert.Equal(originalCiphertext, SdkHarness.Read<ClientReceiptDownloadRequest>(harness.Requests[1].Body).Ciphertext);
+        Assert.DoesNotContain("private-locator", serialized);
+        Assert.DoesNotContain(restored.DownloadUrl, restored.ToString());
     }
 
-    private sealed record ReceiptTemplateGenerationRequestSeen(string BuyerCountryCode, bool TaxesApplied, int FormatCount);
+    [Theory]
+    [InlineData("IN_PROGRESS", ReceiptIssueState.DigitalPending)]
+    [InlineData("EXPIRED", ReceiptIssueState.DigitalExpired)]
+    [InlineData("SUBMITTED", ReceiptIssueState.DigitalSubmitted)]
+    public async Task ResumeUsesOriginalMatchAndNeverRematches(string state, ReceiptIssueState expected)
+    {
+        using var harness = new SdkHarness();
+        harness.Enqueue(200, $"{{\"matchId\":\"match-original\",\"state\":\"{state}\",\"retryAfterSeconds\":2,\"submission\":{SdkHarness.Submitted}}}");
+        var result = await harness.Sdk.ReceiptService.ResumeReceiptAsync("match-original", SdkHarness.Payload());
+        Assert.Equal(expected, result.State);
+        Assert.Null(result.PreparedDownload);
+        Assert.Equal("/recipient/matches/match-original", harness.Requests.Single().Path);
+        Assert.Equal(state == "SUBMITTED", result.IsAccepted);
+    }
 
     [Fact]
-    public async Task SendEncryptedReceiptsAsync_WhenCustomerWasNotFound_ThrowsValidationError()
+    public async Task ResumeMatchedEncryptsForOriginalDeviceSnapshot()
     {
-        var service = CreateService(new FakeCheqiApiClient());
-
-        var dto = new EncryptedReceiptRequest(
-            recipientId: "recipient-1",
-            encryptedReceipt: "cipher",
-            encryptedSymmetricKey: "wrapped",
-            publicKey: "key");
-
-        var notFoundResponse = new RecipientResolutionResponse();
-        notFoundResponse.RouteFound = false;
-
-        var exception = await Assert.ThrowsAsync<CheqiSDKException>(() => service.SendEncryptedReceiptsAsync(
-            new HashSet<EncryptedReceiptRequest> { dto },
-            "template-hash",
-            notFoundResponse,
-            "token"));
-
-        Assert.Equal(CheqiSDKException.ErrorCodes.CUSTOMER_NOT_FOUND, exception.ErrorCode);
+        using var rsa = RSA.Create(2048);
+        using var harness = new SdkHarness();
+        using var match = JsonDocument.Parse(SdkHarness.Match(rsa: rsa));
+        harness.Enqueue(200, $"{{\"matchId\":\"match-original\",\"state\":\"MATCHED\",\"route\":\"DIGITAL\",\"recipients\":{match.RootElement.GetProperty("recipients").GetRawText()}}}");
+        harness.Enqueue(202, SdkHarness.Submitted);
+        var result = await harness.Sdk.ReceiptService.ResumeReceiptAsync("match-original", SdkHarness.Payload());
+        Assert.True(result.IsAccepted);
+        Assert.Equal(new[] { "/recipient/matches/match-original", "/receipt/encrypted" }, harness.Requests.Select(r => r.Path));
     }
 
-    private static ReceiptService CreateService(FakeCheqiApiClient apiClient)
+    [Fact]
+    public async Task ExpiredSubmissionDoesNotPrepareNewFallback()
     {
-        var encryptionService = new EncryptionService();
-        var matchingService = new MatchingService(apiClient);
-        return new ReceiptService(apiClient, encryptionService, matchingService);
+        using var rsa = RSA.Create(2048);
+        using var harness = new SdkHarness();
+        harness.Enqueue(200, SdkHarness.Match(rsa: rsa));
+        harness.Enqueue(410, "{}");
+        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload());
+        Assert.Equal(ReceiptIssueState.DigitalExpired, result.State);
+        Assert.Null(result.PreparedDownload);
+        Assert.False(result.Retryable);
+    }
+
+    [Fact]
+    public async Task ExplicitDownloadDoesNotMatchAndCanBeDeferredAfterNetworkFailure()
+    {
+        using var harness = new SdkHarness();
+        harness.Fail(new HttpRequestException("offline"));
+        var result = await harness.Sdk.ReceiptService.IssueDownloadReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload());
+        Assert.False(result.IsAccepted);
+        Assert.NotNull(result.PreparedDownload);
+        Assert.Equal("/receipt/download", harness.Requests.Single().Path);
+    }
+
+    [Fact]
+    public async Task CancellationPropagatesWithoutFallback()
+    {
+        using var harness = new SdkHarness();
+        using var cts = new CancellationTokenSource();
+        harness.Enqueue((_, ct) => { cts.Cancel(); return Task.FromCanceled<HttpResponseMessage>(ct); });
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload(), cancellationToken: cts.Token));
+        Assert.Single(harness.Requests);
+    }
+
+    [Theory]
+    [InlineData(400)]
+    [InlineData(401)]
+    [InlineData(403)]
+    public async Task PermanentFailurePreservesApiMetadataAndDoesNotBecomeFallback(int status)
+    {
+        using var harness = new SdkHarness();
+        harness.Enqueue(status, "{\"message\":\"denied\"}");
+        var exception = await Assert.ThrowsAsync<CheqiApiException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload()));
+        Assert.Equal(status, exception.HttpStatusCode);
+        Assert.Equal("correlation-test", exception.CorrelationId);
+        Assert.Single(harness.Requests);
+    }
+    [Fact]
+    public async Task CallerSuppliedEnvelopeCanCompleteDownloadFallback()
+    {
+        using var harness = new SdkHarness();
+        harness.Enqueue(200, SdkHarness.Match("DOWNLOAD_FALLBACK"));
+        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(new IdentificationDetails { PairingCode = "pair" }, SdkHarness.Payload());
+        var final = new ReceiptEnvelope("local-receipt", new() { ["CHEQI"] = new("{}", ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson) }, 1, "local-generator", Guid.NewGuid());
+        harness.Enqueue(201, SdkHarness.DownloadAccepted);
+        var completed = await harness.Sdk.ReceiptService.CompleteDownloadFallbackAsync(result, final, templateHash: "caller-hash");
+        Assert.True(completed.IsAccepted);
+        var request = SdkHarness.Read<ClientReceiptDownloadRequest>(harness.Requests[1].Body);
+        Assert.Equal("caller-hash", request.TemplateHash);
+        var key = harness.Sdk.DownloadService.ParseDownloadUrl(completed.DownloadUrl!).ContentKey;
+        Assert.Equal(final.ReceiptUuid, harness.Sdk.DownloadService.DecryptDownloadEnvelope(request.Ciphertext, key).ReceiptUuid);
+    }
+
+    [Theory]
+    [InlineData(503, ReceiptIssueState.DigitalPending)]
+    [InlineData(410, ReceiptIssueState.DigitalExpired)]
+    public async Task RecoveryHandlesTransientFailureOrExpiryWithoutMakingNewCredentials(int status, ReceiptIssueState expected)
+    {
+        using var harness = new SdkHarness();
+        harness.Enqueue(status, "{}");
+        var result = await harness.Sdk.ReceiptService.ResumeReceiptAsync("match-original", SdkHarness.Payload());
+        Assert.Equal(expected, result.State);
+        Assert.Null(result.PreparedDownload);
+        Assert.Null(result.DownloadUrl);
+        Assert.Single(harness.Requests);
+    }
+
+    [Fact]
+    public async Task InvalidPayloadAndTokenAreRejectedBeforeAnyHttp()
+    {
+        using var harness = new SdkHarness();
+        var payload = SdkHarness.Payload();
+        payload.Products.Clear();
+        await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), payload));
+        await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.ResumeReceiptAsync(" ", SdkHarness.Payload()));
+        await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload(), accessToken: " "));
+        Assert.Empty(harness.Requests);
     }
 }

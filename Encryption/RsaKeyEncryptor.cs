@@ -25,8 +25,9 @@ public class RsaKeyEncryptor
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(aesKey);
             _logger.LogDebug("[RSA] Starting RSA key encryption");
-            _logger.LogDebug("[RSA] AES key length: {Length} bytes", aesKey?.Length ?? 0);
+            _logger.LogDebug("[RSA] AES key length: {Length} bytes", aesKey.Length);
             _logger.LogDebug("[RSA] Public key Base64 length: {Length} characters", publicKeyBase64?.Length ?? 0);
             
             if (string.IsNullOrEmpty(publicKeyBase64))

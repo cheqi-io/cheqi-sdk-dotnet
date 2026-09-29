@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// StoreDTO
+    /// Optional issuing location included by the receipt-template engine.
     /// </summary>
     public partial class StoreDTO
     {
@@ -322,10 +322,10 @@ namespace Cheqi.Sdk.Models.Generated
                             openingHours = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "createdAt":
-                            createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "updatedAt":
-                            updatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            updatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         default:
                             break;
@@ -451,10 +451,16 @@ namespace Cheqi.Sdk.Models.Generated
                 writer.WriteString("openingHours", storeDTO.OpeningHours);
 
             if (storeDTO.CreatedAtOption.IsSet)
-                writer.WriteString("createdAt", storeDTO.CreatedAtOption.Value!.Value.ToString(CreatedAtFormat));
+                {
+                    writer.WritePropertyName("createdAt");
+                    JsonSerializer.Serialize(writer, storeDTO.CreatedAtOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (storeDTO.UpdatedAtOption.IsSet)
-                writer.WriteString("updatedAt", storeDTO.UpdatedAtOption.Value!.Value.ToString(UpdatedAtFormat));
+                {
+                    writer.WritePropertyName("updatedAt");
+                    JsonSerializer.Serialize(writer, storeDTO.UpdatedAtOption.Value!.Value, jsonSerializerOptions);
+                }
         }
     }
 }

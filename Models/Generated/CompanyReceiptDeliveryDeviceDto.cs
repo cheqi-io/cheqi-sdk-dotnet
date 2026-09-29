@@ -273,7 +273,7 @@ namespace Cheqi.Sdk.Models.Generated
                                 platform = new Option<CompanyReceiptDeliveryDeviceDto.PlatformEnum?>(CompanyReceiptDeliveryDeviceDto.PlatformEnumFromStringOrDefault(platformRawValue));
                             break;
                         case "createdAt":
-                            createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "receiptDeliveryEnabled":
                             receiptDeliveryEnabled = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
@@ -335,10 +335,16 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyReceiptDeliveryDeviceDto.DeviceNameOption.IsSet)
                 writer.WriteString("deviceName", companyReceiptDeliveryDeviceDto.DeviceName);
 
-            var platformRawValue = CompanyReceiptDeliveryDeviceDto.PlatformEnumToJsonValue(companyReceiptDeliveryDeviceDto.PlatformOption.Value!.Value);
-            writer.WriteString("platform", platformRawValue);
+            if (companyReceiptDeliveryDeviceDto.PlatformOption.IsSet)
+            {
+    var platformRawValue = CompanyReceiptDeliveryDeviceDto.PlatformEnumToJsonValue(companyReceiptDeliveryDeviceDto.PlatformOption.Value!.Value);
+                writer.WriteString("platform", platformRawValue);
+            }
             if (companyReceiptDeliveryDeviceDto.CreatedAtOption.IsSet)
-                writer.WriteString("createdAt", companyReceiptDeliveryDeviceDto.CreatedAtOption.Value!.Value.ToString(CreatedAtFormat));
+                {
+                    writer.WritePropertyName("createdAt");
+                    JsonSerializer.Serialize(writer, companyReceiptDeliveryDeviceDto.CreatedAtOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (companyReceiptDeliveryDeviceDto.ReceiptDeliveryEnabledOption.IsSet)
                 writer.WriteBoolean("receiptDeliveryEnabled", companyReceiptDeliveryDeviceDto.ReceiptDeliveryEnabledOption.Value!.Value);

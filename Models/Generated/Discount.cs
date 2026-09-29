@@ -198,10 +198,16 @@ namespace Cheqi.Sdk.Models.Generated
             if (discount.LabelOption.IsSet && discount.Label == null)
                 throw new ArgumentNullException(nameof(discount.Label), "Property is required for class Discount.");
 
-            writer.WriteNumber("amount", discount.Amount);
+            {
+                writer.WritePropertyName("amount");
+                JsonSerializer.Serialize(writer, discount.Amount, jsonSerializerOptions);
+            }
 
             if (discount.PercentageOption.IsSet)
-                writer.WriteNumber("percentage", discount.PercentageOption.Value!.Value);
+                {
+                    writer.WritePropertyName("percentage");
+                    JsonSerializer.Serialize(writer, discount.PercentageOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (discount.LabelOption.IsSet)
                 writer.WriteString("label", discount.Label);
