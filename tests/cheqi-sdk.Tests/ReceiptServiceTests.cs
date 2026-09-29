@@ -65,9 +65,12 @@ public sealed class ReceiptServiceTests
         Assert.DoesNotContain(link.ContentKey, harness.Requests[1].Body);
         Assert.DoesNotContain("private-locator", harness.Requests[1].Body);
         var envelope = harness.Sdk.DownloadService.DecryptDownloadEnvelope(request.Ciphertext, link.ContentKey);
-        using var document = JsonDocument.Parse(envelope.Documents["CHEQI"].Content);
-        Assert.Equal("private-locator", document.RootElement.GetProperty("identificationDetails").GetProperty("pairingCode").GetString());
-        Assert.Equal("CARD_PAYMENT", document.RootElement.GetProperty("identificationDetails").GetProperty("paymentType").GetString());
+        Assert.Equal(2, envelope.EnvelopeVersion);
+        using var document = JsonDocument.Parse(envelope.Documents["RECEIPT_PAYLOAD"].Content);
+        Assert.False(document.RootElement.TryGetProperty("identificationDetails", out _));
+        using var identification = JsonDocument.Parse(envelope.Documents["IDENTIFICATION_DETAILS"].Content);
+        Assert.Equal("private-locator", identification.RootElement.GetProperty("pairingCode").GetString());
+        Assert.Equal("CARD_PAYMENT", identification.RootElement.GetProperty("paymentType").GetString());
     }
 
     [Theory]
@@ -93,8 +96,8 @@ public sealed class ReceiptServiceTests
         Assert.NotNull(result.PreparedDownload);
         var link = harness.Sdk.DownloadService.ParseDownloadUrl(result.DownloadUrl!);
         var envelope = harness.Sdk.DownloadService.DecryptDownloadEnvelope(result.PreparedDownload!.Ciphertext, link.ContentKey);
-        Assert.DoesNotContain("private-locator", envelope.Documents["CHEQI"].Content);
-        Assert.DoesNotContain("identificationDetails", envelope.Documents["CHEQI"].Content);
+        Assert.DoesNotContain("private-locator", envelope.Documents["RECEIPT_PAYLOAD"].Content);
+        Assert.DoesNotContain("identificationDetails", envelope.Documents["RECEIPT_PAYLOAD"].Content);
     }
 
     [Fact]

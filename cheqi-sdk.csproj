@@ -9,7 +9,7 @@
     <!-- Package Info -->
     <PackageId>cheqi-sdk</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Authors>Cheqi</Authors>
     <Company>Cheqi</Company>
     <Description>Official .NET SDK for Cheqi - End-to-end encrypted digital receipt processing</Description>

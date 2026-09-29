@@ -206,12 +206,15 @@ public sealed class ReceiptService
     private PreparedReceiptDownload PrepareDownload(ReceiptPayload payload, IdentificationDetails? identification = null)
     {
         var link = _downloads.GenerateDownloadLink(RequireDownloadBaseUrl());
-        var document = JsonSerializer.SerializeToNode(payload, _json)!.AsObject();
-        if (identification != null) document["identificationDetails"] = JsonSerializer.SerializeToNode(identification, _json);
-        var plaintext = document.ToJsonString(_json);
+        var plaintext = JsonSerializer.Serialize(payload, _json);
+        var documents = new Dictionary<string, ReceiptEnvelopeDocument> {
+            ["RECEIPT_PAYLOAD"] = new(plaintext, ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson)
+        };
+        if (identification != null)
+            documents["IDENTIFICATION_DETAILS"] = new(JsonSerializer.Serialize(identification, _json),
+                ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson);
         var envelope = new ReceiptEnvelope(link.DownloadId,
-            new Dictionary<string, ReceiptEnvelopeDocument> { ["CHEQI"] = new(plaintext, ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson) },
-            1, "receipt-payload-v1", Guid.NewGuid());
+            documents, 2, "receipt-payload-v1", Guid.NewGuid());
         var request = new ClientReceiptDownloadRequest(link.DownloadId, _downloads.EncryptDownloadEnvelope(envelope, link.ContentKey))
         { TemplateHash = new VerificationService().CalculateCheqiReceiptHash(plaintext) };
         return new PreparedReceiptDownload(link.Url, request);
