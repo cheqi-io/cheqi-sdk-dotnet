@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Encrypted credit note initiation request from a customer&#39;s device
+    /// Encrypted credit note initiation request
     /// </summary>
     public partial class EncryptedCreditNoteInitiationRequest
     {
@@ -34,75 +34,47 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         /// <param name="cheqiReceiptId">The Cheqi receipt ID for the original receipt</param>
         /// <param name="publicKey">The public key of the requesting device</param>
-        /// <param name="varEncryptedCreditNoteInitiationRequest">The encrypted credit note initiation request payload</param>
+        /// <param name="varEncryptedCreditNoteInitiationRequest">Base64-encoded ciphertext containing the plaintext contract documented as &#x60;CreditNoteInitiationRequest&#x60; in &#x60;components/schemas&#x60;</param>
         /// <param name="encryptedSymmetricKey">The AES symmetric key encrypted with the recipient&#39;s RSA public key</param>
         [JsonConstructor]
-        public EncryptedCreditNoteInitiationRequest(Option<string?> cheqiReceiptId = default, Option<string?> publicKey = default, Option<string?> varEncryptedCreditNoteInitiationRequest = default, Option<string?> encryptedSymmetricKey = default)
+        public EncryptedCreditNoteInitiationRequest(string cheqiReceiptId, string publicKey, string varEncryptedCreditNoteInitiationRequest, string encryptedSymmetricKey)
         {
-            CheqiReceiptIdOption = cheqiReceiptId;
-            PublicKeyOption = publicKey;
-            VarEncryptedCreditNoteInitiationRequestOption = varEncryptedCreditNoteInitiationRequest;
-            EncryptedSymmetricKeyOption = encryptedSymmetricKey;
+            CheqiReceiptId = cheqiReceiptId;
+            PublicKey = publicKey;
+            VarEncryptedCreditNoteInitiationRequest = varEncryptedCreditNoteInitiationRequest;
+            EncryptedSymmetricKey = encryptedSymmetricKey;
             OnCreated();
         }
 
         partial void OnCreated();
 
         /// <summary>
-        /// Used to track the state of CheqiReceiptId
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> CheqiReceiptIdOption { get; private set; }
-
-        /// <summary>
         /// The Cheqi receipt ID for the original receipt
         /// </summary>
         /// <value>The Cheqi receipt ID for the original receipt</value>
         [JsonPropertyName("cheqiReceiptId")]
-        public string? CheqiReceiptId { get { return this.CheqiReceiptIdOption; } set { this.CheqiReceiptIdOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of PublicKey
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> PublicKeyOption { get; private set; }
+        public string CheqiReceiptId { get; set; }
 
         /// <summary>
         /// The public key of the requesting device
         /// </summary>
         /// <value>The public key of the requesting device</value>
         [JsonPropertyName("publicKey")]
-        public string? PublicKey { get { return this.PublicKeyOption; } set { this.PublicKeyOption = new(value); } }
+        public string PublicKey { get; set; }
 
         /// <summary>
-        /// Used to track the state of VarEncryptedCreditNoteInitiationRequest
+        /// Base64-encoded ciphertext containing the plaintext contract documented as &#x60;CreditNoteInitiationRequest&#x60; in &#x60;components/schemas&#x60;
         /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> VarEncryptedCreditNoteInitiationRequestOption { get; private set; }
-
-        /// <summary>
-        /// The encrypted credit note initiation request payload
-        /// </summary>
-        /// <value>The encrypted credit note initiation request payload</value>
+        /// <value>Base64-encoded ciphertext containing the plaintext contract documented as &#x60;CreditNoteInitiationRequest&#x60; in &#x60;components/schemas&#x60;</value>
         [JsonPropertyName("encryptedCreditNoteInitiationRequest")]
-        public string? VarEncryptedCreditNoteInitiationRequest { get { return this.VarEncryptedCreditNoteInitiationRequestOption; } set { this.VarEncryptedCreditNoteInitiationRequestOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of EncryptedSymmetricKey
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> EncryptedSymmetricKeyOption { get; private set; }
+        public string VarEncryptedCreditNoteInitiationRequest { get; set; }
 
         /// <summary>
         /// The AES symmetric key encrypted with the recipient&#39;s RSA public key
         /// </summary>
         /// <value>The AES symmetric key encrypted with the recipient&#39;s RSA public key</value>
         [JsonPropertyName("encryptedSymmetricKey")]
-        public string? EncryptedSymmetricKey { get { return this.EncryptedSymmetricKeyOption; } set { this.EncryptedSymmetricKeyOption = new(value); } }
+        public string EncryptedSymmetricKey { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -181,6 +153,18 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
+            if (!cheqiReceiptId.IsSet)
+                throw new ArgumentException("Property is required for class EncryptedCreditNoteInitiationRequest.", nameof(cheqiReceiptId));
+
+            if (!publicKey.IsSet)
+                throw new ArgumentException("Property is required for class EncryptedCreditNoteInitiationRequest.", nameof(publicKey));
+
+            if (!varEncryptedCreditNoteInitiationRequest.IsSet)
+                throw new ArgumentException("Property is required for class EncryptedCreditNoteInitiationRequest.", nameof(varEncryptedCreditNoteInitiationRequest));
+
+            if (!encryptedSymmetricKey.IsSet)
+                throw new ArgumentException("Property is required for class EncryptedCreditNoteInitiationRequest.", nameof(encryptedSymmetricKey));
+
             if (cheqiReceiptId.IsSet && cheqiReceiptId.Value == null)
                 throw new ArgumentNullException(nameof(cheqiReceiptId), "Property is not nullable for class EncryptedCreditNoteInitiationRequest.");
 
@@ -193,7 +177,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (encryptedSymmetricKey.IsSet && encryptedSymmetricKey.Value == null)
                 throw new ArgumentNullException(nameof(encryptedSymmetricKey), "Property is not nullable for class EncryptedCreditNoteInitiationRequest.");
 
-            return new EncryptedCreditNoteInitiationRequest(cheqiReceiptId, publicKey, varEncryptedCreditNoteInitiationRequest, encryptedSymmetricKey);
+            return new EncryptedCreditNoteInitiationRequest(cheqiReceiptId.Value!, publicKey.Value!, varEncryptedCreditNoteInitiationRequest.Value!, encryptedSymmetricKey.Value!);
         }
 
         /// <summary>
@@ -220,29 +204,25 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, EncryptedCreditNoteInitiationRequest encryptedCreditNoteInitiationRequest, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (encryptedCreditNoteInitiationRequest.CheqiReceiptIdOption.IsSet && encryptedCreditNoteInitiationRequest.CheqiReceiptId == null)
+            if (encryptedCreditNoteInitiationRequest.CheqiReceiptId == null)
                 throw new ArgumentNullException(nameof(encryptedCreditNoteInitiationRequest.CheqiReceiptId), "Property is required for class EncryptedCreditNoteInitiationRequest.");
 
-            if (encryptedCreditNoteInitiationRequest.PublicKeyOption.IsSet && encryptedCreditNoteInitiationRequest.PublicKey == null)
+            if (encryptedCreditNoteInitiationRequest.PublicKey == null)
                 throw new ArgumentNullException(nameof(encryptedCreditNoteInitiationRequest.PublicKey), "Property is required for class EncryptedCreditNoteInitiationRequest.");
 
-            if (encryptedCreditNoteInitiationRequest.VarEncryptedCreditNoteInitiationRequestOption.IsSet && encryptedCreditNoteInitiationRequest.VarEncryptedCreditNoteInitiationRequest == null)
+            if (encryptedCreditNoteInitiationRequest.VarEncryptedCreditNoteInitiationRequest == null)
                 throw new ArgumentNullException(nameof(encryptedCreditNoteInitiationRequest.VarEncryptedCreditNoteInitiationRequest), "Property is required for class EncryptedCreditNoteInitiationRequest.");
 
-            if (encryptedCreditNoteInitiationRequest.EncryptedSymmetricKeyOption.IsSet && encryptedCreditNoteInitiationRequest.EncryptedSymmetricKey == null)
+            if (encryptedCreditNoteInitiationRequest.EncryptedSymmetricKey == null)
                 throw new ArgumentNullException(nameof(encryptedCreditNoteInitiationRequest.EncryptedSymmetricKey), "Property is required for class EncryptedCreditNoteInitiationRequest.");
 
-            if (encryptedCreditNoteInitiationRequest.CheqiReceiptIdOption.IsSet)
-                writer.WriteString("cheqiReceiptId", encryptedCreditNoteInitiationRequest.CheqiReceiptId);
+            writer.WriteString("cheqiReceiptId", encryptedCreditNoteInitiationRequest.CheqiReceiptId);
 
-            if (encryptedCreditNoteInitiationRequest.PublicKeyOption.IsSet)
-                writer.WriteString("publicKey", encryptedCreditNoteInitiationRequest.PublicKey);
+            writer.WriteString("publicKey", encryptedCreditNoteInitiationRequest.PublicKey);
 
-            if (encryptedCreditNoteInitiationRequest.VarEncryptedCreditNoteInitiationRequestOption.IsSet)
-                writer.WriteString("encryptedCreditNoteInitiationRequest", encryptedCreditNoteInitiationRequest.VarEncryptedCreditNoteInitiationRequest);
+            writer.WriteString("encryptedCreditNoteInitiationRequest", encryptedCreditNoteInitiationRequest.VarEncryptedCreditNoteInitiationRequest);
 
-            if (encryptedCreditNoteInitiationRequest.EncryptedSymmetricKeyOption.IsSet)
-                writer.WriteString("encryptedSymmetricKey", encryptedCreditNoteInitiationRequest.EncryptedSymmetricKey);
+            writer.WriteString("encryptedSymmetricKey", encryptedCreditNoteInitiationRequest.EncryptedSymmetricKey);
         }
     }
 }

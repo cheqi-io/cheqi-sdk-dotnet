@@ -1,214 +1,43 @@
-using Cheqi.Sdk.CreditNote;
-using Cheqi.Sdk.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Cryptography;
-using EncryptedReceiptRequestDto = Cheqi.Sdk.Models.Generated.EncryptedReceiptRequest;
-using Recipient = Cheqi.Sdk.Models.Generated.MatchedRecipient;
+using Cheqi.Sdk.Models.Generated;
+using Microsoft.Extensions.Logging;
 
 namespace Cheqi.Sdk.Encryption;
 
-/// <summary>
-/// Core encryption service providing hybrid encryption for end-to-end security.
-///
-/// This service orchestrates:
-/// - AES-256-GCM encryption for receipt data
-/// - RSA-OAEP encryption for AES keys
-/// - Secure key generation and management
-///
-/// Thread-safe and designed for high-throughput receipt encryption.
-/// </summary>
-public sealed class EncryptionService
+/// <summary>Independent AES-256-GCM and RSA-OAEP-SHA256 encryption for every owner device.</summary>
+public sealed class EncryptionService : IDisposable
 {
-    private readonly ILogger<EncryptionService> _logger;
-    private readonly RandomNumberGenerator _secureRandom;
-    private readonly AesEncryptor _aesEncryptor;
-    private readonly RsaKeyEncryptor _rsaKeyEncryptor;
-    private readonly AesKeyGenerator _keyGenerator;
+    private readonly RandomNumberGenerator _random = RandomNumberGenerator.Create();
+    public EncryptionService(ILogger<EncryptionService>? logger = null) { }
 
-    public EncryptionService(ILogger<EncryptionService>? logger = null)
+    public EncryptedReceiptPayload EncryptForDevice(string plaintext, MatchedRecipient recipient)
     {
-        _logger = logger ?? NullLogger<EncryptionService>.Instance;
-        _secureRandom = RandomNumberGenerator.Create();
-        _aesEncryptor = new AesEncryptor(_secureRandom);
-        _rsaKeyEncryptor = new RsaKeyEncryptor();
-        _keyGenerator = new AesKeyGenerator(_secureRandom);
-        _logger.LogInformation("EncryptionService initialized with AES-256-GCM and RSA-OAEP");
-    }
-
-    /// <summary>
-    /// Encrypts a receipt template for multiple recipients using hybrid encryption.
-    /// Each recipient gets a unique AES key encrypted with their RSA public key.
-    /// </summary>
-    /// <param name="purchaseReceipt">The JSON receipt template to encrypt</param>
-    /// <param name="recipients">List of recipients with their public keys</param>
-    /// <returns>Set of encrypted receipt DTOs, one per recipient</returns>
-    /// <exception cref="EncryptionException">if encryption fails for any recipient</exception>
-    public HashSet<EncryptedReceiptRequestDto> EncryptReceiptForRecipients(string purchaseReceipt, List<Recipient> recipients)
-    {
-        if (recipients == null || recipients.Count == 0)
-        {
-            throw new EncryptionException("Recipients list cannot be null or empty");
-        }
-
+        if (string.IsNullOrWhiteSpace(plaintext)) throw new ArgumentException("plaintext is required", nameof(plaintext));
+        ArgumentNullException.ThrowIfNull(recipient);
+        if (string.IsNullOrWhiteSpace(recipient.Id) || string.IsNullOrWhiteSpace(recipient.PublicKey))
+            throw new EncryptionException("Recipient must have an id and RSA public key");
+        var key = RandomNumberGenerator.GetBytes(32);
         try
         {
-            var encryptedReceipts = new HashSet<EncryptedReceiptRequestDto>();
-            for (int i = 0; i < recipients.Count; i++)
-            {
-                var recipient = recipients[i];
-                var encrypted = EncryptReceiptForRecipient(recipient, purchaseReceipt);
-                encryptedReceipts.Add(encrypted);
-            }
-
-            return encryptedReceipts;
+            return new EncryptedReceiptPayload(recipient.Id,
+                new AesEncryptor(_random).Encrypt(plaintext, key).ToBase64String(),
+                new RsaKeyEncryptor().EncryptKey(key, recipient.PublicKey));
         }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to encrypt receipt for recipients");
-            throw new EncryptionException("Failed to encrypt receipt for recipients", e);
-        }
+        finally { CryptographicOperations.ZeroMemory(key); }
     }
 
-    /// <summary>
-    /// Encrypts a receipt envelope for a single recipient using hybrid encryption.
-    /// Mirrors the Java <c>encryptReceiptForRecipients(String, MatchedRecipient)</c> overload.
-    /// </summary>
-    /// <param name="purchaseReceipt">The JSON receipt envelope to encrypt</param>
-    /// <param name="recipient">Recipient with public key information</param>
-    /// <returns>The encrypted receipt request for this recipient</returns>
-    /// <exception cref="EncryptionException">if encryption fails</exception>
-    public EncryptedReceiptRequestDto EncryptReceiptForRecipient(string purchaseReceipt, Recipient recipient)
+    public EncryptedReceiptPayload EncryptReceiptForRecipient(string plaintext, MatchedRecipient recipient)
+        => EncryptForDevice(plaintext, recipient);
+
+    public List<EncryptedReceiptPayload> EncryptReceiptForRecipients(string plaintext, IEnumerable<MatchedRecipient> recipients)
     {
-        if (recipient == null)
-        {
-            throw new EncryptionException("Recipient cannot be null");
-        }
-        return EncryptReceiptForRecipient(recipient, purchaseReceipt);
+        ArgumentNullException.ThrowIfNull(recipients);
+        var devices = recipients.ToList();
+        if (devices.Count == 0) throw new EncryptionException("Recipients cannot be empty");
+        return devices.Select(device => EncryptReceiptForRecipient(plaintext, device)).ToList();
     }
 
-    /// <summary>
-    /// Encrypts a credit note for multiple recipients using hybrid encryption.
-    /// Each recipient gets a unique AES key encrypted with their RSA public key.
-    /// </summary>
-    /// <param name="creditNote">The JSON credit note to encrypt</param>
-    /// <param name="recipients">List of recipients with their public keys</param>
-    /// <returns>Set of encrypted credit note DTOs, one per recipient</returns>
-    /// <exception cref="EncryptionException">if encryption fails for any recipient</exception>
-    public HashSet<EncryptedCreditNote> EncryptCreditNoteForRecipients(string creditNote, List<Recipient> recipients)
-    {
-        _logger.LogDebug("Encrypting credit note for {RecipientCount} recipients", recipients.Count);
-
-        try
-        {
-            var encryptedCreditNotes = recipients
-                .Select(recipient => EncryptCreditNoteForRecipient(recipient, creditNote))
-                .ToHashSet();
-
-            _logger.LogInformation("Successfully encrypted credit note for {RecipientCount} recipients", encryptedCreditNotes.Count);
-            return encryptedCreditNotes;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to encrypt credit note for recipients: {Message}", e.Message);
-            throw new EncryptionException("Failed to encrypt credit note for recipients", e);
-        }
-    }
-
-    /// <summary>
-    /// Encrypts a credit note envelope for a single recipient using hybrid encryption.
-    /// Mirrors the Java <c>encryptCreditNoteForRecipient(String, MatchedRecipient)</c>.
-    /// </summary>
-    /// <param name="creditNote">The JSON credit note envelope to encrypt</param>
-    /// <param name="recipient">Recipient with public key information</param>
-    /// <returns>The encrypted credit note for this recipient</returns>
-    /// <exception cref="EncryptionException">if encryption fails</exception>
-    public EncryptedCreditNote EncryptCreditNoteForRecipient(string creditNote, Recipient recipient)
-    {
-        if (recipient == null)
-        {
-            throw new EncryptionException("Recipient cannot be null");
-        }
-        return EncryptCreditNoteForRecipient(recipient, creditNote);
-    }
-
-    /// <summary>
-    /// Encrypts a receipt for a single recipient using hybrid encryption.
-    /// </summary>
-    private EncryptedReceiptRequestDto EncryptReceiptForRecipient(Recipient recipient, string purchaseReceipt)
-    {
-        try
-        {
-            if (recipient == null)
-            {
-                throw new ArgumentNullException(nameof(recipient), "Recipient cannot be null");
-            }
-
-            if (string.IsNullOrEmpty(recipient.PublicKey))
-            {
-                throw new EncryptionException($"Recipient {recipient.Id} has no public key");
-            }
-
-            var aesKey = _keyGenerator.GenerateKey();
-
-            var encryptedData = _aesEncryptor.Encrypt(purchaseReceipt, aesKey);
-            var encryptedReceiptBase64 = encryptedData.ToBase64String();
-
-            try
-            {
-                var encryptedSymmetricKey = _rsaKeyEncryptor.EncryptKey(aesKey, recipient.PublicKey);
-
-                var dto = new EncryptedReceiptRequestDto(
-                    recipientId: recipient.Id,
-                    encryptedReceipt: encryptedReceiptBase64,
-                    encryptedSymmetricKey: encryptedSymmetricKey,
-                    publicKey: recipient.PublicKey);
-                return dto;
-            }
-            catch (Exception rsaException)
-            {
-                _logger.LogError(rsaException, "RSA encryption failed for recipient {RecipientId}", recipient.Id);
-                throw;
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to encrypt receipt for recipient {RecipientId}", recipient?.Id);
-            throw new EncryptionException($"Failed to encrypt receipt for recipient: {recipient?.Id}", e);
-        }
-    }
-
-    /// <summary>
-    /// Encrypts a credit note for a single recipient using hybrid encryption.
-    /// </summary>
-    private EncryptedCreditNote EncryptCreditNoteForRecipient(Recipient recipient, string creditNote)
-    {
-        try
-        {
-            _logger.LogDebug("Encrypting credit note for recipient: {RecipientId}", recipient.Id);
-
-            // Step 1: Generate unique AES-256 key for this credit note
-            var aesKey = _keyGenerator.GenerateKey();
-
-            // Step 2: Encrypt credit note data with AES-GCM
-            var encryptedData = _aesEncryptor.Encrypt(creditNote, aesKey);
-            var encryptedCreditNoteBase64 = encryptedData.ToBase64String();
-
-            // Step 3: Encrypt AES key with recipient's RSA public key
-            var encryptedSymmetricKey = _rsaKeyEncryptor.EncryptKey(aesKey, recipient.PublicKey);
-
-            // Step 4: Build encrypted credit note DTO
-            return EncryptedCreditNote.CreateBuilder()
-                .RecipientId(recipient.Id)
-                .PublicKey(recipient.PublicKey)
-                .EncryptedCreditNote(encryptedCreditNoteBase64)
-                .EncryptedSymmetricKey(encryptedSymmetricKey)
-                .Build();
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to encrypt credit note for recipient {RecipientId}: {Message}", recipient.Id, e.Message);
-            throw new EncryptionException($"Failed to encrypt credit note for recipient: {recipient.Id}", e);
-        }
-    }
+    public EncryptedReceiptPayload EncryptCreditNoteForRecipient(string plaintext, MatchedRecipient recipient)
+        => EncryptReceiptForRecipient(plaintext, recipient);
+    public void Dispose() => _random.Dispose();
 }

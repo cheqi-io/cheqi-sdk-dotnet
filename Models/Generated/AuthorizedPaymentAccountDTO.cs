@@ -378,8 +378,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (authorizedPaymentAccountDTO.AccountIdentifierOption.IsSet)
                 writer.WriteString("accountIdentifier", authorizedPaymentAccountDTO.AccountIdentifier);
 
-            var accountIdentifierTypeRawValue = AuthorizedPaymentAccountDTO.AccountIdentifierTypeEnumToJsonValue(authorizedPaymentAccountDTO.AccountIdentifierTypeOption.Value!.Value);
-            writer.WriteString("accountIdentifierType", accountIdentifierTypeRawValue);
+            if (authorizedPaymentAccountDTO.AccountIdentifierTypeOption.IsSet)
+            {
+    var accountIdentifierTypeRawValue = AuthorizedPaymentAccountDTO.AccountIdentifierTypeEnumToJsonValue(authorizedPaymentAccountDTO.AccountIdentifierTypeOption.Value!.Value);
+                writer.WriteString("accountIdentifierType", accountIdentifierTypeRawValue);
+            }
             if (authorizedPaymentAccountDTO.CompanyOption.IsSet)
             {
                 writer.WritePropertyName("company");

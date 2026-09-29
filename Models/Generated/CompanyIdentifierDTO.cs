@@ -76,59 +76,69 @@ namespace Cheqi.Sdk.Models.Generated
         public enum RegistrationSchemeEnum
         {
             /// <summary>
+            /// Enum BN for value: BN
+            /// </summary>
+            BN = 1,
+
+            /// <summary>
+            /// Enum KENNITALA for value: KENNITALA
+            /// </summary>
+            KENNITALA = 2,
+
+            /// <summary>
             /// Enum KVK for value: KVK
             /// </summary>
-            KVK = 1,
+            KVK = 3,
 
             /// <summary>
             /// Enum HRB for value: HRB
             /// </summary>
-            HRB = 2,
+            HRB = 4,
 
             /// <summary>
             /// Enum HRA for value: HRA
             /// </summary>
-            HRA = 3,
+            HRA = 5,
 
             /// <summary>
             /// Enum SIREN for value: SIREN
             /// </summary>
-            SIREN = 4,
+            SIREN = 6,
 
             /// <summary>
             /// Enum SIRET for value: SIRET
             /// </summary>
-            SIRET = 5,
+            SIRET = 7,
 
             /// <summary>
             /// Enum KBO for value: KBO
             /// </summary>
-            KBO = 6,
+            KBO = 8,
 
             /// <summary>
             /// Enum COMPANIESHOUSE for value: COMPANIES_HOUSE
             /// </summary>
-            COMPANIESHOUSE = 7,
+            COMPANIESHOUSE = 9,
 
             /// <summary>
             /// Enum CNPJ for value: CNPJ
             /// </summary>
-            CNPJ = 8,
+            CNPJ = 10,
 
             /// <summary>
             /// Enum ABN for value: ABN
             /// </summary>
-            ABN = 9,
+            ABN = 11,
 
             /// <summary>
             /// Enum CIK for value: CIK
             /// </summary>
-            CIK = 10,
+            CIK = 12,
 
             /// <summary>
             /// Enum OTHER for value: OTHER
             /// </summary>
-            OTHER = 11
+            OTHER = 13
         }
 
         /// <summary>
@@ -139,6 +149,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public static RegistrationSchemeEnum RegistrationSchemeEnumFromString(string value)
         {
+            if (value.Equals("BN"))
+                return RegistrationSchemeEnum.BN;
+
+            if (value.Equals("KENNITALA"))
+                return RegistrationSchemeEnum.KENNITALA;
+
             if (value.Equals("KVK"))
                 return RegistrationSchemeEnum.KVK;
 
@@ -182,6 +198,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <returns></returns>
         public static RegistrationSchemeEnum? RegistrationSchemeEnumFromStringOrDefault(string value)
         {
+            if (value.Equals("BN"))
+                return RegistrationSchemeEnum.BN;
+
+            if (value.Equals("KENNITALA"))
+                return RegistrationSchemeEnum.KENNITALA;
+
             if (value.Equals("KVK"))
                 return RegistrationSchemeEnum.KVK;
 
@@ -226,6 +248,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public static string RegistrationSchemeEnumToJsonValue(RegistrationSchemeEnum? value)
         {
+            if (value == RegistrationSchemeEnum.BN)
+                return "BN";
+
+            if (value == RegistrationSchemeEnum.KENNITALA)
+                return "KENNITALA";
+
             if (value == RegistrationSchemeEnum.KVK)
                 return "KVK";
 
@@ -465,7 +493,7 @@ namespace Cheqi.Sdk.Models.Generated
                             isVerified = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "verifiedAt":
-                            verifiedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            verifiedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         default:
                             break;
@@ -541,8 +569,11 @@ namespace Cheqi.Sdk.Models.Generated
                 var identifierTypeRawValue = CompanyIdentifierTypeValueConverter.ToJsonValue(companyIdentifierDTO.IdentifierType!.Value);
                 writer.WriteString("identifierType", identifierTypeRawValue);
             }
-            var registrationSchemeRawValue = CompanyIdentifierDTO.RegistrationSchemeEnumToJsonValue(companyIdentifierDTO.RegistrationSchemeOption.Value!.Value);
-            writer.WriteString("registrationScheme", registrationSchemeRawValue);
+            if (companyIdentifierDTO.RegistrationSchemeOption.IsSet)
+            {
+    var registrationSchemeRawValue = CompanyIdentifierDTO.RegistrationSchemeEnumToJsonValue(companyIdentifierDTO.RegistrationSchemeOption.Value!.Value);
+                writer.WriteString("registrationScheme", registrationSchemeRawValue);
+            }
             if (companyIdentifierDTO.ValueOption.IsSet)
                 writer.WriteString("value", companyIdentifierDTO.Value);
 
@@ -556,7 +587,10 @@ namespace Cheqi.Sdk.Models.Generated
                 writer.WriteBoolean("isVerified", companyIdentifierDTO.IsVerifiedOption.Value!.Value);
 
             if (companyIdentifierDTO.VerifiedAtOption.IsSet)
-                writer.WriteString("verifiedAt", companyIdentifierDTO.VerifiedAtOption.Value!.Value.ToString(VerifiedAtFormat));
+                {
+                    writer.WritePropertyName("verifiedAt");
+                    JsonSerializer.Serialize(writer, companyIdentifierDTO.VerifiedAtOption.Value!.Value, jsonSerializerOptions);
+                }
         }
     }
 }

@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
-using Cheqi.Sdk.Models.Company;
 
 namespace Cheqi.Sdk.Models.Ubl;
 

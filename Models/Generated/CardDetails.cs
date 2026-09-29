@@ -297,8 +297,11 @@ namespace Cheqi.Sdk.Models.Generated
 
             writer.WriteString("paymentAccountReference", cardDetails.PaymentAccountReference);
 
-            var cardProviderRawValue = CardDetails.CardProviderEnumToJsonValue(cardDetails.CardProviderOption.Value!.Value);
-            writer.WriteString("cardProvider", cardProviderRawValue);
+            if (cardDetails.CardProviderOption.IsSet)
+            {
+    var cardProviderRawValue = CardDetails.CardProviderEnumToJsonValue(cardDetails.CardProviderOption.Value!.Value);
+                writer.WriteString("cardProvider", cardProviderRawValue);
+            }
             if (cardDetails.LastFourDigitsOption.IsSet)
                 writer.WriteString("lastFourDigits", cardDetails.LastFourDigits);
         }

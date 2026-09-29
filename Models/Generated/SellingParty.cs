@@ -35,14 +35,16 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="companyName">The name of the company</param>
         /// <param name="companyLegalName">The legal name of the company</param>
         /// <param name="taxNumber">The tax number of the selling party</param>
+        /// <param name="phoneNumber">The phone number of the selling party</param>
         /// <param name="identifiers">All company identifiers of the selling party</param>
         /// <param name="address">address</param>
         [JsonConstructor]
-        public SellingParty(Option<string?> companyName = default, Option<string?> companyLegalName = default, Option<string?> taxNumber = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<PartyAddress?> address = default)
+        public SellingParty(Option<string?> companyName = default, Option<string?> companyLegalName = default, Option<string?> taxNumber = default, Option<string?> phoneNumber = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<PartyAddress?> address = default)
         {
             CompanyNameOption = companyName;
             CompanyLegalNameOption = companyLegalName;
             TaxNumberOption = taxNumber;
+            PhoneNumberOption = phoneNumber;
             IdentifiersOption = identifiers;
             AddressOption = address;
             OnCreated();
@@ -96,6 +98,21 @@ namespace Cheqi.Sdk.Models.Generated
         public string? TaxNumber { get { return this.TaxNumberOption; } set { this.TaxNumberOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of PhoneNumber
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> PhoneNumberOption { get; private set; }
+
+        /// <summary>
+        /// The phone number of the selling party
+        /// </summary>
+        /// <value>The phone number of the selling party</value>
+        /* <example>+31 20 123 4567</example> */
+        [JsonPropertyName("phoneNumber")]
+        public string? PhoneNumber { get { return this.PhoneNumberOption; } set { this.PhoneNumberOption = new(value); } }
+
+        /// <summary>
         /// Used to track the state of Identifiers
         /// </summary>
         [JsonIgnore]
@@ -133,6 +150,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  CompanyName: ").Append(CompanyName).Append("\n");
             sb.Append("  CompanyLegalName: ").Append(CompanyLegalName).Append("\n");
             sb.Append("  TaxNumber: ").Append(TaxNumber).Append("\n");
+            sb.Append("  PhoneNumber: ").Append(PhoneNumber).Append("\n");
             sb.Append("  Identifiers: ").Append(Identifiers).Append("\n");
             sb.Append("  Address: ").Append(Address).Append("\n");
             sb.Append("}\n");
@@ -165,6 +183,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> companyName = default;
             Option<string?> companyLegalName = default;
             Option<string?> taxNumber = default;
+            Option<string?> phoneNumber = default;
             Option<List<CompanyIdentifierDTO>?> identifiers = default;
             Option<PartyAddress?> address = default;
 
@@ -192,6 +211,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "taxNumber":
                             taxNumber = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
+                        case "phoneNumber":
+                            phoneNumber = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
                         case "identifiers":
                             identifiers = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
@@ -213,13 +235,16 @@ namespace Cheqi.Sdk.Models.Generated
             if (taxNumber.IsSet && taxNumber.Value == null)
                 throw new ArgumentNullException(nameof(taxNumber), "Property is not nullable for class SellingParty.");
 
+            if (phoneNumber.IsSet && phoneNumber.Value == null)
+                throw new ArgumentNullException(nameof(phoneNumber), "Property is not nullable for class SellingParty.");
+
             if (identifiers.IsSet && identifiers.Value == null)
                 throw new ArgumentNullException(nameof(identifiers), "Property is not nullable for class SellingParty.");
 
             if (address.IsSet && address.Value == null)
                 throw new ArgumentNullException(nameof(address), "Property is not nullable for class SellingParty.");
 
-            return new SellingParty(companyName, companyLegalName, taxNumber, identifiers, address);
+            return new SellingParty(companyName, companyLegalName, taxNumber, phoneNumber, identifiers, address);
         }
 
         /// <summary>
@@ -255,6 +280,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (sellingParty.TaxNumberOption.IsSet && sellingParty.TaxNumber == null)
                 throw new ArgumentNullException(nameof(sellingParty.TaxNumber), "Property is required for class SellingParty.");
 
+            if (sellingParty.PhoneNumberOption.IsSet && sellingParty.PhoneNumber == null)
+                throw new ArgumentNullException(nameof(sellingParty.PhoneNumber), "Property is required for class SellingParty.");
+
             if (sellingParty.IdentifiersOption.IsSet && sellingParty.Identifiers == null)
                 throw new ArgumentNullException(nameof(sellingParty.Identifiers), "Property is required for class SellingParty.");
 
@@ -269,6 +297,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (sellingParty.TaxNumberOption.IsSet)
                 writer.WriteString("taxNumber", sellingParty.TaxNumber);
+
+            if (sellingParty.PhoneNumberOption.IsSet)
+                writer.WriteString("phoneNumber", sellingParty.PhoneNumber);
 
             if (sellingParty.IdentifiersOption.IsSet)
             {

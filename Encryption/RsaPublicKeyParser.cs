@@ -27,6 +27,12 @@ public class RsaPublicKeyParser
     {
         try
         {
+            if (publicKeyBase64.Contains("-----BEGIN"))
+            {
+                var pemRsa = RSA.Create();
+                try { pemRsa.ImportFromPem(publicKeyBase64); return pemRsa; }
+                catch { pemRsa.Dispose(); throw; }
+            }
             byte[] keyBytes = Convert.FromBase64String(publicKeyBase64);
             var rsa = RSA.Create();
 
@@ -37,10 +43,11 @@ public class RsaPublicKeyParser
                 _logger.LogDebug("Successfully parsed X.509 format RSA public key");
                 return rsa;
             }
-            catch (Exception x509Exception)
+            catch (CryptographicException)
             {
                 // If X.509 fails, try raw RSA format (from iOS SecKeyCopyExternalRepresentation)
                 _logger.LogDebug("X.509 parsing failed, trying raw RSA format");
+                rsa.Dispose();
                 return ParseRawRsaPublicKey(keyBytes);
             }
         }

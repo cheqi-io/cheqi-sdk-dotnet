@@ -1,120 +1,51 @@
-using System.Text.Json.Serialization;
-using Cheqi.Sdk.Models;
-using ReceiptCreatedResponse = Cheqi.Sdk.Models.Generated.ReceiptCreatedResponse;
+using Cheqi.Sdk.Models.Generated;
+using Route = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse.DeliveryRouteTypeEnum;
 
 namespace Cheqi.Sdk.Receipt;
 
-/// <summary>
-/// Result of processing a receipt through the SDK.
-/// </summary>
-public class ReceiptResult
+/// <summary>An accepted submission, explicit fallback, or an uncertain digital submission to recover.</summary>
+public sealed class ReceiptResult
 {
-    [JsonPropertyName("success")]
-    public bool Success { get; }
-    
-    [JsonPropertyName("deliveryStatus")]
-    public DeliveryStatus DeliveryStatus { get; }
-    
-    [JsonPropertyName("cheqiReceiptId")]
-    public string? CheqiReceiptId { get; }
-    
-    [JsonPropertyName("createdAt")]
-    public DateTimeOffset? CreatedAt { get; }
-    
-    [JsonPropertyName("templateHash")]
-    public string? TemplateHash { get; }
-    
-    [JsonPropertyName("canonicalJson")]
-    public string? CanonicalJson { get; }
-    
-    [JsonPropertyName("emailAddress")]
-    public string? EmailAddress { get; }
-    
-    [JsonPropertyName("message")]
-    public string? Message { get; }
+    public ReceiptIssueState State { get; init; }
+    public string? CheqiReceiptId { get; init; }
+    public string? MatchId { get; init; }
+    public Route DeliveryRouteType { get; init; }
+    public ReceiptSubmissionResponse.StatusEnum? Status { get; init; }
+    public DateTimeOffset? CreatedAt { get; init; }
+    public DateTimeOffset? ExpiresAt { get; init; }
+    public string? DownloadUrl { get; init; }
+    public bool DownloadEnvelopeRequired { get; init; }
+    public bool EmailReceiptRequired { get; init; }
+    public ReceiptSubmissionResponse? Submission { get; init; }
+    public PreparedReceiptDownload? PreparedDownload { get; init; }
+    public bool Retryable { get; init; }
+    public int? RetryAfterSeconds { get; init; }
+    public bool IsAccepted => !string.IsNullOrWhiteSpace(CheqiReceiptId);
+    public bool IsSuccess => IsAccepted;
 
-    private ReceiptResult(
-        bool success,
-        DeliveryStatus deliveryStatus,
-        string? cheqiReceiptId,
-        DateTimeOffset? createdAt,
-        string? templateHash,
-        string? canonicalJson,
-        string? emailAddress,
-        string? message)
+    public static ReceiptResult Accepted(ReceiptSubmissionResponse response) => new()
     {
-        Success = success;
-        DeliveryStatus = deliveryStatus;
-        CheqiReceiptId = cheqiReceiptId;
-        CreatedAt = createdAt;
-        TemplateHash = templateHash;
-        CanonicalJson = canonicalJson;
-        EmailAddress = emailAddress;
-        Message = message;
-    }
-
-    public static ReceiptResult DeliveredToApp(ReceiptCreatedResponse response, string canonicalJson)
+        State = ReceiptIssueState.DigitalSubmitted, DeliveryRouteType = Route.DIGITAL,
+        CheqiReceiptId = response.CheqiReceiptId, MatchId = response.MatchId,
+        Status = response.Status, CreatedAt = response.CreatedAt, Submission = response
+    };
+    internal static ReceiptResult Pending(string matchId, PreparedReceiptDownload? download, int? retryAfter) => new()
     {
-        return new ReceiptResult(
-            true,
-            DeliveryStatus.DELIVERED_DIGITAL,
-            response.CheqiReceiptId,
-            response.CreatedAt,
-            response.TemplateHash,
-            canonicalJson,
-            null,
-            "Receipt delivered to customer's Cheqi app"
-        );
-    }
-
-    public static ReceiptResult DeliveredViaEmail(string emailAddress)
+        State = ReceiptIssueState.DigitalPending, MatchId = matchId, DeliveryRouteType = Route.DIGITAL,
+        PreparedDownload = download, DownloadUrl = download?.DownloadUrl, Retryable = true, RetryAfterSeconds = retryAfter
+    };
+    internal static ReceiptResult Expired(string matchId) => new()
+    { State = ReceiptIssueState.DigitalExpired, MatchId = matchId, DeliveryRouteType = Route.DIGITAL };
+    internal static ReceiptResult DownloadPrepared(PreparedReceiptDownload download) => new()
     {
-        return new ReceiptResult(
-            true,
-            DeliveryStatus.DELIVERED_EMAIL,
-            null,
-            DateTimeOffset.Now,
-            null,
-            null,
-            emailAddress,
-            $"Receipt sent via email to {emailAddress}"
-        );
-    }
-
-    public static ReceiptResult CustomerNotFound()
+        State = ReceiptIssueState.DownloadFallback, DeliveryRouteType = Route.DOWNLOADFALLBACK,
+        PreparedDownload = download, DownloadUrl = download.DownloadUrl, Retryable = true
+    };
+    internal static ReceiptResult DownloadAccepted(string? matchId, ClientReceiptDownloadResponse response, string url) => new()
     {
-        return new ReceiptResult(
-            false,
-            DeliveryStatus.CUSTOMER_NOT_FOUND,
-            null,
-            null,
-            null,
-            null,
-            null,
-            "Customer not found with provided payment details"
-        );
-    }
-
-    public static ReceiptResult Failed(string message)
-    {
-        return new ReceiptResult(
-            false,
-            DeliveryStatus.FAILED,
-            null,
-            null,
-            null,
-            null,
-            null,
-            message
-        );
-    }
-
-    // Core status checks
-    public bool IsSuccess() => Success;
-    public bool IsCustomerNotFound() => DeliveryStatus == DeliveryStatus.CUSTOMER_NOT_FOUND;
-
-    public override string ToString()
-    {
-        return $"ReceiptResult{{success={Success}, deliveryStatus={DeliveryStatus}, cheqiReceiptId='{CheqiReceiptId}'}}";
-    }
+        State = ReceiptIssueState.DownloadFallback, DeliveryRouteType = Route.DOWNLOADFALLBACK,
+        MatchId = matchId, CheqiReceiptId = response.CheqiReceiptId,
+        CreatedAt = response.CreatedAt, ExpiresAt = response.ExpiresAt, DownloadUrl = url
+    };
+    public override string ToString() => $"ReceiptResult {{ State = {State}, IsAccepted = {IsAccepted}, DownloadUrl = <redacted> }}";
 }

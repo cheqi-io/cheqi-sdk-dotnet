@@ -8,25 +8,27 @@ namespace Cheqi.Sdk.Config;
 /// </summary>
 public sealed class CheqiSdkOptions
 {
-    public CheqiApiEnvironment? Environment { get; init; }
+    public CheqiApiEnvironment? Environment { get; set; }
 
-    public string? CustomApiEndpoint { get; init; }
+    public string? CustomApiEndpoint { get; set; }
 
-    public string? ApiKey { get; init; }
+    public string? ReceiptDownloadBaseUrl { get; set; }
 
-    public string? SupplierClientId { get; init; }
+    public string? ApiKey { get; set; }
 
-    public string? SupplierClientSecret { get; init; }
+    public string? SupplierClientId { get; set; }
 
-    public string? PrivateKey { get; init; }
+    public string? SupplierClientSecret { get; set; }
 
-    public Encryption.EncryptionConfig? EncryptionConfig { get; init; }
+    public string? PrivateKey { get; set; }
 
-    public int TimeoutSeconds { get; init; } = 30;
+    public Encryption.EncryptionConfig? EncryptionConfig { get; set; }
 
-    public int MaxRetries { get; init; } = 3;
+    public int TimeoutSeconds { get; set; } = 30;
 
-    public ILoggerFactory? LoggerFactory { get; init; }
+    public int MaxRetries { get; set; } = 3;
 
-    public HttpClient? HttpClient { get; init; }
+    public ILoggerFactory? LoggerFactory { get; set; }
+
+    public HttpClient? HttpClient { get; set; }
 }

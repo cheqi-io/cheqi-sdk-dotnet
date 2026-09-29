@@ -5,7 +5,7 @@ namespace Cheqi.Sdk.Encryption;
 /// <summary>
 /// Exception thrown when encryption or decryption operations fail.
 /// </summary>
-public class EncryptionException : CheqiSDKException
+public class EncryptionException : CheqiSdkException
 {
     public EncryptionException(string message) : base(message)
     {

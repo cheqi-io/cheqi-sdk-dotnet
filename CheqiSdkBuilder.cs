@@ -40,6 +40,12 @@ public sealed class CheqiSdkBuilder
         return this;
     }
 
+    public CheqiSdkBuilder ReceiptDownloadBaseUrl(string baseUrl)
+    {
+        _configBuilder.ReceiptDownloadBaseUrl(baseUrl);
+        return this;
+    }
+
     public CheqiSdkBuilder ApiKey(string apiKey)
     {
         _configBuilder.ApiKey(apiKey);

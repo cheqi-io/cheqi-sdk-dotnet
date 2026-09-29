@@ -1,0 +1,143 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Cheqi.Sdk.Models.Generated;
+
+namespace Cheqi.Sdk.Serialization;
+
+/// <summary>Serializer options for Cheqi API models and persisted recovery results.</summary>
+public static class CheqiJson
+{
+    public static JsonSerializerOptions CreateOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+        options.Converters.Add(new AccountIdentifierTypeJsonConverter());
+        options.Converters.Add(new AccountIdentifierTypeNullableJsonConverter());
+        options.Converters.Add(new AcknowledgeRequestJsonConverter());
+        options.Converters.Add(new AddressDTOJsonConverter());
+        options.Converters.Add(new AuthorizationCodeExchangeRequestJsonConverter());
+        options.Converters.Add(new AuthorizedCardDTOJsonConverter());
+        options.Converters.Add(new AuthorizedCompanyDTOJsonConverter());
+        options.Converters.Add(new AuthorizedEmailDTOJsonConverter());
+        options.Converters.Add(new AuthorizedPaymentAccountDTOJsonConverter());
+        options.Converters.Add(new AuthorizedResourcesResponseJsonConverter());
+        options.Converters.Add(new BarcodeJsonConverter());
+        options.Converters.Add(new BarcodeTypeJsonConverter());
+        options.Converters.Add(new BarcodeTypeNullableJsonConverter());
+        options.Converters.Add(new BuyerTypeJsonConverter());
+        options.Converters.Add(new BuyerTypeNullableJsonConverter());
+        options.Converters.Add(new CardDetailsJsonConverter());
+        options.Converters.Add(new ChargeJsonConverter());
+        options.Converters.Add(new CheqiReceiptJsonConverter());
+        options.Converters.Add(new ClientCredentialsTokenRequestJsonConverter());
+        options.Converters.Add(new ClientReceiptDownloadRequestJsonConverter());
+        options.Converters.Add(new ClientReceiptDownloadResponseJsonConverter());
+        options.Converters.Add(new CompanyAuthorizationResponseJsonConverter());
+        options.Converters.Add(new CompanyCreationRequestJsonConverter());
+        options.Converters.Add(new CompanyGrantActionRequestJsonConverter());
+        options.Converters.Add(new CompanyGrantMetadataResponseJsonConverter());
+        options.Converters.Add(new CompanyGrantResponseJsonConverter());
+        options.Converters.Add(new CompanyIdentifierDTOJsonConverter());
+        options.Converters.Add(new CompanyIdentifierRequirementJsonConverter());
+        options.Converters.Add(new CompanyIdentifierTypeJsonConverter());
+        options.Converters.Add(new CompanyIdentifierTypeNullableJsonConverter());
+        options.Converters.Add(new CompanyReceiptDeliveryDeviceDtoJsonConverter());
+        options.Converters.Add(new CompanyReceiptDeliverySettingsResponseJsonConverter());
+        options.Converters.Add(new CompanyResponseJsonConverter());
+        options.Converters.Add(new CompanyRoleJsonConverter());
+        options.Converters.Add(new CompanyRoleNullableJsonConverter());
+        options.Converters.Add(new ContactDetailDtoJsonConverter());
+        options.Converters.Add(new CreateChildCompanyRequestJsonConverter());
+        options.Converters.Add(new CreateStoreRequestJsonConverter());
+        options.Converters.Add(new CreditNoteContextEnvelopeJsonConverter());
+        options.Converters.Add(new CreditNoteInitiationRequestJsonConverter());
+        options.Converters.Add(new DiscountJsonConverter());
+        options.Converters.Add(new DocumentTypeJsonConverter());
+        options.Converters.Add(new DocumentTypeNullableJsonConverter());
+        options.Converters.Add(new EmailReceiptRequestJsonConverter());
+        options.Converters.Add(new EncryptedCreditNoteEnvelopeJsonConverter());
+        options.Converters.Add(new EncryptedCreditNoteInitiationRequestJsonConverter());
+        options.Converters.Add(new EncryptedCreditNoteInitiationRequestResponseJsonConverter());
+        options.Converters.Add(new EncryptedReceiptDeliveryResponseJsonConverter());
+        options.Converters.Add(new EncryptedReceiptEnvelopeJsonConverter());
+        options.Converters.Add(new EncryptedReceiptPayloadJsonConverter());
+        options.Converters.Add(new ExpenseSubmissionEnvelopeJsonConverter());
+        options.Converters.Add(new FiscalizationDataJsonConverter());
+        options.Converters.Add(new FiscalizationStatusJsonConverter());
+        options.Converters.Add(new FiscalizationStatusNullableJsonConverter());
+        options.Converters.Add(new IdentificationDetailsJsonConverter());
+        options.Converters.Add(new IdentifierJsonConverter());
+        options.Converters.Add(new InviteEmployeeRequestJsonConverter());
+        options.Converters.Add(new JurisdictionFieldJsonConverter());
+        options.Converters.Add(new JurisdictionLegalTextJsonConverter());
+        options.Converters.Add(new JurisdictionalDataJsonConverter());
+        options.Converters.Add(new KeyAlgorithmJsonConverter());
+        options.Converters.Add(new KeyAlgorithmNullableJsonConverter());
+        options.Converters.Add(new MatchStateJsonConverter());
+        options.Converters.Add(new MatchStateNullableJsonConverter());
+        options.Converters.Add(new MatchStatusResponseJsonConverter());
+        options.Converters.Add(new MatchedRecipientJsonConverter());
+        options.Converters.Add(new MemberReceiptIdentityResponseJsonConverter());
+        options.Converters.Add(new OAuthGrantCompanyResponseJsonConverter());
+        options.Converters.Add(new OAuthGrantDetailsResponseJsonConverter());
+        options.Converters.Add(new OAuthTokenExchangeResponseJsonConverter());
+        options.Converters.Add(new PartyAddressJsonConverter());
+        options.Converters.Add(new PaymentAccountDetailsJsonConverter());
+        options.Converters.Add(new PaymentDetailsJsonConverter());
+        options.Converters.Add(new PaymentTypeJsonConverter());
+        options.Converters.Add(new PaymentTypeNullableJsonConverter());
+        options.Converters.Add(new PeriodJsonConverter());
+        options.Converters.Add(new PermanentFailureAcknowledgeRequestJsonConverter());
+        options.Converters.Add(new ProductJsonConverter());
+        options.Converters.Add(new PublicKeyResponseJsonConverter());
+        options.Converters.Add(new ReceiptEnvelopeJsonConverter());
+        options.Converters.Add(new ReceiptEnvelopeDocumentJsonConverter());
+        options.Converters.Add(new ReceiptFormatJsonConverter());
+        options.Converters.Add(new ReceiptFormatNullableJsonConverter());
+        options.Converters.Add(new ReceiptPayloadJsonConverter());
+        options.Converters.Add(new ReceiptSubmissionResponseJsonConverter());
+        options.Converters.Add(new ReceivingPartyJsonConverter());
+        options.Converters.Add(new ReceivingPartyEnvelopeJsonConverter());
+        options.Converters.Add(new RecipientResolutionResponseJsonConverter());
+        options.Converters.Add(new RefundBankAccountJsonConverter());
+        options.Converters.Add(new RefundPreferenceJsonConverter());
+        options.Converters.Add(new RefundPreferenceNullableJsonConverter());
+        options.Converters.Add(new ReturnLineItemJsonConverter());
+        options.Converters.Add(new ReturnProcessingModeJsonConverter());
+        options.Converters.Add(new ReturnProcessingModeNullableJsonConverter());
+        options.Converters.Add(new ReturnReasonCodeJsonConverter());
+        options.Converters.Add(new ReturnReasonCodeNullableJsonConverter());
+        options.Converters.Add(new RoutingIdentifierJsonConverter());
+        options.Converters.Add(new RoutingIdentifierTypeJsonConverter());
+        options.Converters.Add(new RoutingIdentifierTypeNullableJsonConverter());
+        options.Converters.Add(new SellingPartyJsonConverter());
+        options.Converters.Add(new StoreDTOJsonConverter());
+        options.Converters.Add(new SubmitEncryptedReceipt202ResponseJsonConverter());
+        options.Converters.Add(new TaxJsonConverter());
+        options.Converters.Add(new TaxCategoryCodeJsonConverter());
+        options.Converters.Add(new TaxCategoryCodeNullableJsonConverter());
+        options.Converters.Add(new UnitCodeJsonConverter());
+        options.Converters.Add(new UnitCodeNullableJsonConverter());
+        options.Converters.Add(new UpdateCompanyGrantRequestJsonConverter());
+        options.Converters.Add(new UpdateCompanyReceiptDeliveryPreferenceRequestJsonConverter());
+        options.Converters.Add(new UpdateCreditNoteRequestStatusRequestJsonConverter());
+        options.Converters.Add(new UpdateStoreRequestJsonConverter());
+        options.Converters.Add(new UploadPublicKeyRequestJsonConverter());
+        options.Converters.Add(new WebhookCreditNoteInitiationRequestJsonConverter());
+        options.Converters.Add(new WebhookDTOJsonConverter());
+        options.Converters.Add(new WebhookDataJsonConverter());
+        options.Converters.Add(new WebhookEventJsonConverter());
+        options.Converters.Add(new WebhookReceiptEnvelopeJsonConverter());
+        options.Converters.Add(new WebhookRequestBodyJsonConverter());
+        options.Converters.Add(new WebhookResponseJsonConverter());
+        options.Converters.Add(new Utils.DecimalJsonConverter());
+        options.Converters.Add(new DoubleJsonConverter());
+        options.Converters.Add(new DateTimeOffsetJsonConverter());
+        options.Converters.Add(new JsonStringEnumConverter());
+        return options;
+    }
+}

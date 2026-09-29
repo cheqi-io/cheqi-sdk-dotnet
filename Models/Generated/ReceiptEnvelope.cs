@@ -25,84 +25,84 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Receipt envelope, that is the encrypted receipt content
+    /// Versioned plaintext receipt package encrypted independently for one recipient.
     /// </summary>
     public partial class ReceiptEnvelope
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ReceiptEnvelope" /> class.
         /// </summary>
-        /// <param name="cheqi">cheqi</param>
-        /// <param name="ublPurchaseReceipt">Serialized UBL PurchaseReceipt XML payload. Include this when the recipient accepts UBL_PURCHASE_RECEIPT.</param>
-        /// <param name="ublInvoice">Serialized UBL Invoice XML payload. Include this when the recipient accepts UBL_INVOICE.</param>
-        /// <param name="vatMetaData">vatMetaData</param>
+        /// <param name="cheqiReceiptId">Stable Cheqi receipt or credit-note identifier.</param>
+        /// <param name="documents">Generated documents keyed by ReceiptFormat name: CHEQI, UBL_PURCHASE_RECEIPT, UBL_INVOICE, or UBL_CREDIT_NOTE. Only formats included for this recipient are present. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.</param>
+        /// <param name="envelopeVersion">Schema version of this encrypted plaintext envelope.</param>
+        /// <param name="receiptGeneratorVersion">Version of the Rust receipt-template engine that generated the documents.</param>
+        /// <param name="receiptUuid">Shared UUID embedded in every generated representation of this receipt.</param>
+        /// <param name="expenseSubmission">expenseSubmission</param>
         [JsonConstructor]
-        public ReceiptEnvelope(Option<CheqiReceipt?> cheqi = default, Option<string?> ublPurchaseReceipt = default, Option<string?> ublInvoice = default, Option<VatMetadata?> vatMetaData = default)
+        public ReceiptEnvelope(string cheqiReceiptId, Dictionary<string, ReceiptEnvelopeDocument> documents, int envelopeVersion, string receiptGeneratorVersion, Guid receiptUuid, Option<ExpenseSubmissionEnvelope?> expenseSubmission = default)
         {
-            CheqiOption = cheqi;
-            UblPurchaseReceiptOption = ublPurchaseReceipt;
-            UblInvoiceOption = ublInvoice;
-            VatMetaDataOption = vatMetaData;
+            CheqiReceiptId = cheqiReceiptId;
+            Documents = documents;
+            EnvelopeVersion = envelopeVersion;
+            ReceiptGeneratorVersion = receiptGeneratorVersion;
+            ReceiptUuid = receiptUuid;
+            ExpenseSubmissionOption = expenseSubmission;
             OnCreated();
         }
 
         partial void OnCreated();
 
         /// <summary>
-        /// Used to track the state of Cheqi
+        /// Stable Cheqi receipt or credit-note identifier.
+        /// </summary>
+        /// <value>Stable Cheqi receipt or credit-note identifier.</value>
+        /* <example>CHQ-20260724-135304-36DEC3</example> */
+        [JsonPropertyName("cheqiReceiptId")]
+        public string CheqiReceiptId { get; set; }
+
+        /// <summary>
+        /// Generated documents keyed by ReceiptFormat name: CHEQI, UBL_PURCHASE_RECEIPT, UBL_INVOICE, or UBL_CREDIT_NOTE. Only formats included for this recipient are present. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.
+        /// </summary>
+        /// <value>Generated documents keyed by ReceiptFormat name: CHEQI, UBL_PURCHASE_RECEIPT, UBL_INVOICE, or UBL_CREDIT_NOTE. Only formats included for this recipient are present. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.</value>
+        [JsonPropertyName("documents")]
+        public Dictionary<string, ReceiptEnvelopeDocument> Documents { get; set; }
+
+        /// <summary>
+        /// Schema version of this encrypted plaintext envelope.
+        /// </summary>
+        /// <value>Schema version of this encrypted plaintext envelope.</value>
+        /* <example>1</example> */
+        [JsonPropertyName("envelopeVersion")]
+        public int EnvelopeVersion { get; set; }
+
+        /// <summary>
+        /// Version of the Rust receipt-template engine that generated the documents.
+        /// </summary>
+        /// <value>Version of the Rust receipt-template engine that generated the documents.</value>
+        /* <example>0.3.1</example> */
+        [JsonPropertyName("receiptGeneratorVersion")]
+        public string ReceiptGeneratorVersion { get; set; }
+
+        /// <summary>
+        /// Shared UUID embedded in every generated representation of this receipt.
+        /// </summary>
+        /// <value>Shared UUID embedded in every generated representation of this receipt.</value>
+        /* <example>2a061905-30da-430d-b6b9-0be2189a6902</example> */
+        [JsonPropertyName("receiptUuid")]
+        public Guid ReceiptUuid { get; set; }
+
+        /// <summary>
+        /// Used to track the state of ExpenseSubmission
         /// </summary>
         [JsonIgnore]
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<CheqiReceipt?> CheqiOption { get; private set; }
+        public Option<ExpenseSubmissionEnvelope?> ExpenseSubmissionOption { get; private set; }
 
         /// <summary>
-        /// Gets or Sets Cheqi
+        /// Gets or Sets ExpenseSubmission
         /// </summary>
-        [JsonPropertyName("cheqi")]
-        public CheqiReceipt? Cheqi { get { return this.CheqiOption; } set { this.CheqiOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of UblPurchaseReceipt
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> UblPurchaseReceiptOption { get; private set; }
-
-        /// <summary>
-        /// Serialized UBL PurchaseReceipt XML payload. Include this when the recipient accepts UBL_PURCHASE_RECEIPT.
-        /// </summary>
-        /// <value>Serialized UBL PurchaseReceipt XML payload. Include this when the recipient accepts UBL_PURCHASE_RECEIPT.</value>
-        /* <example>&lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8&quot;?&gt;&lt;PurchaseReceipt xmlns&#x3D;&quot;urn:oasis:names:specification:ubl:schema:xsd:PurchaseReceipt-2&quot;&gt;...&lt;/PurchaseReceipt&gt;</example> */
-        [JsonPropertyName("ublPurchaseReceipt")]
-        public string? UblPurchaseReceipt { get { return this.UblPurchaseReceiptOption; } set { this.UblPurchaseReceiptOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of UblInvoice
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> UblInvoiceOption { get; private set; }
-
-        /// <summary>
-        /// Serialized UBL Invoice XML payload. Include this when the recipient accepts UBL_INVOICE.
-        /// </summary>
-        /// <value>Serialized UBL Invoice XML payload. Include this when the recipient accepts UBL_INVOICE.</value>
-        /* <example>&lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8&quot;?&gt;&lt;Invoice xmlns&#x3D;&quot;urn:oasis:names:specification:ubl:schema:xsd:Invoice-2&quot;&gt;...&lt;/Invoice&gt;</example> */
-        [JsonPropertyName("ublInvoice")]
-        public string? UblInvoice { get { return this.UblInvoiceOption; } set { this.UblInvoiceOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of VatMetaData
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<VatMetadata?> VatMetaDataOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets VatMetaData
-        /// </summary>
-        [JsonPropertyName("vatMetaData")]
-        public VatMetadata? VatMetaData { get { return this.VatMetaDataOption; } set { this.VatMetaDataOption = new(value); } }
+        [JsonPropertyName("expenseSubmission")]
+        public ExpenseSubmissionEnvelope? ExpenseSubmission { get { return this.ExpenseSubmissionOption; } set { this.ExpenseSubmissionOption = new(value); } }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -112,10 +112,12 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class ReceiptEnvelope {\n");
-            sb.Append("  Cheqi: ").Append(Cheqi).Append("\n");
-            sb.Append("  UblPurchaseReceipt: ").Append(UblPurchaseReceipt).Append("\n");
-            sb.Append("  UblInvoice: ").Append(UblInvoice).Append("\n");
-            sb.Append("  VatMetaData: ").Append(VatMetaData).Append("\n");
+            sb.Append("  CheqiReceiptId: ").Append(CheqiReceiptId).Append("\n");
+            sb.Append("  Documents: ").Append(Documents).Append("\n");
+            sb.Append("  EnvelopeVersion: ").Append(EnvelopeVersion).Append("\n");
+            sb.Append("  ReceiptGeneratorVersion: ").Append(ReceiptGeneratorVersion).Append("\n");
+            sb.Append("  ReceiptUuid: ").Append(ReceiptUuid).Append("\n");
+            sb.Append("  ExpenseSubmission: ").Append(ExpenseSubmission).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -143,10 +145,12 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<CheqiReceipt?> cheqi = default;
-            Option<string?> ublPurchaseReceipt = default;
-            Option<string?> ublInvoice = default;
-            Option<VatMetadata?> vatMetaData = default;
+            Option<string?> cheqiReceiptId = default;
+            Option<Dictionary<string, ReceiptEnvelopeDocument>?> documents = default;
+            Option<int?> envelopeVersion = default;
+            Option<string?> receiptGeneratorVersion = default;
+            Option<Guid?> receiptUuid = default;
+            Option<ExpenseSubmissionEnvelope?> expenseSubmission = default;
 
             while (utf8JsonReader.Read())
             {
@@ -163,17 +167,23 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
-                        case "cheqi":
-                            cheqi = new Option<CheqiReceipt?>(JsonSerializer.Deserialize<CheqiReceipt>(ref utf8JsonReader, jsonSerializerOptions)!);
+                        case "cheqiReceiptId":
+                            cheqiReceiptId = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
-                        case "ublPurchaseReceipt":
-                            ublPurchaseReceipt = new Option<string?>(utf8JsonReader.GetString()!);
+                        case "documents":
+                            documents = new Option<Dictionary<string, ReceiptEnvelopeDocument>?>(JsonSerializer.Deserialize<Dictionary<string, ReceiptEnvelopeDocument>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
-                        case "ublInvoice":
-                            ublInvoice = new Option<string?>(utf8JsonReader.GetString()!);
+                        case "envelopeVersion":
+                            envelopeVersion = new Option<int?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (int?)null : utf8JsonReader.GetInt32());
                             break;
-                        case "vatMetaData":
-                            vatMetaData = new Option<VatMetadata?>(JsonSerializer.Deserialize<VatMetadata>(ref utf8JsonReader, jsonSerializerOptions)!);
+                        case "receiptGeneratorVersion":
+                            receiptGeneratorVersion = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "receiptUuid":
+                            receiptUuid = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
+                            break;
+                        case "expenseSubmission":
+                            expenseSubmission = new Option<ExpenseSubmissionEnvelope?>(JsonSerializer.Deserialize<ExpenseSubmissionEnvelope>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         default:
                             break;
@@ -181,19 +191,37 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
-            if (cheqi.IsSet && cheqi.Value == null)
-                throw new ArgumentNullException(nameof(cheqi), "Property is not nullable for class ReceiptEnvelope.");
+            if (!cheqiReceiptId.IsSet)
+                throw new ArgumentException("Property is required for class ReceiptEnvelope.", nameof(cheqiReceiptId));
 
-            if (ublPurchaseReceipt.IsSet && ublPurchaseReceipt.Value == null)
-                throw new ArgumentNullException(nameof(ublPurchaseReceipt), "Property is not nullable for class ReceiptEnvelope.");
+            if (!documents.IsSet)
+                throw new ArgumentException("Property is required for class ReceiptEnvelope.", nameof(documents));
 
-            if (ublInvoice.IsSet && ublInvoice.Value == null)
-                throw new ArgumentNullException(nameof(ublInvoice), "Property is not nullable for class ReceiptEnvelope.");
+            if (!envelopeVersion.IsSet)
+                throw new ArgumentException("Property is required for class ReceiptEnvelope.", nameof(envelopeVersion));
 
-            if (vatMetaData.IsSet && vatMetaData.Value == null)
-                throw new ArgumentNullException(nameof(vatMetaData), "Property is not nullable for class ReceiptEnvelope.");
+            if (!receiptGeneratorVersion.IsSet)
+                throw new ArgumentException("Property is required for class ReceiptEnvelope.", nameof(receiptGeneratorVersion));
 
-            return new ReceiptEnvelope(cheqi, ublPurchaseReceipt, ublInvoice, vatMetaData);
+            if (!receiptUuid.IsSet)
+                throw new ArgumentException("Property is required for class ReceiptEnvelope.", nameof(receiptUuid));
+
+            if (cheqiReceiptId.IsSet && cheqiReceiptId.Value == null)
+                throw new ArgumentNullException(nameof(cheqiReceiptId), "Property is not nullable for class ReceiptEnvelope.");
+
+            if (documents.IsSet && documents.Value == null)
+                throw new ArgumentNullException(nameof(documents), "Property is not nullable for class ReceiptEnvelope.");
+
+            if (envelopeVersion.IsSet && envelopeVersion.Value == null)
+                throw new ArgumentNullException(nameof(envelopeVersion), "Property is not nullable for class ReceiptEnvelope.");
+
+            if (receiptGeneratorVersion.IsSet && receiptGeneratorVersion.Value == null)
+                throw new ArgumentNullException(nameof(receiptGeneratorVersion), "Property is not nullable for class ReceiptEnvelope.");
+
+            if (receiptUuid.IsSet && receiptUuid.Value == null)
+                throw new ArgumentNullException(nameof(receiptUuid), "Property is not nullable for class ReceiptEnvelope.");
+
+            return new ReceiptEnvelope(cheqiReceiptId.Value!, documents.Value!, envelopeVersion.Value!.Value!, receiptGeneratorVersion.Value!, receiptUuid.Value!.Value!, expenseSubmission);
         }
 
         /// <summary>
@@ -220,34 +248,36 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, ReceiptEnvelope receiptEnvelope, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (receiptEnvelope.CheqiOption.IsSet && receiptEnvelope.Cheqi == null)
-                throw new ArgumentNullException(nameof(receiptEnvelope.Cheqi), "Property is required for class ReceiptEnvelope.");
+            if (receiptEnvelope.CheqiReceiptId == null)
+                throw new ArgumentNullException(nameof(receiptEnvelope.CheqiReceiptId), "Property is required for class ReceiptEnvelope.");
 
-            if (receiptEnvelope.UblPurchaseReceiptOption.IsSet && receiptEnvelope.UblPurchaseReceipt == null)
-                throw new ArgumentNullException(nameof(receiptEnvelope.UblPurchaseReceipt), "Property is required for class ReceiptEnvelope.");
+            if (receiptEnvelope.Documents == null)
+                throw new ArgumentNullException(nameof(receiptEnvelope.Documents), "Property is required for class ReceiptEnvelope.");
 
-            if (receiptEnvelope.UblInvoiceOption.IsSet && receiptEnvelope.UblInvoice == null)
-                throw new ArgumentNullException(nameof(receiptEnvelope.UblInvoice), "Property is required for class ReceiptEnvelope.");
+            if (receiptEnvelope.ReceiptGeneratorVersion == null)
+                throw new ArgumentNullException(nameof(receiptEnvelope.ReceiptGeneratorVersion), "Property is required for class ReceiptEnvelope.");
 
-            if (receiptEnvelope.VatMetaDataOption.IsSet && receiptEnvelope.VatMetaData == null)
-                throw new ArgumentNullException(nameof(receiptEnvelope.VatMetaData), "Property is required for class ReceiptEnvelope.");
+            writer.WriteString("cheqiReceiptId", receiptEnvelope.CheqiReceiptId);
 
-            if (receiptEnvelope.CheqiOption.IsSet)
+            writer.WritePropertyName("documents");
+            JsonSerializer.Serialize(writer, receiptEnvelope.Documents, jsonSerializerOptions);
             {
-                writer.WritePropertyName("cheqi");
-                JsonSerializer.Serialize(writer, receiptEnvelope.Cheqi, jsonSerializerOptions);
+                writer.WritePropertyName("envelopeVersion");
+                JsonSerializer.Serialize(writer, receiptEnvelope.EnvelopeVersion, jsonSerializerOptions);
             }
-            if (receiptEnvelope.UblPurchaseReceiptOption.IsSet)
-                writer.WriteString("ublPurchaseReceipt", receiptEnvelope.UblPurchaseReceipt);
 
-            if (receiptEnvelope.UblInvoiceOption.IsSet)
-                writer.WriteString("ublInvoice", receiptEnvelope.UblInvoice);
+            writer.WriteString("receiptGeneratorVersion", receiptEnvelope.ReceiptGeneratorVersion);
 
-            if (receiptEnvelope.VatMetaDataOption.IsSet)
-            {
-                writer.WritePropertyName("vatMetaData");
-                JsonSerializer.Serialize(writer, receiptEnvelope.VatMetaData, jsonSerializerOptions);
-            }
+            writer.WriteString("receiptUuid", receiptEnvelope.ReceiptUuid);
+
+            if (receiptEnvelope.ExpenseSubmissionOption.IsSet)
+                if (receiptEnvelope.ExpenseSubmissionOption.Value != null)
+                {
+                    writer.WritePropertyName("expenseSubmission");
+                    JsonSerializer.Serialize(writer, receiptEnvelope.ExpenseSubmission, jsonSerializerOptions);
+                }
+                else
+                    writer.WriteNull("expenseSubmission");
         }
     }
 }

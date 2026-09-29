@@ -11,16 +11,13 @@ namespace Cheqi.Sdk.Http;
 /// </summary>
 public class ResponseHandler
 {
-    private readonly ILogger<ResponseHandler> _logger;
+    private readonly ILogger _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public ResponseHandler(ILogger<ResponseHandler>? logger = null, JsonSerializerOptions? jsonOptions = null)
+    public ResponseHandler(ILogger? logger = null, JsonSerializerOptions? jsonOptions = null)
     {
         _logger = logger ?? NullLogger<ResponseHandler>.Instance;
-        _jsonOptions = jsonOptions ?? new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
+        _jsonOptions = jsonOptions ?? Serialization.CheqiJson.CreateOptions();
     }
 
     /// <summary>
@@ -78,7 +75,28 @@ public class ResponseHandler
                 );
             }
 
-            T? result = JsonSerializer.Deserialize<T>(responseJson, _jsonOptions);
+            if (typeof(T) == typeof(Cheqi.Sdk.Models.Generated.ReceiptSubmissionResponse))
+            {
+                try
+                {
+                    using var document = JsonDocument.Parse(responseJson);
+                    if (document.RootElement.TryGetProperty("state", out var state) && state.GetString() == "IN_PROGRESS")
+                    {
+                        int? retryAfter = response.Headers.RetryAfter?.Delta is TimeSpan delay
+                            ? (int)Math.Ceiling(delay.TotalSeconds)
+                            : response.Headers.RetryAfter?.Date is DateTimeOffset date
+                                ? Math.Max(0, (int)Math.Ceiling((date - DateTimeOffset.UtcNow).TotalSeconds)) : null;
+                        if (retryAfter == null && document.RootElement.TryGetProperty("retryAfterSeconds", out var seconds) && seconds.TryGetInt32(out var value)) retryAfter = value;
+                        throw new SubmissionInProgressException("Submission in progress", correlationId, Math.Max(1, retryAfter ?? 2));
+                    }
+                }
+                catch (Exception exception) when (exception is JsonException or InvalidOperationException or FormatException)
+                { throw new CheqiApiException("Invalid JSON response", exception, (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId); }
+            }
+            T? result;
+            try { result = JsonSerializer.Deserialize<T>(responseJson, _jsonOptions); }
+            catch (Exception exception) when (exception is JsonException or ArgumentException or NotImplementedException or InvalidOperationException or FormatException)
+            { throw new CheqiApiException("Invalid JSON response", exception, (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId); }
             if (result == null)
             {
                 throw new CheqiApiException(
@@ -88,6 +106,9 @@ public class ResponseHandler
                     correlationId
                 );
             }
+            if (result is Cheqi.Sdk.Models.Generated.ReceiptSubmissionResponse submission &&
+                (string.IsNullOrWhiteSpace(submission.CheqiReceiptId) || string.IsNullOrWhiteSpace(submission.MatchId)))
+                throw new CheqiApiException("Invalid receipt submission response", (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId);
             return result;
         }
         else

@@ -35,17 +35,21 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="companyLegalName">The legal name of the receiving company (B2B only). Use this for business recipients.</param>
         /// <param name="taxNumber">The tax number of the receiving party (B2B only)</param>
         /// <param name="companyIdentifiers">The company identifiers of the receiving party (B2B only)</param>
+        /// <param name="contactFirstName">The first name of the person who made a B2B purchase on behalf of the receiving company</param>
+        /// <param name="contactLastName">The last name of the person who made a B2B purchase on behalf of the receiving company</param>
         /// <param name="consumerName">The full name of the consumer (B2C only). Use this for individual recipients.</param>
         /// <param name="email">The email addressDto of the receiving party</param>
         /// <param name="phone">The phone number of the receiving party</param>
         /// <param name="address">address</param>
         /// <param name="companyRegistration">companyRegistration</param>
         [JsonConstructor]
-        public ReceivingParty(Option<string?> companyLegalName = default, Option<string?> taxNumber = default, Option<List<CompanyIdentifierDTO>?> companyIdentifiers = default, Option<string?> consumerName = default, Option<string?> email = default, Option<string?> phone = default, Option<PartyAddress?> address = default, Option<List<CompanyIdentifierDTO>?> companyRegistration = default)
+        public ReceivingParty(Option<string?> companyLegalName = default, Option<string?> taxNumber = default, Option<List<CompanyIdentifierDTO>?> companyIdentifiers = default, Option<string?> contactFirstName = default, Option<string?> contactLastName = default, Option<string?> consumerName = default, Option<string?> email = default, Option<string?> phone = default, Option<PartyAddress?> address = default, Option<List<CompanyIdentifierDTO>?> companyRegistration = default)
         {
             CompanyLegalNameOption = companyLegalName;
             TaxNumberOption = taxNumber;
             CompanyIdentifiersOption = companyIdentifiers;
+            ContactFirstNameOption = contactFirstName;
+            ContactLastNameOption = contactLastName;
             ConsumerNameOption = consumerName;
             EmailOption = email;
             PhoneOption = phone;
@@ -100,6 +104,36 @@ namespace Cheqi.Sdk.Models.Generated
         /* <example>987654321</example> */
         [JsonPropertyName("companyIdentifiers")]
         public List<CompanyIdentifierDTO>? CompanyIdentifiers { get { return this.CompanyIdentifiersOption; } set { this.CompanyIdentifiersOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of ContactFirstName
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> ContactFirstNameOption { get; private set; }
+
+        /// <summary>
+        /// The first name of the person who made a B2B purchase on behalf of the receiving company
+        /// </summary>
+        /// <value>The first name of the person who made a B2B purchase on behalf of the receiving company</value>
+        /* <example>John</example> */
+        [JsonPropertyName("contactFirstName")]
+        public string? ContactFirstName { get { return this.ContactFirstNameOption; } set { this.ContactFirstNameOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of ContactLastName
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> ContactLastNameOption { get; private set; }
+
+        /// <summary>
+        /// The last name of the person who made a B2B purchase on behalf of the receiving company
+        /// </summary>
+        /// <value>The last name of the person who made a B2B purchase on behalf of the receiving company</value>
+        /* <example>Doe</example> */
+        [JsonPropertyName("contactLastName")]
+        public string? ContactLastName { get { return this.ContactLastNameOption; } set { this.ContactLastNameOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of ConsumerName
@@ -183,6 +217,8 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  CompanyLegalName: ").Append(CompanyLegalName).Append("\n");
             sb.Append("  TaxNumber: ").Append(TaxNumber).Append("\n");
             sb.Append("  CompanyIdentifiers: ").Append(CompanyIdentifiers).Append("\n");
+            sb.Append("  ContactFirstName: ").Append(ContactFirstName).Append("\n");
+            sb.Append("  ContactLastName: ").Append(ContactLastName).Append("\n");
             sb.Append("  ConsumerName: ").Append(ConsumerName).Append("\n");
             sb.Append("  Email: ").Append(Email).Append("\n");
             sb.Append("  Phone: ").Append(Phone).Append("\n");
@@ -218,6 +254,8 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> companyLegalName = default;
             Option<string?> taxNumber = default;
             Option<List<CompanyIdentifierDTO>?> companyIdentifiers = default;
+            Option<string?> contactFirstName = default;
+            Option<string?> contactLastName = default;
             Option<string?> consumerName = default;
             Option<string?> email = default;
             Option<string?> phone = default;
@@ -247,6 +285,12 @@ namespace Cheqi.Sdk.Models.Generated
                             break;
                         case "companyIdentifiers":
                             companyIdentifiers = new Option<List<CompanyIdentifierDTO>?>(JsonSerializer.Deserialize<List<CompanyIdentifierDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
+                        case "contactFirstName":
+                            contactFirstName = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "contactLastName":
+                            contactLastName = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "consumerName":
                             consumerName = new Option<string?>(utf8JsonReader.GetString()!);
@@ -278,6 +322,12 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyIdentifiers.IsSet && companyIdentifiers.Value == null)
                 throw new ArgumentNullException(nameof(companyIdentifiers), "Property is not nullable for class ReceivingParty.");
 
+            if (contactFirstName.IsSet && contactFirstName.Value == null)
+                throw new ArgumentNullException(nameof(contactFirstName), "Property is not nullable for class ReceivingParty.");
+
+            if (contactLastName.IsSet && contactLastName.Value == null)
+                throw new ArgumentNullException(nameof(contactLastName), "Property is not nullable for class ReceivingParty.");
+
             if (consumerName.IsSet && consumerName.Value == null)
                 throw new ArgumentNullException(nameof(consumerName), "Property is not nullable for class ReceivingParty.");
 
@@ -293,7 +343,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyRegistration.IsSet && companyRegistration.Value == null)
                 throw new ArgumentNullException(nameof(companyRegistration), "Property is not nullable for class ReceivingParty.");
 
-            return new ReceivingParty(companyLegalName, taxNumber, companyIdentifiers, consumerName, email, phone, address, companyRegistration);
+            return new ReceivingParty(companyLegalName, taxNumber, companyIdentifiers, contactFirstName, contactLastName, consumerName, email, phone, address, companyRegistration);
         }
 
         /// <summary>
@@ -329,6 +379,12 @@ namespace Cheqi.Sdk.Models.Generated
             if (receivingParty.CompanyIdentifiersOption.IsSet && receivingParty.CompanyIdentifiers == null)
                 throw new ArgumentNullException(nameof(receivingParty.CompanyIdentifiers), "Property is required for class ReceivingParty.");
 
+            if (receivingParty.ContactFirstNameOption.IsSet && receivingParty.ContactFirstName == null)
+                throw new ArgumentNullException(nameof(receivingParty.ContactFirstName), "Property is required for class ReceivingParty.");
+
+            if (receivingParty.ContactLastNameOption.IsSet && receivingParty.ContactLastName == null)
+                throw new ArgumentNullException(nameof(receivingParty.ContactLastName), "Property is required for class ReceivingParty.");
+
             if (receivingParty.ConsumerNameOption.IsSet && receivingParty.ConsumerName == null)
                 throw new ArgumentNullException(nameof(receivingParty.ConsumerName), "Property is required for class ReceivingParty.");
 
@@ -355,6 +411,12 @@ namespace Cheqi.Sdk.Models.Generated
                 writer.WritePropertyName("companyIdentifiers");
                 JsonSerializer.Serialize(writer, receivingParty.CompanyIdentifiers, jsonSerializerOptions);
             }
+            if (receivingParty.ContactFirstNameOption.IsSet)
+                writer.WriteString("contactFirstName", receivingParty.ContactFirstName);
+
+            if (receivingParty.ContactLastNameOption.IsSet)
+                writer.WriteString("contactLastName", receivingParty.ContactLastName);
+
             if (receivingParty.ConsumerNameOption.IsSet)
                 writer.WriteString("consumerName", receivingParty.ConsumerName);
 

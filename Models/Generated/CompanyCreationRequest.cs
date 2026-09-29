@@ -45,8 +45,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="returnProcessingMode">returnProcessingMode</param>
         /// <param name="notificationCodeEnabled">Whether notification-code based receipt retrieval is enabled</param>
         /// <param name="emailFallbackEnabled">Whether receipts may fall back to PDF email delivery when recipient matching does not find a Cheqi recipient</param>
+        /// <param name="downloadFallbackEnabled">Whether receipts may fall back to QR-code download delivery when recipient matching does not find a Cheqi recipient</param>
         [JsonConstructor]
-        public CompanyCreationRequest(string companyName, string companyLegalName, AddressDTO address, string companyEmail, Option<string?> phoneNumber = default, Option<List<ContactDetailDto>?> contactDetails = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<string?> website = default, Option<int?> returnDays = default, Option<string?> companyReceiptText = default, Option<ReturnProcessingMode?> returnProcessingMode = default, Option<bool?> notificationCodeEnabled = default, Option<bool?> emailFallbackEnabled = default)
+        public CompanyCreationRequest(string companyName, string companyLegalName, AddressDTO address, string companyEmail, Option<string?> phoneNumber = default, Option<List<ContactDetailDto>?> contactDetails = default, Option<List<CompanyIdentifierDTO>?> identifiers = default, Option<string?> website = default, Option<int?> returnDays = default, Option<string?> companyReceiptText = default, Option<ReturnProcessingMode?> returnProcessingMode = default, Option<bool?> notificationCodeEnabled = default, Option<bool?> emailFallbackEnabled = default, Option<bool?> downloadFallbackEnabled = default)
         {
             CompanyName = companyName;
             CompanyLegalName = companyLegalName;
@@ -61,6 +62,7 @@ namespace Cheqi.Sdk.Models.Generated
             ReturnProcessingModeOption = returnProcessingMode;
             NotificationCodeEnabledOption = notificationCodeEnabled;
             EmailFallbackEnabledOption = emailFallbackEnabled;
+            DownloadFallbackEnabledOption = downloadFallbackEnabled;
             OnCreated();
         }
 
@@ -225,6 +227,20 @@ namespace Cheqi.Sdk.Models.Generated
         public bool? EmailFallbackEnabled { get { return this.EmailFallbackEnabledOption; } set { this.EmailFallbackEnabledOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of DownloadFallbackEnabled
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<bool?> DownloadFallbackEnabledOption { get; private set; }
+
+        /// <summary>
+        /// Whether receipts may fall back to QR-code download delivery when recipient matching does not find a Cheqi recipient
+        /// </summary>
+        /// <value>Whether receipts may fall back to QR-code download delivery when recipient matching does not find a Cheqi recipient</value>
+        [JsonPropertyName("downloadFallbackEnabled")]
+        public bool? DownloadFallbackEnabled { get { return this.DownloadFallbackEnabledOption; } set { this.DownloadFallbackEnabledOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -245,6 +261,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  ReturnProcessingMode: ").Append(ReturnProcessingMode).Append("\n");
             sb.Append("  NotificationCodeEnabled: ").Append(NotificationCodeEnabled).Append("\n");
             sb.Append("  EmailFallbackEnabled: ").Append(EmailFallbackEnabled).Append("\n");
+            sb.Append("  DownloadFallbackEnabled: ").Append(DownloadFallbackEnabled).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -285,6 +302,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<ReturnProcessingMode?> returnProcessingMode = default;
             Option<bool?> notificationCodeEnabled = default;
             Option<bool?> emailFallbackEnabled = default;
+            Option<bool?> downloadFallbackEnabled = default;
 
             while (utf8JsonReader.Read())
             {
@@ -342,6 +360,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "emailFallbackEnabled":
                             emailFallbackEnabled = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
+                        case "downloadFallbackEnabled":
+                            downloadFallbackEnabled = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
+                            break;
                         default:
                             break;
                     }
@@ -378,7 +399,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (identifiers.IsSet && identifiers.Value == null)
                 throw new ArgumentNullException(nameof(identifiers), "Property is not nullable for class CompanyCreationRequest.");
 
-            return new CompanyCreationRequest(companyName.Value!, companyLegalName.Value!, address.Value!, companyEmail.Value!, phoneNumber, contactDetails, identifiers, website, returnDays, companyReceiptText, returnProcessingMode, notificationCodeEnabled, emailFallbackEnabled);
+            return new CompanyCreationRequest(companyName.Value!, companyLegalName.Value!, address.Value!, companyEmail.Value!, phoneNumber, contactDetails, identifiers, website, returnDays, companyReceiptText, returnProcessingMode, notificationCodeEnabled, emailFallbackEnabled, downloadFallbackEnabled);
         }
 
         /// <summary>
@@ -455,7 +476,10 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (companyCreationRequest.ReturnDaysOption.IsSet)
                 if (companyCreationRequest.ReturnDaysOption.Value != null)
-                    writer.WriteNumber("returnDays", companyCreationRequest.ReturnDaysOption.Value!.Value);
+                    {
+                        writer.WritePropertyName("returnDays");
+                        JsonSerializer.Serialize(writer, companyCreationRequest.ReturnDaysOption.Value!.Value, jsonSerializerOptions);
+                    }
                 else
                     writer.WriteNull("returnDays");
 
@@ -484,6 +508,12 @@ namespace Cheqi.Sdk.Models.Generated
                     writer.WriteBoolean("emailFallbackEnabled", companyCreationRequest.EmailFallbackEnabledOption.Value!.Value);
                 else
                     writer.WriteNull("emailFallbackEnabled");
+
+            if (companyCreationRequest.DownloadFallbackEnabledOption.IsSet)
+                if (companyCreationRequest.DownloadFallbackEnabledOption.Value != null)
+                    writer.WriteBoolean("downloadFallbackEnabled", companyCreationRequest.DownloadFallbackEnabledOption.Value!.Value);
+                else
+                    writer.WriteNull("downloadFallbackEnabled");
         }
     }
 }

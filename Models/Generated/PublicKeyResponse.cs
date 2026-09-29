@@ -173,7 +173,7 @@ namespace Cheqi.Sdk.Models.Generated
                                 keyAlgorithm = new Option<KeyAlgorithm?>(KeyAlgorithmValueConverter.FromStringOrDefault(keyAlgorithmRawValue));
                             break;
                         case "keyCreatedAt":
-                            keyCreatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime>(ref utf8JsonReader, jsonSerializerOptions));
+                            keyCreatedAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "hasKey":
                             hasKey = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
@@ -235,7 +235,10 @@ namespace Cheqi.Sdk.Models.Generated
                 writer.WriteString("keyAlgorithm", keyAlgorithmRawValue);
             }
             if (publicKeyResponse.KeyCreatedAtOption.IsSet)
-                writer.WriteString("keyCreatedAt", publicKeyResponse.KeyCreatedAtOption.Value!.Value.ToString(KeyCreatedAtFormat));
+                {
+                    writer.WritePropertyName("keyCreatedAt");
+                    JsonSerializer.Serialize(writer, publicKeyResponse.KeyCreatedAtOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (publicKeyResponse.HasKeyOption.IsSet)
                 writer.WriteBoolean("hasKey", publicKeyResponse.HasKeyOption.Value!.Value);

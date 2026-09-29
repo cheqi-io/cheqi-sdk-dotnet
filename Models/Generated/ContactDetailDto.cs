@@ -226,7 +226,10 @@ namespace Cheqi.Sdk.Models.Generated
                 throw new ArgumentNullException(nameof(contactDetailDto.DisplayName), "Property is required for class ContactDetailDto.");
 
             if (contactDetailDto.IdOption.IsSet)
-                writer.WriteNumber("id", contactDetailDto.IdOption.Value!.Value);
+                {
+                    writer.WritePropertyName("id");
+                    JsonSerializer.Serialize(writer, contactDetailDto.IdOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (contactDetailDto.ContactTypeOption.IsSet)
                 writer.WriteString("contactType", contactDetailDto.ContactType);

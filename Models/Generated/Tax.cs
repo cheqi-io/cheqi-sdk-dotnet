@@ -37,18 +37,37 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="taxableAmount">The total taxable amount for this tax rate</param>
         /// <param name="amount">The calculated tax amount</param>
         /// <param name="label">The label of the tax</param>
+        /// <param name="category">category</param>
+        /// <param name="exemptionReasonCode">Tax exemption reason code, applicable only when category is EXEMPT</param>
+        /// <param name="exemptionReason">Tax exemption reason, applicable only when category is EXEMPT</param>
         [JsonConstructor]
-        public Tax(double rate, string type, decimal taxableAmount, Option<decimal?> amount = default, Option<string?> label = default)
+        public Tax(double rate, string type, decimal taxableAmount, Option<decimal?> amount = default, Option<string?> label = default, Option<TaxCategoryCode?> category = default, Option<string?> exemptionReasonCode = default, Option<string?> exemptionReason = default)
         {
             Rate = rate;
             Type = type;
             TaxableAmount = taxableAmount;
             AmountOption = amount;
             LabelOption = label;
+            CategoryOption = category;
+            ExemptionReasonCodeOption = exemptionReasonCode;
+            ExemptionReasonOption = exemptionReason;
             OnCreated();
         }
 
         partial void OnCreated();
+
+        /// <summary>
+        /// Used to track the state of Category
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<TaxCategoryCode?> CategoryOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets Category
+        /// </summary>
+        [JsonPropertyName("category")]
+        public TaxCategoryCode? Category { get { return this.CategoryOption; } set { this.CategoryOption = new(value); } }
 
         /// <summary>
         /// The tax rate as a percentage (e.g. 21.0 for 21%)
@@ -105,6 +124,36 @@ namespace Cheqi.Sdk.Models.Generated
         public string? Label { get { return this.LabelOption; } set { this.LabelOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of ExemptionReasonCode
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> ExemptionReasonCodeOption { get; private set; }
+
+        /// <summary>
+        /// Tax exemption reason code, applicable only when category is EXEMPT
+        /// </summary>
+        /// <value>Tax exemption reason code, applicable only when category is EXEMPT</value>
+        /* <example>VATEX-EU-132</example> */
+        [JsonPropertyName("exemptionReasonCode")]
+        public string? ExemptionReasonCode { get { return this.ExemptionReasonCodeOption; } set { this.ExemptionReasonCodeOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of ExemptionReason
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> ExemptionReasonOption { get; private set; }
+
+        /// <summary>
+        /// Tax exemption reason, applicable only when category is EXEMPT
+        /// </summary>
+        /// <value>Tax exemption reason, applicable only when category is EXEMPT</value>
+        /* <example>Exempt supply</example> */
+        [JsonPropertyName("exemptionReason")]
+        public string? ExemptionReason { get { return this.ExemptionReasonOption; } set { this.ExemptionReasonOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -117,6 +166,9 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  TaxableAmount: ").Append(TaxableAmount).Append("\n");
             sb.Append("  Amount: ").Append(Amount).Append("\n");
             sb.Append("  Label: ").Append(Label).Append("\n");
+            sb.Append("  Category: ").Append(Category).Append("\n");
+            sb.Append("  ExemptionReasonCode: ").Append(ExemptionReasonCode).Append("\n");
+            sb.Append("  ExemptionReason: ").Append(ExemptionReason).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -149,6 +201,9 @@ namespace Cheqi.Sdk.Models.Generated
             Option<decimal?> taxableAmount = default;
             Option<decimal?> amount = default;
             Option<string?> label = default;
+            Option<TaxCategoryCode?> category = default;
+            Option<string?> exemptionReasonCode = default;
+            Option<string?> exemptionReason = default;
 
             while (utf8JsonReader.Read())
             {
@@ -180,6 +235,17 @@ namespace Cheqi.Sdk.Models.Generated
                         case "label":
                             label = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
+                        case "category":
+                            string? categoryRawValue = utf8JsonReader.GetString();
+                            if (categoryRawValue != null)
+                                category = new Option<TaxCategoryCode?>(TaxCategoryCodeValueConverter.FromStringOrDefault(categoryRawValue));
+                            break;
+                        case "exemptionReasonCode":
+                            exemptionReasonCode = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "exemptionReason":
+                            exemptionReason = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
                         default:
                             break;
                     }
@@ -210,7 +276,16 @@ namespace Cheqi.Sdk.Models.Generated
             if (label.IsSet && label.Value == null)
                 throw new ArgumentNullException(nameof(label), "Property is not nullable for class Tax.");
 
-            return new Tax(rate.Value!.Value!, type.Value!, taxableAmount.Value!.Value!, amount, label);
+            if (category.IsSet && category.Value == null)
+                throw new ArgumentNullException(nameof(category), "Property is not nullable for class Tax.");
+
+            if (exemptionReasonCode.IsSet && exemptionReasonCode.Value == null)
+                throw new ArgumentNullException(nameof(exemptionReasonCode), "Property is not nullable for class Tax.");
+
+            if (exemptionReason.IsSet && exemptionReason.Value == null)
+                throw new ArgumentNullException(nameof(exemptionReason), "Property is not nullable for class Tax.");
+
+            return new Tax(rate.Value!.Value!, type.Value!, taxableAmount.Value!.Value!, amount, label, category, exemptionReasonCode, exemptionReason);
         }
 
         /// <summary>
@@ -243,17 +318,43 @@ namespace Cheqi.Sdk.Models.Generated
             if (tax.LabelOption.IsSet && tax.Label == null)
                 throw new ArgumentNullException(nameof(tax.Label), "Property is required for class Tax.");
 
-            writer.WriteNumber("rate", tax.Rate);
+            if (tax.ExemptionReasonCodeOption.IsSet && tax.ExemptionReasonCode == null)
+                throw new ArgumentNullException(nameof(tax.ExemptionReasonCode), "Property is required for class Tax.");
+
+            if (tax.ExemptionReasonOption.IsSet && tax.ExemptionReason == null)
+                throw new ArgumentNullException(nameof(tax.ExemptionReason), "Property is required for class Tax.");
+
+            {
+                writer.WritePropertyName("rate");
+                JsonSerializer.Serialize(writer, tax.Rate, jsonSerializerOptions);
+            }
 
             writer.WriteString("type", tax.Type);
 
-            writer.WriteNumber("taxableAmount", tax.TaxableAmount);
+            {
+                writer.WritePropertyName("taxableAmount");
+                JsonSerializer.Serialize(writer, tax.TaxableAmount, jsonSerializerOptions);
+            }
 
             if (tax.AmountOption.IsSet)
-                writer.WriteNumber("amount", tax.AmountOption.Value!.Value);
+                {
+                    writer.WritePropertyName("amount");
+                    JsonSerializer.Serialize(writer, tax.AmountOption.Value!.Value, jsonSerializerOptions);
+                }
 
             if (tax.LabelOption.IsSet)
                 writer.WriteString("label", tax.Label);
+
+            if (tax.CategoryOption.IsSet)
+            {
+                var categoryRawValue = TaxCategoryCodeValueConverter.ToJsonValue(tax.Category!.Value);
+                writer.WriteString("category", categoryRawValue);
+            }
+            if (tax.ExemptionReasonCodeOption.IsSet)
+                writer.WriteString("exemptionReasonCode", tax.ExemptionReasonCode);
+
+            if (tax.ExemptionReasonOption.IsSet)
+                writer.WriteString("exemptionReason", tax.ExemptionReason);
         }
     }
 }

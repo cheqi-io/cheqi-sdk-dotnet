@@ -43,7 +43,7 @@ public class AesDecryptor
             Array.Copy(ciphertext, 0, ciphertextWithTag, 0, ciphertext.Length);
             Array.Copy(tag, 0, ciphertextWithTag, ciphertext.Length, tag.Length);
 
-            using var aesGcm = new AesGcm(aesKey);
+            using var aesGcm = new AesGcm(aesKey, GCM_TAG_LENGTH);
 
             byte[] decryptedBytes = new byte[ciphertext.Length];
             aesGcm.Decrypt(iv, ciphertext, tag, decryptedBytes);
