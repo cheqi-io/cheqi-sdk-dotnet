@@ -7,7 +7,7 @@ Version 2.0 is a breaking migration from the old server-generated template flow.
 ## Installation and initialization
 
 ```sh
-dotnet add package cheqi-sdk --version 2.0.0
+dotnet add package cheqi-sdk --version 2.1.0
 ```
 
 ```csharp

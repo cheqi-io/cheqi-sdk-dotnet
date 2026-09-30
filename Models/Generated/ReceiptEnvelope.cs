@@ -33,9 +33,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="ReceiptEnvelope" /> class.
         /// </summary>
         /// <param name="cheqiReceiptId">Stable Cheqi receipt or credit-note identifier.</param>
-        /// <param name="documents">Generated documents keyed by ReceiptFormat name: CHEQI, UBL_PURCHASE_RECEIPT, UBL_INVOICE, or UBL_CREDIT_NOTE. Only formats included for this recipient are present. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.</param>
-        /// <param name="envelopeVersion">Schema version of this encrypted plaintext envelope.</param>
-        /// <param name="receiptGeneratorVersion">Version of the Rust receipt-template engine that generated the documents.</param>
+        /// <param name="documents">Version 1 holds generated CHEQI/UBL documents. Version 2 download envelopes hold RECEIPT_PAYLOAD generation input and optional IDENTIFICATION_DETAILS. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.</param>
+        /// <param name="envelopeVersion">Schema version of this encrypted plaintext envelope. Version 2 download envelopes carry RECEIPT_PAYLOAD generation input instead of a generated CHEQI document.</param>
+        /// <param name="receiptGeneratorVersion">Generated-document engine version for version 1; payload schema marker for version 2 download envelopes.</param>
         /// <param name="receiptUuid">Shared UUID embedded in every generated representation of this receipt.</param>
         /// <param name="expenseSubmission">expenseSubmission</param>
         [JsonConstructor]
@@ -61,24 +61,24 @@ namespace Cheqi.Sdk.Models.Generated
         public string CheqiReceiptId { get; set; }
 
         /// <summary>
-        /// Generated documents keyed by ReceiptFormat name: CHEQI, UBL_PURCHASE_RECEIPT, UBL_INVOICE, or UBL_CREDIT_NOTE. Only formats included for this recipient are present. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.
+        /// Version 1 holds generated CHEQI/UBL documents. Version 2 download envelopes hold RECEIPT_PAYLOAD generation input and optional IDENTIFICATION_DETAILS. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.
         /// </summary>
-        /// <value>Generated documents keyed by ReceiptFormat name: CHEQI, UBL_PURCHASE_RECEIPT, UBL_INVOICE, or UBL_CREDIT_NOTE. Only formats included for this recipient are present. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.</value>
+        /// <value>Version 1 holds generated CHEQI/UBL documents. Version 2 download envelopes hold RECEIPT_PAYLOAD generation input and optional IDENTIFICATION_DETAILS. Each document&#39;s content is serialized JSON or XML, not a nested parsed document.</value>
         [JsonPropertyName("documents")]
         public Dictionary<string, ReceiptEnvelopeDocument> Documents { get; set; }
 
         /// <summary>
-        /// Schema version of this encrypted plaintext envelope.
+        /// Schema version of this encrypted plaintext envelope. Version 2 download envelopes carry RECEIPT_PAYLOAD generation input instead of a generated CHEQI document.
         /// </summary>
-        /// <value>Schema version of this encrypted plaintext envelope.</value>
+        /// <value>Schema version of this encrypted plaintext envelope. Version 2 download envelopes carry RECEIPT_PAYLOAD generation input instead of a generated CHEQI document.</value>
         /* <example>1</example> */
         [JsonPropertyName("envelopeVersion")]
         public int EnvelopeVersion { get; set; }
 
         /// <summary>
-        /// Version of the Rust receipt-template engine that generated the documents.
+        /// Generated-document engine version for version 1; payload schema marker for version 2 download envelopes.
         /// </summary>
-        /// <value>Version of the Rust receipt-template engine that generated the documents.</value>
+        /// <value>Generated-document engine version for version 1; payload schema marker for version 2 download envelopes.</value>
         /* <example>0.3.1</example> */
         [JsonPropertyName("receiptGeneratorVersion")]
         public string ReceiptGeneratorVersion { get; set; }
