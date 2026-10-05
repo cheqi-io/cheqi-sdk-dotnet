@@ -26,6 +26,7 @@ public sealed class CheqiSdk : IDisposable
     public ReceiptService ReceiptService { get; }
     public CreditNoteService CreditNoteService { get; }
     public StoreService StoreService { get; }
+    public CompanyService CompanyService { get; }
     public VerificationService VerificationService { get; }
 
     public CheqiSdk(CheqiSdkOptions options, ILoggerFactory? loggerFactory = null, HttpClient? httpClient = null)
@@ -43,6 +44,7 @@ public sealed class CheqiSdk : IDisposable
         ReceiptService = new ReceiptService(ApiClient, EncryptionService, MatchingService, DownloadService, config.ReceiptDownloadBaseUrl);
         CreditNoteService = new CreditNoteService(ApiClient, EncryptionService, MatchingService);
         StoreService = new StoreService(ApiClient, logging.CreateLogger<StoreService>());
+        CompanyService = new CompanyService(ApiClient);
         VerificationService = new VerificationService();
     }
 

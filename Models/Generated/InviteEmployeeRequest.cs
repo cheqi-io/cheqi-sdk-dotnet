@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Invitation request with email addresses and role
+    /// Invitation request with email addresses
     /// </summary>
     public partial class InviteEmployeeRequest
     {
@@ -33,58 +33,20 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="InviteEmployeeRequest" /> class.
         /// </summary>
         /// <param name="emails">emails</param>
-        /// <param name="role">role</param>
-        /// <param name="receiptRecipient">receiptRecipient</param>
-        /// <param name="receiptWriter">receiptWriter</param>
         [JsonConstructor]
-        public InviteEmployeeRequest(List<string> emails, CompanyRole role, Option<bool?> receiptRecipient = default, Option<bool?> receiptWriter = default)
+        public InviteEmployeeRequest(List<string> emails)
         {
             Emails = emails;
-            Role = role;
-            ReceiptRecipientOption = receiptRecipient;
-            ReceiptWriterOption = receiptWriter;
             OnCreated();
         }
 
         partial void OnCreated();
 
         /// <summary>
-        /// Gets or Sets Role
-        /// </summary>
-        [JsonPropertyName("role")]
-        public CompanyRole Role { get; set; }
-
-        /// <summary>
         /// Gets or Sets Emails
         /// </summary>
         [JsonPropertyName("emails")]
         public List<string> Emails { get; set; }
-
-        /// <summary>
-        /// Used to track the state of ReceiptRecipient
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<bool?> ReceiptRecipientOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets ReceiptRecipient
-        /// </summary>
-        [JsonPropertyName("receiptRecipient")]
-        public bool? ReceiptRecipient { get { return this.ReceiptRecipientOption; } set { this.ReceiptRecipientOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of ReceiptWriter
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<bool?> ReceiptWriterOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets ReceiptWriter
-        /// </summary>
-        [JsonPropertyName("receiptWriter")]
-        public bool? ReceiptWriter { get { return this.ReceiptWriterOption; } set { this.ReceiptWriterOption = new(value); } }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -95,9 +57,6 @@ namespace Cheqi.Sdk.Models.Generated
             StringBuilder sb = new StringBuilder();
             sb.Append("class InviteEmployeeRequest {\n");
             sb.Append("  Emails: ").Append(Emails).Append("\n");
-            sb.Append("  Role: ").Append(Role).Append("\n");
-            sb.Append("  ReceiptRecipient: ").Append(ReceiptRecipient).Append("\n");
-            sb.Append("  ReceiptWriter: ").Append(ReceiptWriter).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -126,9 +85,6 @@ namespace Cheqi.Sdk.Models.Generated
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
             Option<List<string>?> emails = default;
-            Option<CompanyRole?> role = default;
-            Option<bool?> receiptRecipient = default;
-            Option<bool?> receiptWriter = default;
 
             while (utf8JsonReader.Read())
             {
@@ -148,17 +104,6 @@ namespace Cheqi.Sdk.Models.Generated
                         case "emails":
                             emails = new Option<List<string>?>(JsonSerializer.Deserialize<List<string>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
-                        case "role":
-                            string? roleRawValue = utf8JsonReader.GetString();
-                            if (roleRawValue != null)
-                                role = new Option<CompanyRole?>(CompanyRoleValueConverter.FromStringOrDefault(roleRawValue));
-                            break;
-                        case "receiptRecipient":
-                            receiptRecipient = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
-                            break;
-                        case "receiptWriter":
-                            receiptWriter = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
-                            break;
                         default:
                             break;
                     }
@@ -168,22 +113,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (!emails.IsSet)
                 throw new ArgumentException("Property is required for class InviteEmployeeRequest.", nameof(emails));
 
-            if (!role.IsSet)
-                throw new ArgumentException("Property is required for class InviteEmployeeRequest.", nameof(role));
-
             if (emails.IsSet && emails.Value == null)
                 throw new ArgumentNullException(nameof(emails), "Property is not nullable for class InviteEmployeeRequest.");
 
-            if (role.IsSet && role.Value == null)
-                throw new ArgumentNullException(nameof(role), "Property is not nullable for class InviteEmployeeRequest.");
-
-            if (receiptRecipient.IsSet && receiptRecipient.Value == null)
-                throw new ArgumentNullException(nameof(receiptRecipient), "Property is not nullable for class InviteEmployeeRequest.");
-
-            if (receiptWriter.IsSet && receiptWriter.Value == null)
-                throw new ArgumentNullException(nameof(receiptWriter), "Property is not nullable for class InviteEmployeeRequest.");
-
-            return new InviteEmployeeRequest(emails.Value!, role.Value!.Value!, receiptRecipient, receiptWriter);
+            return new InviteEmployeeRequest(emails.Value!);
         }
 
         /// <summary>
@@ -215,14 +148,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             writer.WritePropertyName("emails");
             JsonSerializer.Serialize(writer, inviteEmployeeRequest.Emails, jsonSerializerOptions);
-            var roleRawValue = CompanyRoleValueConverter.ToJsonValue(inviteEmployeeRequest.Role);
-            writer.WriteString("role", roleRawValue);
-
-            if (inviteEmployeeRequest.ReceiptRecipientOption.IsSet)
-                writer.WriteBoolean("receiptRecipient", inviteEmployeeRequest.ReceiptRecipientOption.Value!.Value);
-
-            if (inviteEmployeeRequest.ReceiptWriterOption.IsSet)
-                writer.WriteBoolean("receiptWriter", inviteEmployeeRequest.ReceiptWriterOption.Value!.Value);
         }
     }
 }

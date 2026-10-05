@@ -134,6 +134,18 @@ public sealed class CheqiApiClient : ICheqiApiClient
         return response;
     }
 
+    public async Task InviteUsersAsync(
+        Guid companyId,
+        List<string> emails,
+        string? accessToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.CompanyInviteEmployees(companyId));
+        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        request.Content = CreateJsonContent(new InviteEmployeeRequest(emails));
+        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<List<StoreDTO>> GetStoresAsync(
         Guid companyId,
         string? accessToken = null,
