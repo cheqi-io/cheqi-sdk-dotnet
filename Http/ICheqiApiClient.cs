@@ -13,6 +13,7 @@ public interface ICheqiApiClient : IDisposable
     Task<ClientReceiptDownloadResponse> UploadEncryptedDownloadReceiptAsync(ClientReceiptDownloadRequest request, string? accessToken = null, CancellationToken cancellationToken = default);
     Task SendReceiptViaEmailAsync(string customerEmail, CheqiReceipt receipt, string? accessToken = null, CancellationToken cancellationToken = default);
     Task<StoreDTO> CreateStoreAsync(Guid companyId, CreateStoreRequest request, string? accessToken = null, CancellationToken cancellationToken = default);
+    Task InviteUsersAsync(Guid companyId, List<string> emails, string? accessToken = null, CancellationToken cancellationToken = default);
     Task<List<StoreDTO>> GetStoresAsync(Guid companyId, string? accessToken = null, CancellationToken cancellationToken = default, bool? activeOnly = null);
     Task<StoreDTO> GetStoreAsync(Guid companyId, Guid storeId, string? accessToken = null, CancellationToken cancellationToken = default);
     Task<StoreDTO> UpdateStoreAsync(Guid companyId, Guid storeId, CreateStoreRequest request, string? accessToken = null, CancellationToken cancellationToken = default);

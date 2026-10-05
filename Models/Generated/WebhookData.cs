@@ -32,12 +32,14 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="WebhookData" /> class.
         /// </summary>
+        /// <param name="companyInvitationAccepted">companyInvitationAccepted</param>
         /// <param name="encryptedReceipt">encryptedReceipt</param>
         /// <param name="encryptedCreditNote">encryptedCreditNote</param>
         /// <param name="creditNoteInitiationRequest">creditNoteInitiationRequest</param>
         [JsonConstructor]
-        public WebhookData(Option<WebhookReceiptEnvelope?> encryptedReceipt = default, Option<WebhookReceiptEnvelope?> encryptedCreditNote = default, Option<WebhookCreditNoteInitiationRequest?> creditNoteInitiationRequest = default)
+        public WebhookData(Option<WebhookCompanyInvitationAccepted?> companyInvitationAccepted = default, Option<WebhookReceiptEnvelope?> encryptedReceipt = default, Option<WebhookReceiptEnvelope?> encryptedCreditNote = default, Option<WebhookCreditNoteInitiationRequest?> creditNoteInitiationRequest = default)
         {
+            CompanyInvitationAcceptedOption = companyInvitationAccepted;
             EncryptedReceiptOption = encryptedReceipt;
             EncryptedCreditNoteOption = encryptedCreditNote;
             CreditNoteInitiationRequestOption = creditNoteInitiationRequest;
@@ -45,6 +47,19 @@ namespace Cheqi.Sdk.Models.Generated
         }
 
         partial void OnCreated();
+
+        /// <summary>
+        /// Used to track the state of CompanyInvitationAccepted
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<WebhookCompanyInvitationAccepted?> CompanyInvitationAcceptedOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets CompanyInvitationAccepted
+        /// </summary>
+        [JsonPropertyName("companyInvitationAccepted")]
+        public WebhookCompanyInvitationAccepted? CompanyInvitationAccepted { get { return this.CompanyInvitationAcceptedOption; } set { this.CompanyInvitationAcceptedOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of EncryptedReceipt
@@ -93,6 +108,7 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class WebhookData {\n");
+            sb.Append("  CompanyInvitationAccepted: ").Append(CompanyInvitationAccepted).Append("\n");
             sb.Append("  EncryptedReceipt: ").Append(EncryptedReceipt).Append("\n");
             sb.Append("  EncryptedCreditNote: ").Append(EncryptedCreditNote).Append("\n");
             sb.Append("  CreditNoteInitiationRequest: ").Append(CreditNoteInitiationRequest).Append("\n");
@@ -123,6 +139,7 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
+            Option<WebhookCompanyInvitationAccepted?> companyInvitationAccepted = default;
             Option<WebhookReceiptEnvelope?> encryptedReceipt = default;
             Option<WebhookReceiptEnvelope?> encryptedCreditNote = default;
             Option<WebhookCreditNoteInitiationRequest?> creditNoteInitiationRequest = default;
@@ -142,6 +159,9 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
+                        case "companyInvitationAccepted":
+                            companyInvitationAccepted = new Option<WebhookCompanyInvitationAccepted?>(JsonSerializer.Deserialize<WebhookCompanyInvitationAccepted>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
                         case "encryptedReceipt":
                             encryptedReceipt = new Option<WebhookReceiptEnvelope?>(JsonSerializer.Deserialize<WebhookReceiptEnvelope>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
@@ -157,6 +177,9 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
+            if (companyInvitationAccepted.IsSet && companyInvitationAccepted.Value == null)
+                throw new ArgumentNullException(nameof(companyInvitationAccepted), "Property is not nullable for class WebhookData.");
+
             if (encryptedReceipt.IsSet && encryptedReceipt.Value == null)
                 throw new ArgumentNullException(nameof(encryptedReceipt), "Property is not nullable for class WebhookData.");
 
@@ -166,7 +189,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (creditNoteInitiationRequest.IsSet && creditNoteInitiationRequest.Value == null)
                 throw new ArgumentNullException(nameof(creditNoteInitiationRequest), "Property is not nullable for class WebhookData.");
 
-            return new WebhookData(encryptedReceipt, encryptedCreditNote, creditNoteInitiationRequest);
+            return new WebhookData(companyInvitationAccepted, encryptedReceipt, encryptedCreditNote, creditNoteInitiationRequest);
         }
 
         /// <summary>
@@ -193,6 +216,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, WebhookData webhookData, JsonSerializerOptions jsonSerializerOptions)
         {
+            if (webhookData.CompanyInvitationAcceptedOption.IsSet && webhookData.CompanyInvitationAccepted == null)
+                throw new ArgumentNullException(nameof(webhookData.CompanyInvitationAccepted), "Property is required for class WebhookData.");
+
             if (webhookData.EncryptedReceiptOption.IsSet && webhookData.EncryptedReceipt == null)
                 throw new ArgumentNullException(nameof(webhookData.EncryptedReceipt), "Property is required for class WebhookData.");
 
@@ -202,6 +228,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (webhookData.CreditNoteInitiationRequestOption.IsSet && webhookData.CreditNoteInitiationRequest == null)
                 throw new ArgumentNullException(nameof(webhookData.CreditNoteInitiationRequest), "Property is required for class WebhookData.");
 
+            if (webhookData.CompanyInvitationAcceptedOption.IsSet)
+            {
+                writer.WritePropertyName("companyInvitationAccepted");
+                JsonSerializer.Serialize(writer, webhookData.CompanyInvitationAccepted, jsonSerializerOptions);
+            }
             if (webhookData.EncryptedReceiptOption.IsSet)
             {
                 writer.WritePropertyName("encryptedReceipt");

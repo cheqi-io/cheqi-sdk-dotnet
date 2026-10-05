@@ -10,6 +10,20 @@ namespace Cheqi.Sdk.Tests;
 public sealed class CheqiApiClientTests
 {
     [Fact]
+    public async Task InviteUsersPostsEmailsAndAcceptsEmptySuccess()
+    {
+        using var harness = new SdkHarness();
+        var companyId = Guid.NewGuid();
+        harness.Enqueue(200, "");
+        await harness.Sdk.CompanyService.InviteUsersAsync(companyId, new List<string> { "employee@example.com" }, "oauth-token");
+        var request = Assert.Single(harness.Requests);
+        Assert.Equal("POST", request.Method);
+        Assert.Equal($"/company/{companyId:D}/invite/employees", request.Path);
+        Assert.Equal("Bearer oauth-token", request.Authorization);
+        Assert.Equal("employee@example.com", JsonDocument.Parse(request.Body).RootElement.GetProperty("emails")[0].GetString());
+    }
+
+    [Fact]
     public async Task InProgressResponseIsTypedAndHonorsRetryAfter()
     {
         using var harness = new SdkHarness();
