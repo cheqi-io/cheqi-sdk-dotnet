@@ -134,16 +134,70 @@ public sealed class CheqiApiClient : ICheqiApiClient
         return response;
     }
 
-    public async Task InviteUsersAsync(
+    public async Task<InviteEmployeesResponse> InviteUsersAsync(
         Guid companyId,
         List<string> emails,
         string? accessToken = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool? resendPending = null)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.CompanyInviteEmployees(companyId));
         await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
-        request.Content = CreateJsonContent(new InviteEmployeeRequest(emails));
+        var body = new InviteEmployeeRequest(emails);
+        if (resendPending.HasValue) body.ResendPending = resendPending.Value;
+        request.Content = CreateJsonContent(body);
+        return await SendAsync<InviteEmployeesResponse>(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<List<DestinationResponse>> ListReceiptDestinationsAsync(
+        string? accessToken = null, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, Endpoints.ReceiptDestinations);
+        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        return await SendAsync<List<DestinationResponse>>(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<RegisterResponse> RegisterReceiptDestinationAsync(
+        RegisterRequest destination, string? accessToken = null, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.ReceiptDestinations);
+        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        request.Content = CreateJsonContent(destination);
+        return await SendAsync<RegisterResponse>(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<List<WebhookReceiptEnvelope>> GetPendingReceiptsAsync(
+        Guid destinationId, string? accessToken = null, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, Endpoints.ReceiptDestinationQueue(destinationId));
+        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        return await SendAsync<List<WebhookReceiptEnvelope>>(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task AcknowledgeReceiptsAsync(
+        Guid destinationId, List<string> receiptIds, string? accessToken = null, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.ReceiptDestinationAcknowledge(destinationId));
+        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        request.Content = CreateJsonContent(new AcknowledgeRequest { ReceiptIds = receiptIds });
         await SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task DeactivateReceiptDestinationAsync(
+        Guid destinationId, string? accessToken = null, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, Endpoints.ReceiptDestination(destinationId));
+        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<WebhookDTO> UpdateWebhookSubscriptionUrlAsync(
+        Guid subscriptionId, string notificationUrl, string? accessToken = null, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Patch, Endpoints.WebhookSubscription(subscriptionId));
+        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        request.Content = CreateJsonContent(new UpdateSubscriptionRequest { NotificationUrl = notificationUrl });
+        return await SendAsync<WebhookDTO>(request, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<StoreDTO>> GetStoresAsync(

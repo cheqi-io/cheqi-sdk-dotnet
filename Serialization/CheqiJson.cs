@@ -54,6 +54,7 @@ public static class CheqiJson
         options.Converters.Add(new CreateStoreRequestJsonConverter());
         options.Converters.Add(new CreditNoteContextEnvelopeJsonConverter());
         options.Converters.Add(new CreditNoteInitiationRequestJsonConverter());
+        options.Converters.Add(new DestinationResponseJsonConverter());
         options.Converters.Add(new DiscountJsonConverter());
         options.Converters.Add(new DocumentTypeJsonConverter());
         options.Converters.Add(new DocumentTypeNullableJsonConverter());
@@ -64,6 +65,7 @@ public static class CheqiJson
         options.Converters.Add(new EncryptedReceiptDeliveryResponseJsonConverter());
         options.Converters.Add(new EncryptedReceiptEnvelopeJsonConverter());
         options.Converters.Add(new EncryptedReceiptPayloadJsonConverter());
+        options.Converters.Add(new ExistingMemberJsonConverter());
         options.Converters.Add(new ExpenseSubmissionEnvelopeJsonConverter());
         options.Converters.Add(new FiscalizationDataJsonConverter());
         options.Converters.Add(new FiscalizationStatusJsonConverter());
@@ -71,6 +73,7 @@ public static class CheqiJson
         options.Converters.Add(new IdentificationDetailsJsonConverter());
         options.Converters.Add(new IdentifierJsonConverter());
         options.Converters.Add(new InviteEmployeeRequestJsonConverter());
+        options.Converters.Add(new InviteEmployeesResponseJsonConverter());
         options.Converters.Add(new JurisdictionFieldJsonConverter());
         options.Converters.Add(new JurisdictionLegalTextJsonConverter());
         options.Converters.Add(new JurisdictionalDataJsonConverter());
@@ -111,6 +114,8 @@ public static class CheqiJson
         options.Converters.Add(new RefundBankAccountJsonConverter());
         options.Converters.Add(new RefundPreferenceJsonConverter());
         options.Converters.Add(new RefundPreferenceNullableJsonConverter());
+        options.Converters.Add(new RegisterRequestJsonConverter());
+        options.Converters.Add(new RegisterResponseJsonConverter());
         options.Converters.Add(new ResolveCollectionRecipientsRequestJsonConverter());
         options.Converters.Add(new ReturnLineItemJsonConverter());
         options.Converters.Add(new ReturnProcessingModeJsonConverter());
@@ -131,6 +136,7 @@ public static class CheqiJson
         options.Converters.Add(new UnitCodeNullableJsonConverter());
         options.Converters.Add(new UpdateCreditNoteRequestStatusRequestJsonConverter());
         options.Converters.Add(new UpdateStoreRequestJsonConverter());
+        options.Converters.Add(new UpdateSubscriptionRequestJsonConverter());
         options.Converters.Add(new UploadPublicKeyRequestJsonConverter());
         options.Converters.Add(new WebhookCompanyInvitationAcceptedJsonConverter());
         options.Converters.Add(new WebhookCreditNoteInitiationRequestJsonConverter());

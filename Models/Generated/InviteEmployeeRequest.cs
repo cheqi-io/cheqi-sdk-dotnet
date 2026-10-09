@@ -33,10 +33,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="InviteEmployeeRequest" /> class.
         /// </summary>
         /// <param name="emails">emails</param>
+        /// <param name="resendPending">resendPending</param>
         [JsonConstructor]
-        public InviteEmployeeRequest(List<string> emails)
+        public InviteEmployeeRequest(List<string> emails, Option<bool?> resendPending = default)
         {
             Emails = emails;
+            ResendPendingOption = resendPending;
             OnCreated();
         }
 
@@ -49,6 +51,19 @@ namespace Cheqi.Sdk.Models.Generated
         public List<string> Emails { get; set; }
 
         /// <summary>
+        /// Used to track the state of ResendPending
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<bool?> ResendPendingOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets ResendPending
+        /// </summary>
+        [JsonPropertyName("resendPending")]
+        public bool? ResendPending { get { return this.ResendPendingOption; } set { this.ResendPendingOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -57,6 +72,7 @@ namespace Cheqi.Sdk.Models.Generated
             StringBuilder sb = new StringBuilder();
             sb.Append("class InviteEmployeeRequest {\n");
             sb.Append("  Emails: ").Append(Emails).Append("\n");
+            sb.Append("  ResendPending: ").Append(ResendPending).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -85,6 +101,7 @@ namespace Cheqi.Sdk.Models.Generated
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
             Option<List<string>?> emails = default;
+            Option<bool?> resendPending = default;
 
             while (utf8JsonReader.Read())
             {
@@ -104,6 +121,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "emails":
                             emails = new Option<List<string>?>(JsonSerializer.Deserialize<List<string>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
+                        case "resendPending":
+                            resendPending = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
+                            break;
                         default:
                             break;
                     }
@@ -116,7 +136,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (emails.IsSet && emails.Value == null)
                 throw new ArgumentNullException(nameof(emails), "Property is not nullable for class InviteEmployeeRequest.");
 
-            return new InviteEmployeeRequest(emails.Value!);
+            if (resendPending.IsSet && resendPending.Value == null)
+                throw new ArgumentNullException(nameof(resendPending), "Property is not nullable for class InviteEmployeeRequest.");
+
+            return new InviteEmployeeRequest(emails.Value!, resendPending);
         }
 
         /// <summary>
@@ -148,6 +171,8 @@ namespace Cheqi.Sdk.Models.Generated
 
             writer.WritePropertyName("emails");
             JsonSerializer.Serialize(writer, inviteEmployeeRequest.Emails, jsonSerializerOptions);
+            if (inviteEmployeeRequest.ResendPendingOption.IsSet)
+                writer.WriteBoolean("resendPending", inviteEmployeeRequest.ResendPendingOption.Value!.Value);
         }
     }
 }

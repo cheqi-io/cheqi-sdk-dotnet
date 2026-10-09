@@ -35,12 +35,14 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="name">name</param>
         /// <param name="events">events</param>
         /// <param name="notificationUrl">notificationUrl</param>
+        /// <param name="destinationId">destinationId</param>
         [JsonConstructor]
-        public WebhookRequestBody(Option<string?> name = default, Option<List<WebhookRequestBody.EventsEnum>?> events = default, Option<string?> notificationUrl = default)
+        public WebhookRequestBody(Option<string?> name = default, Option<List<WebhookRequestBody.EventsEnum>?> events = default, Option<string?> notificationUrl = default, Option<Guid?> destinationId = default)
         {
             NameOption = name;
             EventsOption = events;
             NotificationUrlOption = notificationUrl;
+            DestinationIdOption = destinationId;
             OnCreated();
         }
 
@@ -180,6 +182,19 @@ namespace Cheqi.Sdk.Models.Generated
         public string? NotificationUrl { get { return this.NotificationUrlOption; } set { this.NotificationUrlOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of DestinationId
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<Guid?> DestinationIdOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets DestinationId
+        /// </summary>
+        [JsonPropertyName("destinationId")]
+        public Guid? DestinationId { get { return this.DestinationIdOption; } set { this.DestinationIdOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -190,6 +205,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  Events: ").Append(Events).Append("\n");
             sb.Append("  NotificationUrl: ").Append(NotificationUrl).Append("\n");
+            sb.Append("  DestinationId: ").Append(DestinationId).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -220,6 +236,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> name = default;
             Option<List<WebhookRequestBody.EventsEnum>?> events = default;
             Option<string?> notificationUrl = default;
+            Option<Guid?> destinationId = default;
 
             while (utf8JsonReader.Read())
             {
@@ -245,6 +262,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "notificationUrl":
                             notificationUrl = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
+                        case "destinationId":
+                            destinationId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
+                            break;
                         default:
                             break;
                     }
@@ -260,7 +280,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (notificationUrl.IsSet && notificationUrl.Value == null)
                 throw new ArgumentNullException(nameof(notificationUrl), "Property is not nullable for class WebhookRequestBody.");
 
-            return new WebhookRequestBody(name, events, notificationUrl);
+            if (destinationId.IsSet && destinationId.Value == null)
+                throw new ArgumentNullException(nameof(destinationId), "Property is not nullable for class WebhookRequestBody.");
+
+            return new WebhookRequestBody(name, events, notificationUrl, destinationId);
         }
 
         /// <summary>
@@ -306,6 +329,9 @@ namespace Cheqi.Sdk.Models.Generated
             }
             if (webhookRequestBody.NotificationUrlOption.IsSet)
                 writer.WriteString("notificationUrl", webhookRequestBody.NotificationUrl);
+
+            if (webhookRequestBody.DestinationIdOption.IsSet)
+                writer.WriteString("destinationId", webhookRequestBody.DestinationIdOption.Value!.Value);
         }
     }
 }
