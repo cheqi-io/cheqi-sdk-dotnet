@@ -1,13 +1,13 @@
 # Cheqi .NET SDK
 
-The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 2.6.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
+The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 2.7.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
 
 Version 2.0 is a breaking migration from the old server-generated template flow. The library targets .NET 8 and is tested on .NET 8 and .NET 10.
 
 ## Installation and initialization
 
 ```sh
-dotnet add package cheqi-sdk --version 2.2.0
+dotnet add package cheqi-sdk --version 2.3.0
 ```
 
 ```csharp
