@@ -34,11 +34,13 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         /// <param name="createdWebhooks">createdWebhooks</param>
         /// <param name="failedEvents">failedEvents</param>
+        /// <param name="existingWebhooks">existingWebhooks</param>
         [JsonConstructor]
-        public WebhookResponse(Option<List<WebhookDTO>?> createdWebhooks = default, Option<List<string>?> failedEvents = default)
+        public WebhookResponse(Option<List<WebhookDTO>?> createdWebhooks = default, Option<List<string>?> failedEvents = default, Option<List<WebhookDTO>?> existingWebhooks = default)
         {
             CreatedWebhooksOption = createdWebhooks;
             FailedEventsOption = failedEvents;
+            ExistingWebhooksOption = existingWebhooks;
             OnCreated();
         }
 
@@ -71,6 +73,19 @@ namespace Cheqi.Sdk.Models.Generated
         public List<string>? FailedEvents { get { return this.FailedEventsOption; } set { this.FailedEventsOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of ExistingWebhooks
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<List<WebhookDTO>?> ExistingWebhooksOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets ExistingWebhooks
+        /// </summary>
+        [JsonPropertyName("existingWebhooks")]
+        public List<WebhookDTO>? ExistingWebhooks { get { return this.ExistingWebhooksOption; } set { this.ExistingWebhooksOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -80,6 +95,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("class WebhookResponse {\n");
             sb.Append("  CreatedWebhooks: ").Append(CreatedWebhooks).Append("\n");
             sb.Append("  FailedEvents: ").Append(FailedEvents).Append("\n");
+            sb.Append("  ExistingWebhooks: ").Append(ExistingWebhooks).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -109,6 +125,7 @@ namespace Cheqi.Sdk.Models.Generated
 
             Option<List<WebhookDTO>?> createdWebhooks = default;
             Option<List<string>?> failedEvents = default;
+            Option<List<WebhookDTO>?> existingWebhooks = default;
 
             while (utf8JsonReader.Read())
             {
@@ -131,6 +148,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "failedEvents":
                             failedEvents = new Option<List<string>?>(JsonSerializer.Deserialize<List<string>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
+                        case "existingWebhooks":
+                            existingWebhooks = new Option<List<WebhookDTO>?>(JsonSerializer.Deserialize<List<WebhookDTO>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
                         default:
                             break;
                     }
@@ -143,7 +163,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (failedEvents.IsSet && failedEvents.Value == null)
                 throw new ArgumentNullException(nameof(failedEvents), "Property is not nullable for class WebhookResponse.");
 
-            return new WebhookResponse(createdWebhooks, failedEvents);
+            if (existingWebhooks.IsSet && existingWebhooks.Value == null)
+                throw new ArgumentNullException(nameof(existingWebhooks), "Property is not nullable for class WebhookResponse.");
+
+            return new WebhookResponse(createdWebhooks, failedEvents, existingWebhooks);
         }
 
         /// <summary>
@@ -176,6 +199,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (webhookResponse.FailedEventsOption.IsSet && webhookResponse.FailedEvents == null)
                 throw new ArgumentNullException(nameof(webhookResponse.FailedEvents), "Property is required for class WebhookResponse.");
 
+            if (webhookResponse.ExistingWebhooksOption.IsSet && webhookResponse.ExistingWebhooks == null)
+                throw new ArgumentNullException(nameof(webhookResponse.ExistingWebhooks), "Property is required for class WebhookResponse.");
+
             if (webhookResponse.CreatedWebhooksOption.IsSet)
             {
                 writer.WritePropertyName("createdWebhooks");
@@ -185,6 +211,11 @@ namespace Cheqi.Sdk.Models.Generated
             {
                 writer.WritePropertyName("failedEvents");
                 JsonSerializer.Serialize(writer, webhookResponse.FailedEvents, jsonSerializerOptions);
+            }
+            if (webhookResponse.ExistingWebhooksOption.IsSet)
+            {
+                writer.WritePropertyName("existingWebhooks");
+                JsonSerializer.Serialize(writer, webhookResponse.ExistingWebhooks, jsonSerializerOptions);
             }
         }
     }

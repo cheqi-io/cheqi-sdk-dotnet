@@ -9,6 +9,11 @@ public static class Endpoints
     public const string RecipientResolve = "/recipient/resolve";
     public const string CreditNoteEncrypted = "/credit-note/encrypted";
     public const string OAuthToken = "/oauth/exchange";
+    public const string ReceiptDestinations = "/company/receipt-destinations";
+    public static string ReceiptDestination(Guid id) => $"{ReceiptDestinations}/{id:D}";
+    public static string ReceiptDestinationQueue(Guid id) => ReceiptDestination(id) + "/receipts/queue";
+    public static string ReceiptDestinationAcknowledge(Guid id) => ReceiptDestinationQueue(id) + "/acknowledge";
+    public static string WebhookSubscription(Guid id) => $"/webhook/subscription/{id:D}";
     public static string MatchStatus(string matchId) => $"/recipient/matches/{Uri.EscapeDataString(matchId)}";
     public static string CompanyStores(Guid companyId) => $"/company/{companyId:D}/stores";
     public static string CompanyInviteEmployees(Guid companyId) => $"/company/{companyId:D}/invite/employees";

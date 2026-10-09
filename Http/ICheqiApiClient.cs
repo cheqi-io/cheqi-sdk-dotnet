@@ -13,7 +13,13 @@ public interface ICheqiApiClient : IDisposable
     Task<ClientReceiptDownloadResponse> UploadEncryptedDownloadReceiptAsync(ClientReceiptDownloadRequest request, string? accessToken = null, CancellationToken cancellationToken = default);
     Task SendReceiptViaEmailAsync(string customerEmail, CheqiReceipt receipt, string? accessToken = null, CancellationToken cancellationToken = default);
     Task<StoreDTO> CreateStoreAsync(Guid companyId, CreateStoreRequest request, string? accessToken = null, CancellationToken cancellationToken = default);
-    Task InviteUsersAsync(Guid companyId, List<string> emails, string? accessToken = null, CancellationToken cancellationToken = default);
+    Task<InviteEmployeesResponse> InviteUsersAsync(Guid companyId, List<string> emails, string? accessToken = null, CancellationToken cancellationToken = default, bool? resendPending = null);
+    Task<List<DestinationResponse>> ListReceiptDestinationsAsync(string? accessToken = null, CancellationToken cancellationToken = default);
+    Task<RegisterResponse> RegisterReceiptDestinationAsync(RegisterRequest request, string? accessToken = null, CancellationToken cancellationToken = default);
+    Task<List<WebhookReceiptEnvelope>> GetPendingReceiptsAsync(Guid destinationId, string? accessToken = null, CancellationToken cancellationToken = default);
+    Task AcknowledgeReceiptsAsync(Guid destinationId, List<string> receiptIds, string? accessToken = null, CancellationToken cancellationToken = default);
+    Task DeactivateReceiptDestinationAsync(Guid destinationId, string? accessToken = null, CancellationToken cancellationToken = default);
+    Task<WebhookDTO> UpdateWebhookSubscriptionUrlAsync(Guid subscriptionId, string notificationUrl, string? accessToken = null, CancellationToken cancellationToken = default);
     Task<List<StoreDTO>> GetStoresAsync(Guid companyId, string? accessToken = null, CancellationToken cancellationToken = default, bool? activeOnly = null);
     Task<StoreDTO> GetStoreAsync(Guid companyId, Guid storeId, string? accessToken = null, CancellationToken cancellationToken = default);
     Task<StoreDTO> UpdateStoreAsync(Guid companyId, Guid storeId, CreateStoreRequest request, string? accessToken = null, CancellationToken cancellationToken = default);

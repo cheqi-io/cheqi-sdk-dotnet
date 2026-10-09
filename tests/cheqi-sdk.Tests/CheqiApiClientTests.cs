@@ -10,17 +10,50 @@ namespace Cheqi.Sdk.Tests;
 public sealed class CheqiApiClientTests
 {
     [Fact]
-    public async Task InviteUsersPostsEmailsAndAcceptsEmptySuccess()
+    public async Task InviteUsersPostsEmailsAndReturnsOutcomes()
     {
         using var harness = new SdkHarness();
         var companyId = Guid.NewGuid();
-        harness.Enqueue(200, "");
-        await harness.Sdk.CompanyService.InviteUsersAsync(companyId, new List<string> { "employee@example.com" }, "oauth-token");
+        harness.Enqueue(200, "{\"invitedEmails\":[\"employee@example.com\"],\"pendingEmails\":[],\"existingMembers\":[]}");
+        var result = await harness.Sdk.CompanyService.InviteUsersAsync(companyId, new List<string> { "employee@example.com" }, "oauth-token", resendPending: true);
         var request = Assert.Single(harness.Requests);
         Assert.Equal("POST", request.Method);
         Assert.Equal($"/company/{companyId:D}/invite/employees", request.Path);
         Assert.Equal("Bearer oauth-token", request.Authorization);
         Assert.Equal("employee@example.com", JsonDocument.Parse(request.Body).RootElement.GetProperty("emails")[0].GetString());
+        Assert.True(JsonDocument.Parse(request.Body).RootElement.GetProperty("resendPending").GetBoolean());
+        Assert.Equal("employee@example.com", Assert.Single(result.InvitedEmails!));
+    }
+
+    [Fact]
+    public async Task ReceiptDestinationAndWebhookMethodsUseProductionRoutes()
+    {
+        using var harness = new SdkHarness();
+        var destinationId = Guid.NewGuid();
+        var subscriptionId = Guid.NewGuid();
+        harness.Enqueue(200, "[]");
+        harness.Enqueue(200, "{}");
+        harness.Enqueue(200, "[]");
+        harness.Enqueue(204, "");
+        harness.Enqueue(204, "");
+        harness.Enqueue(200, "{}");
+        await harness.Sdk.CompanyService.ListReceiptDestinationsAsync();
+        await harness.Sdk.CompanyService.RegisterReceiptDestinationAsync(new RegisterRequest("ERP", "key", "RSA"));
+        await harness.Sdk.CompanyService.GetPendingReceiptsAsync(destinationId);
+        await harness.Sdk.CompanyService.AcknowledgeReceiptsAsync(destinationId, new List<string> { "receipt-1" });
+        await harness.Sdk.CompanyService.DeactivateReceiptDestinationAsync(destinationId);
+        await harness.Sdk.WebhookService.UpdateSubscriptionUrlAsync(subscriptionId, "https://example.com/hook");
+        Assert.Equal(new[] { "GET", "POST", "GET", "POST", "DELETE", "PATCH" }, harness.Requests.Select(x => x.Method));
+        Assert.Equal(new[] {
+            "/company/receipt-destinations",
+            "/company/receipt-destinations",
+            $"/company/receipt-destinations/{destinationId:D}/receipts/queue",
+            $"/company/receipt-destinations/{destinationId:D}/receipts/queue/acknowledge",
+            $"/company/receipt-destinations/{destinationId:D}",
+            $"/webhook/subscription/{subscriptionId:D}"
+        }, harness.Requests.Select(x => x.Path));
+        Assert.Equal("receipt-1", JsonDocument.Parse(harness.Requests[3].Body).RootElement.GetProperty("receiptIds")[0].GetString());
+        Assert.Equal("https://example.com/hook", JsonDocument.Parse(harness.Requests[5].Body).RootElement.GetProperty("notificationUrl").GetString());
     }
 
     [Fact]

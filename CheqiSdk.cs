@@ -27,6 +27,7 @@ public sealed class CheqiSdk : IDisposable
     public CreditNoteService CreditNoteService { get; }
     public StoreService StoreService { get; }
     public CompanyService CompanyService { get; }
+    public WebhookService WebhookService { get; }
     public VerificationService VerificationService { get; }
 
     public CheqiSdk(CheqiSdkOptions options, ILoggerFactory? loggerFactory = null, HttpClient? httpClient = null)
@@ -45,6 +46,7 @@ public sealed class CheqiSdk : IDisposable
         CreditNoteService = new CreditNoteService(ApiClient, EncryptionService, MatchingService);
         StoreService = new StoreService(ApiClient, logging.CreateLogger<StoreService>());
         CompanyService = new CompanyService(ApiClient);
+        WebhookService = new WebhookService(ApiClient);
         VerificationService = new VerificationService();
     }
 

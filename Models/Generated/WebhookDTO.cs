@@ -32,25 +32,42 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="WebhookDTO" /> class.
         /// </summary>
+        /// <param name="id">id</param>
         /// <param name="name">name</param>
         /// <param name="notificationUrl">notificationUrl</param>
         /// <param name="event">event</param>
         /// <param name="clientApplicationId">clientApplicationId</param>
         /// <param name="userId">userId</param>
         /// <param name="companyId">companyId</param>
+        /// <param name="destinationId">destinationId</param>
         [JsonConstructor]
-        public WebhookDTO(Option<string?> name = default, Option<string?> notificationUrl = default, Option<string?> @event = default, Option<Guid?> clientApplicationId = default, Option<Guid?> userId = default, Option<string?> companyId = default)
+        public WebhookDTO(Option<Guid?> id = default, Option<string?> name = default, Option<string?> notificationUrl = default, Option<string?> @event = default, Option<Guid?> clientApplicationId = default, Option<Guid?> userId = default, Option<string?> companyId = default, Option<Guid?> destinationId = default)
         {
+            IdOption = id;
             NameOption = name;
             NotificationUrlOption = notificationUrl;
             EventOption = @event;
             ClientApplicationIdOption = clientApplicationId;
             UserIdOption = userId;
             CompanyIdOption = companyId;
+            DestinationIdOption = destinationId;
             OnCreated();
         }
 
         partial void OnCreated();
+
+        /// <summary>
+        /// Used to track the state of Id
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<Guid?> IdOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets Id
+        /// </summary>
+        [JsonPropertyName("id")]
+        public Guid? Id { get { return this.IdOption; } set { this.IdOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Name
@@ -131,6 +148,19 @@ namespace Cheqi.Sdk.Models.Generated
         public string? CompanyId { get { return this.CompanyIdOption; } set { this.CompanyIdOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of DestinationId
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<Guid?> DestinationIdOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets DestinationId
+        /// </summary>
+        [JsonPropertyName("destinationId")]
+        public Guid? DestinationId { get { return this.DestinationIdOption; } set { this.DestinationIdOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -138,12 +168,14 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class WebhookDTO {\n");
+            sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("  NotificationUrl: ").Append(NotificationUrl).Append("\n");
             sb.Append("  Event: ").Append(Event).Append("\n");
             sb.Append("  ClientApplicationId: ").Append(ClientApplicationId).Append("\n");
             sb.Append("  UserId: ").Append(UserId).Append("\n");
             sb.Append("  CompanyId: ").Append(CompanyId).Append("\n");
+            sb.Append("  DestinationId: ").Append(DestinationId).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -171,12 +203,14 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
+            Option<Guid?> id = default;
             Option<string?> name = default;
             Option<string?> notificationUrl = default;
             Option<string?> varEvent = default;
             Option<Guid?> clientApplicationId = default;
             Option<Guid?> userId = default;
             Option<string?> companyId = default;
+            Option<Guid?> destinationId = default;
 
             while (utf8JsonReader.Read())
             {
@@ -193,6 +227,9 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
+                        case "id":
+                            id = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
+                            break;
                         case "name":
                             name = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
@@ -211,11 +248,17 @@ namespace Cheqi.Sdk.Models.Generated
                         case "companyId":
                             companyId = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
+                        case "destinationId":
+                            destinationId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
+                            break;
                         default:
                             break;
                     }
                 }
             }
+
+            if (id.IsSet && id.Value == null)
+                throw new ArgumentNullException(nameof(id), "Property is not nullable for class WebhookDTO.");
 
             if (name.IsSet && name.Value == null)
                 throw new ArgumentNullException(nameof(name), "Property is not nullable for class WebhookDTO.");
@@ -235,7 +278,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (companyId.IsSet && companyId.Value == null)
                 throw new ArgumentNullException(nameof(companyId), "Property is not nullable for class WebhookDTO.");
 
-            return new WebhookDTO(name, notificationUrl, varEvent, clientApplicationId, userId, companyId);
+            if (destinationId.IsSet && destinationId.Value == null)
+                throw new ArgumentNullException(nameof(destinationId), "Property is not nullable for class WebhookDTO.");
+
+            return new WebhookDTO(id, name, notificationUrl, varEvent, clientApplicationId, userId, companyId, destinationId);
         }
 
         /// <summary>
@@ -274,6 +320,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (webhookDTO.CompanyIdOption.IsSet && webhookDTO.CompanyId == null)
                 throw new ArgumentNullException(nameof(webhookDTO.CompanyId), "Property is required for class WebhookDTO.");
 
+            if (webhookDTO.IdOption.IsSet)
+                writer.WriteString("id", webhookDTO.IdOption.Value!.Value);
+
             if (webhookDTO.NameOption.IsSet)
                 writer.WriteString("name", webhookDTO.Name);
 
@@ -291,6 +340,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (webhookDTO.CompanyIdOption.IsSet)
                 writer.WriteString("companyId", webhookDTO.CompanyId);
+
+            if (webhookDTO.DestinationIdOption.IsSet)
+                writer.WriteString("destinationId", webhookDTO.DestinationIdOption.Value!.Value);
         }
     }
 }
