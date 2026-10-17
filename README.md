@@ -36,14 +36,9 @@ var result = await sdk.ReceiptService.IssueReceiptAsync(
     identification, payload, storeId,
     options: RequestOptions.WithAccessToken(accessToken),
     cancellationToken: cancellationToken);
-
-var slowCall = new RequestOptions
-{
-    AccessToken = accessToken,
-    Timeout = TimeSpan.FromSeconds(60),
-    MaxRetries = 0
-};
 ```
+
+The same `RequestOptions` can also set `Timeout` and `MaxRetries` for a single call, for example `new RequestOptions { AccessToken = accessToken, Timeout = TimeSpan.FromSeconds(60) }`.
 
 Company access tokens are short-lived and bound to one Grant, so an integration that serves several companies holds one token per Grant. Request one with the client-credentials grant:
 
