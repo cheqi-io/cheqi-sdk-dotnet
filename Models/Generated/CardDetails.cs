@@ -70,7 +70,12 @@ namespace Cheqi.Sdk.Models.Generated
             /// <summary>
             /// Enum AMERICANEXPRESS for value: AMERICAN_EXPRESS
             /// </summary>
-            AMERICANEXPRESS = 4
+            AMERICANEXPRESS = 4,
+
+            /// <summary>
+            /// Enum UNKNOWN for value: UNKNOWN
+            /// </summary>
+            UNKNOWN = 5
         }
 
         /// <summary>
@@ -92,6 +97,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value.Equals("AMERICAN_EXPRESS"))
                 return CardProviderEnum.AMERICANEXPRESS;
+
+            if (value.Equals("UNKNOWN"))
+                return CardProviderEnum.UNKNOWN;
 
             throw new NotImplementedException($"Could not convert value to type CardProviderEnum: '{value}'");
         }
@@ -115,6 +123,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("AMERICAN_EXPRESS"))
                 return CardProviderEnum.AMERICANEXPRESS;
 
+            if (value.Equals("UNKNOWN"))
+                return CardProviderEnum.UNKNOWN;
+
             return null;
         }
 
@@ -137,6 +148,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value == CardProviderEnum.AMERICANEXPRESS)
                 return "AMERICAN_EXPRESS";
+
+            if (value == CardProviderEnum.UNKNOWN)
+                return "UNKNOWN";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }
