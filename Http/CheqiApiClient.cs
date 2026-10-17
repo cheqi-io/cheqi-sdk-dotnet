@@ -1,7 +1,6 @@
 using Cheqi.Sdk.Models.Generated;
 
 using Cheqi.Sdk.Serialization;
-using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -19,6 +18,10 @@ namespace Cheqi.Sdk.Http;
 /// <summary>
 /// HTTP client implementation for the Cheqi API.
 /// </summary>
+/// <remarks>
+/// Each call authenticates with <see cref="RequestOptions.AccessToken"/> when present, otherwise with the
+/// configured API key. The client holds no tokens of its own.
+/// </remarks>
 public sealed class CheqiApiClient : ICheqiApiClient
 {
     private readonly HttpClient _httpClient;
@@ -26,9 +29,6 @@ public sealed class CheqiApiClient : ICheqiApiClient
     private readonly ILogger? _logger;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly bool _ownsHttpClient;
-    private string? _cachedAccessToken;
-    private DateTimeOffset _tokenExpiry = DateTimeOffset.MinValue;
-    private readonly SemaphoreSlim _tokenLock = new(1, 1);
     private bool _disposed;
 
     public CheqiApiClient(CheqiSdkConfig config, ILogger? logger = null, HttpClient? httpClient = null)
@@ -49,7 +49,8 @@ public sealed class CheqiApiClient : ICheqiApiClient
             _httpClient = new HttpClient(handler)
             {
                 BaseAddress = new Uri(_config.ApiEndpoint),
-                Timeout = _config.Timeout
+                // Timeouts are applied per call, so RequestOptions.Timeout can exceed the configured default.
+                Timeout = System.Threading.Timeout.InfiniteTimeSpan
             };
             _ownsHttpClient = true;
         }
@@ -66,281 +67,258 @@ public sealed class CheqiApiClient : ICheqiApiClient
 
         if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
         {
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CheqiSDK/1.0");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CheqiSDK/3.0");
         }
+    }
+
+    public async Task<OAuthTokenExchangeResponse> RequestAccessTokenAsync(
+        ClientCredentialsTokenRequest request,
+        RequestOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (string.IsNullOrWhiteSpace(request.ClientId) || string.IsNullOrWhiteSpace(request.ClientSecret) || request.GrantId == null)
+            throw new ArgumentException("Token request requires ClientId, ClientSecret and GrantId", nameof(request));
+        request.GrantType ??= ClientCredentialsTokenRequest.GrantTypeEnum.ClientCredentials;
+
+        // Client credentials travel in the body; this call carries no bearer credential.
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, Endpoints.OAuthToken);
+        httpRequest.Content = CreateJsonContent(request);
+        httpRequest.Options.Set(RetryHandler.DisableRetries, true);
+        var token = await SendAsync<OAuthTokenExchangeResponse>(httpRequest, options ?? RequestOptions.Default, cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(token?.AccessToken))
+            throw new CheqiApiException("Token response did not include an access token", 0, CheqiApiException.ErrorCodes.INVALID_RESPONSE, null);
+        return token;
     }
 
     public async Task<RecipientResolutionResponse> ResolveRecipientsAsync(
         IdentificationDetails identificationDetails,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.RecipientResolve);
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         request.Content = CreateJsonContent(identificationDetails);
 
-        var response = await SendAsync<RecipientResolutionResponse>(request, cancellationToken).ConfigureAwait(false);
-        return response;
+        return await SendAsync<RecipientResolutionResponse>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public Task<RecipientResolutionResponse> MatchCustomerAsync(
         IdentificationDetails identificationDetails,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
         // Alias for ResolveRecipientsAsync - same functionality, different name for consistency
-        return ResolveRecipientsAsync(identificationDetails, accessToken, cancellationToken);
+        return ResolveRecipientsAsync(identificationDetails, options, cancellationToken);
     }
 
-    public async Task<MatchStatusResponse> GetMatchAsync(string matchId, string? accessToken = null, CancellationToken cancellationToken = default)
+    public async Task<MatchStatusResponse> GetMatchAsync(string matchId, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(matchId)) throw new ArgumentException("matchId is required", nameof(matchId));
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Get, Endpoints.MatchStatus(matchId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
-        return await SendAsync<MatchStatusResponse>(request, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
+        return await SendAsync<MatchStatusResponse>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task<ReceiptSubmissionResponse> SubmitEncryptedReceiptAsync(EncryptedReceiptEnvelope request, string? accessToken = null, CancellationToken cancellationToken = default)
-        => PostAsync<ReceiptSubmissionResponse>(Endpoints.ReceiptEncrypted, request, accessToken, cancellationToken);
+    public Task<ReceiptSubmissionResponse> SubmitEncryptedReceiptAsync(EncryptedReceiptEnvelope request, RequestOptions? options = null, CancellationToken cancellationToken = default)
+        => PostAsync<ReceiptSubmissionResponse>(Endpoints.ReceiptEncrypted, request, options, cancellationToken);
 
-    public Task<ReceiptSubmissionResponse> SubmitEncryptedCreditNoteAsync(EncryptedCreditNoteEnvelope request, string? accessToken = null, CancellationToken cancellationToken = default)
-        => PostAsync<ReceiptSubmissionResponse>(Endpoints.CreditNoteEncrypted, request, accessToken, cancellationToken);
+    public Task<ReceiptSubmissionResponse> SubmitEncryptedCreditNoteAsync(EncryptedCreditNoteEnvelope request, RequestOptions? options = null, CancellationToken cancellationToken = default)
+        => PostAsync<ReceiptSubmissionResponse>(Endpoints.CreditNoteEncrypted, request, options, cancellationToken);
 
-    public Task<ClientReceiptDownloadResponse> UploadEncryptedDownloadReceiptAsync(ClientReceiptDownloadRequest request, string? accessToken = null, CancellationToken cancellationToken = default)
-        => PostAsync<ClientReceiptDownloadResponse>(Endpoints.ReceiptDownload, request, accessToken, cancellationToken);
+    public Task<ClientReceiptDownloadResponse> UploadEncryptedDownloadReceiptAsync(ClientReceiptDownloadRequest request, RequestOptions? options = null, CancellationToken cancellationToken = default)
+        => PostAsync<ClientReceiptDownloadResponse>(Endpoints.ReceiptDownload, request, options, cancellationToken);
 
-    private async Task<T> PostAsync<T>(string path, object body, string? accessToken, CancellationToken cancellationToken)
+    private async Task<T> PostAsync<T>(string path, object body, RequestOptions? options, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(body);
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Post, path);
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         request.Content = CreateJsonContent(body);
         if (path is Endpoints.ReceiptEncrypted or Endpoints.CreditNoteEncrypted)
             request.Options.Set(RetryHandler.DisableRetries, true);
-        return await SendAsync<T>(request, cancellationToken).ConfigureAwait(false);
+        return await SendAsync<T>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<StoreDTO> CreateStoreAsync(
         Guid companyId,
         CreateStoreRequest createRequest,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.CompanyStores(companyId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         request.Content = CreateJsonContent(createRequest);
 
-        var response = await SendAsync<StoreDTO>(request, cancellationToken).ConfigureAwait(false);
-        return response;
+        return await SendAsync<StoreDTO>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<InviteEmployeesResponse> InviteUsersAsync(
         Guid companyId,
         List<string> emails,
-        string? accessToken = null,
-        CancellationToken cancellationToken = default,
-        bool? resendPending = null)
+        bool? resendPending = null,
+        RequestOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.CompanyInviteEmployees(companyId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         var body = new InviteEmployeeRequest(emails);
         if (resendPending.HasValue) body.ResendPending = resendPending.Value;
         request.Content = CreateJsonContent(body);
-        return await SendAsync<InviteEmployeesResponse>(request, cancellationToken).ConfigureAwait(false);
+        return await SendAsync<InviteEmployeesResponse>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<DestinationResponse>> ListReceiptDestinationsAsync(
-        string? accessToken = null, CancellationToken cancellationToken = default)
+        RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Get, Endpoints.ReceiptDestinations);
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
-        return await SendAsync<List<DestinationResponse>>(request, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
+        return await SendAsync<List<DestinationResponse>>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<RegisterResponse> RegisterReceiptDestinationAsync(
-        RegisterRequest destination, string? accessToken = null, CancellationToken cancellationToken = default)
+        RegisterRequest destination, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.ReceiptDestinations);
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         request.Content = CreateJsonContent(destination);
-        return await SendAsync<RegisterResponse>(request, cancellationToken).ConfigureAwait(false);
+        return await SendAsync<RegisterResponse>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<WebhookReceiptEnvelope>> GetPendingReceiptsAsync(
-        Guid destinationId, string? accessToken = null, CancellationToken cancellationToken = default)
+        Guid destinationId, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Get, Endpoints.ReceiptDestinationQueue(destinationId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
-        return await SendAsync<List<WebhookReceiptEnvelope>>(request, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
+        return await SendAsync<List<WebhookReceiptEnvelope>>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task AcknowledgeReceiptsAsync(
-        Guid destinationId, List<string> receiptIds, string? accessToken = null, CancellationToken cancellationToken = default)
+        Guid destinationId, List<string> receiptIds, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.ReceiptDestinationAcknowledge(destinationId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         request.Content = CreateJsonContent(new AcknowledgeRequest { ReceiptIds = receiptIds });
-        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await SendAsync(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeactivateReceiptDestinationAsync(
-        Guid destinationId, string? accessToken = null, CancellationToken cancellationToken = default)
+        Guid destinationId, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Delete, Endpoints.ReceiptDestination(destinationId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
-        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
+        await SendAsync(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<WebhookDTO> UpdateWebhookSubscriptionUrlAsync(
-        Guid subscriptionId, string notificationUrl, string? accessToken = null, CancellationToken cancellationToken = default)
+        Guid subscriptionId, string notificationUrl, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Patch, Endpoints.WebhookSubscription(subscriptionId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         request.Content = CreateJsonContent(new UpdateSubscriptionRequest { NotificationUrl = notificationUrl });
-        return await SendAsync<WebhookDTO>(request, cancellationToken).ConfigureAwait(false);
+        return await SendAsync<WebhookDTO>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<StoreDTO>> GetStoresAsync(
         Guid companyId,
-        string? accessToken = null,
-        CancellationToken cancellationToken = default,
-        bool? activeOnly = null)
+        bool? activeOnly = null,
+        RequestOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         var path = Endpoints.CompanyStores(companyId) + (activeOnly.HasValue ? "?activeOnly=" + activeOnly.Value.ToString().ToLowerInvariant() : "");
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
 
-        var response = await SendAsync<List<StoreDTO>>(request, cancellationToken).ConfigureAwait(false);
-        return response;
+        return await SendAsync<List<StoreDTO>>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<StoreDTO> GetStoreAsync(
         Guid companyId,
         Guid storeId,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Get, Endpoints.CompanyStore(companyId, storeId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
 
-        var response = await SendAsync<StoreDTO>(request, cancellationToken).ConfigureAwait(false);
-        return response;
+        return await SendAsync<StoreDTO>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<StoreDTO> UpdateStoreAsync(
         Guid companyId,
         Guid storeId,
         CreateStoreRequest updateRequest,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Put, Endpoints.CompanyStore(companyId, storeId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         request.Content = CreateJsonContent(updateRequest);
 
-        var response = await SendAsync<StoreDTO>(request, cancellationToken).ConfigureAwait(false);
-        return response;
+        return await SendAsync<StoreDTO>(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteStoreAsync(
         Guid companyId,
         Guid storeId,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Delete, Endpoints.CompanyStore(companyId, storeId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
 
-        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await SendAsync(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task ActivateStoreAsync(
         Guid companyId,
         Guid storeId,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.CompanyStoreActivate(companyId, storeId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
 
-        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await SendAsync(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeactivateStoreAsync(
         Guid companyId,
         Guid storeId,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.CompanyStoreDeactivate(companyId, storeId));
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
 
-        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await SendAsync(request, options, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken = default)
+    /// <summary>Uses the per-call access token when present, otherwise the configured API key.</summary>
+    private void Authorize(HttpRequestMessage request, RequestOptions options)
     {
-        if (string.IsNullOrEmpty(_config.ClientId) || string.IsNullOrEmpty(_config.ClientSecret))
-        {
-            throw new InvalidOperationException("Client credentials not configured");
-        }
-
-        await _tokenLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            // Check if we have a valid cached token
-            if (_cachedAccessToken != null && DateTimeOffset.UtcNow < _tokenExpiry)
-            {
-                return _cachedAccessToken;
-            }
-
-            // Request new token
-            using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.OAuthToken);
-            request.Content = CreateJsonContent(new ClientCredentialsTokenRequest
-            {
-                GrantType = ClientCredentialsTokenRequest.GrantTypeEnum.ClientCredentials,
-                ClientId = _config.ClientId,
-                ClientSecret = _config.ClientSecret
-            });
-            var tokenResponse = await SendAsync<OAuthTokenExchangeResponse>(request, cancellationToken).ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(tokenResponse.AccessToken) || tokenResponse.ExpiresIn is null or <= 0)
-                throw new CheqiApiException("Invalid token response", 200, CheqiApiException.ErrorCodes.INVALID_RESPONSE, null);
-
-            _cachedAccessToken = tokenResponse.AccessToken;
-            // Expire 5 minutes before actual expiry to be safe
-            _tokenExpiry = DateTimeOffset.UtcNow.AddSeconds(Math.Max(1, tokenResponse.ExpiresIn.Value - Math.Min(300, tokenResponse.ExpiresIn.Value / 10)));
-
-            return _cachedAccessToken;
-        }
-        finally
-        {
-            _tokenLock.Release();
-        }
-    }
-
-    private async Task SetAuthorizationHeaderAsync(
-        HttpRequestMessage request,
-        string? accessToken,
-        CancellationToken cancellationToken)
-    {
-        if (accessToken != null && string.IsNullOrWhiteSpace(accessToken)) throw new ArgumentException("accessToken cannot be empty", nameof(accessToken));
-        if (!string.IsNullOrEmpty(accessToken))
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        }
-        else if (!string.IsNullOrEmpty(_config.ApiKey))
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _config.ApiKey);
-        }
-        else if (!string.IsNullOrEmpty(_config.ClientId) && !string.IsNullOrEmpty(_config.ClientSecret))
-        {
-            var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        }
-        else
-        {
-            throw new InvalidOperationException("No authentication method configured");
-        }
+        var token = options.AccessToken ?? _config.ApiKey;
+        if (string.IsNullOrWhiteSpace(token))
+            throw new CheqiApiException("No credentials for this call: pass RequestOptions.WithAccessToken(...) or configure ApiKey",
+                0, CheqiApiException.ErrorCodes.AUTHENTICATION_FAILED, null);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
     private StringContent CreateJsonContent<T>(T data)
@@ -349,21 +327,24 @@ public sealed class CheqiApiClient : ICheqiApiClient
         return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
-    private async Task<T> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken)
+    private async Task<T> SendAsync<T>(HttpRequestMessage request, RequestOptions options, CancellationToken cancellationToken)
     {
-        using var response = await SendTransportAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendTransportAsync(request, options, cancellationToken).ConfigureAwait(false);
         return await new ResponseHandler(_logger, _jsonOptions).HandleJsonResponseAsync<T>(response, "API request", cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    private async Task SendAsync(HttpRequestMessage request, RequestOptions options, CancellationToken cancellationToken)
     {
-        using var response = await SendTransportAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendTransportAsync(request, options, cancellationToken).ConfigureAwait(false);
         await new ResponseHandler(_logger, _jsonOptions).HandleVoidResponseAsync(response, "API request", cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<HttpResponseMessage> SendTransportAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    private async Task<HttpResponseMessage> SendTransportAsync(HttpRequestMessage request, RequestOptions options, CancellationToken cancellationToken)
     {
-        try { return await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false); }
+        if (options.MaxRetries is int maxRetries) request.Options.Set(RetryHandler.MaxRetriesOverride, maxRetries);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(options.Timeout ?? _config.Timeout);
+        try { return await _httpClient.SendAsync(request, timeout.Token).ConfigureAwait(false); }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (OperationCanceledException exception)
         { throw new CheqiApiException("API request timed out", exception, 0, CheqiApiException.ErrorCodes.TIMEOUT_ERROR, null); }
@@ -374,16 +355,17 @@ public sealed class CheqiApiClient : ICheqiApiClient
     public async Task SendReceiptViaEmailAsync(
         string customerEmail,
         Cheqi.Sdk.Models.Generated.CheqiReceipt cheqiReceipt,
-        string? accessToken = null,
+        RequestOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= RequestOptions.Default;
         var emailRequest = new Cheqi.Sdk.Models.Generated.EmailReceiptRequest(customerEmail, cheqiReceipt);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, Endpoints.ReceiptEmail);
-        await SetAuthorizationHeaderAsync(request, accessToken, cancellationToken).ConfigureAwait(false);
+        Authorize(request, options);
         request.Content = CreateJsonContent(emailRequest);
 
-        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await SendAsync(request, options, cancellationToken).ConfigureAwait(false);
     }
 
     public void Dispose()
@@ -394,7 +376,6 @@ public sealed class CheqiApiClient : ICheqiApiClient
         {
             _httpClient.Dispose();
         }
-        _tokenLock.Dispose();
     }
 
 }

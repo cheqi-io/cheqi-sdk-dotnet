@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Cheqi.Sdk.Http;
 using Cheqi.Sdk.Http.Exceptions;
 using Cheqi.Sdk.Models.Generated;
 using Cheqi.Sdk.Serialization;
@@ -15,7 +16,8 @@ public sealed class CheqiApiClientTests
         using var harness = new SdkHarness();
         var companyId = Guid.NewGuid();
         harness.Enqueue(200, "{\"invitedEmails\":[\"employee@example.com\"],\"pendingEmails\":[],\"existingMembers\":[]}");
-        var result = await harness.Sdk.CompanyService.InviteUsersAsync(companyId, new List<string> { "employee@example.com" }, "oauth-token", resendPending: true);
+        var result = await harness.Sdk.CompanyService.InviteUsersAsync(companyId, new List<string> { "employee@example.com" }, resendPending: true,
+            options: RequestOptions.WithAccessToken("oauth-token"));
         var request = Assert.Single(harness.Requests);
         Assert.Equal("POST", request.Method);
         Assert.Equal($"/company/{companyId:D}/invite/employees", request.Path);
@@ -170,24 +172,88 @@ public sealed class CheqiApiClientTests
         Assert.Equal(System.Net.HttpStatusCode.OK, (await harness.Client.GetAsync("/test")).StatusCode);
     }
     [Fact]
-    public async Task OAuthUsesCurrentJsonExchangeAndCachesShortLivedToken()
+    public async Task RequestAccessTokenPostsClientCredentialsForOneGrantWithoutBearer()
     {
         using var harness = new SdkHarness();
-        using var sdk = new CheqiSdk(new Config.CheqiSdkOptions
+        var grantId = Guid.NewGuid();
+        harness.Enqueue(200, "{\"access_token\":\"company-token\",\"expires_in\":900,\"token_type\":\"bearer\",\"scope\":\"receipt:issue\"}");
+        var token = await harness.Sdk.OAuthService.RequestAccessTokenAsync(new ClientCredentialsTokenRequest
         {
-            Environment = Config.CheqiApiEnvironment.Sandbox,
-            SupplierClientId = "client-id", SupplierClientSecret = "client-secret", HttpClient = harness.Client
+            ClientId = "client-id", ClientSecret = "client-secret", GrantId = grantId, Scope = "receipt:issue"
         });
-        harness.Enqueue(200, "{\"access_token\":\"cached-token\",\"expires_in\":60,\"token_type\":\"bearer\"}");
-        harness.Enqueue(200, SdkHarness.Match("DOWNLOAD_FALLBACK"));
-        harness.Enqueue(200, SdkHarness.Match("DOWNLOAD_FALLBACK"));
-        await sdk.MatchingService.MatchCustomerAsync(SdkHarness.Identification());
-        await sdk.MatchingService.MatchCustomerAsync(SdkHarness.Identification());
-        Assert.Equal(3, harness.Requests.Count);
-        Assert.Equal("/oauth/exchange", harness.Requests[0].Path);
-        Assert.Contains("\"grant_type\":\"client_credentials\"", harness.Requests[0].Body);
-        Assert.Contains("\"client_id\":\"client-id\"", harness.Requests[0].Body);
-        Assert.Equal("Bearer cached-token", harness.Requests[1].Authorization);
-        Assert.Equal("Bearer cached-token", harness.Requests[2].Authorization);
+        Assert.Equal("company-token", token.AccessToken);
+        Assert.Equal(900, token.ExpiresIn);
+        var request = Assert.Single(harness.Requests);
+        Assert.Equal("/oauth2/token", request.Path);
+        Assert.Null(request.Authorization);
+        using var body = JsonDocument.Parse(request.Body);
+        Assert.Equal("client_credentials", body.RootElement.GetProperty("grant_type").GetString());
+        Assert.Equal(grantId, body.RootElement.GetProperty("grant_id").GetGuid());
+        Assert.Equal("client-id", body.RootElement.GetProperty("client_id").GetString());
+    }
+
+    [Fact]
+    public async Task RequestAccessTokenRequiresAGrant()
+    {
+        using var harness = new SdkHarness();
+        await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.OAuthService.RequestAccessTokenAsync(
+            new ClientCredentialsTokenRequest { ClientId = "client-id", ClientSecret = "client-secret" }));
+        Assert.Empty(harness.Requests);
+    }
+
+    [Fact]
+    public async Task PerCallAccessTokenOverridesApiKeyAndNothingIsCached()
+    {
+        using var harness = new SdkHarness();
+        harness.Enqueue(200, "[]");
+        harness.Enqueue(200, "[]");
+        harness.Enqueue(200, "[]");
+        await harness.Sdk.CompanyService.ListReceiptDestinationsAsync(RequestOptions.WithAccessToken("customer-a"));
+        await harness.Sdk.CompanyService.ListReceiptDestinationsAsync(RequestOptions.WithAccessToken("customer-b"));
+        await harness.Sdk.CompanyService.ListReceiptDestinationsAsync();
+        Assert.Equal(new[] { "Bearer customer-a", "Bearer customer-b", "Bearer test-key" }, harness.Requests.Select(r => r.Authorization));
+    }
+
+    [Fact]
+    public async Task CallWithoutAccessTokenOrApiKeyFailsBeforeSendingAnything()
+    {
+        using var harness = new SdkHarness();
+        using var sdk = new CheqiSdk(new Config.CheqiSdkOptions { Environment = Config.CheqiApiEnvironment.Sandbox, HttpClient = harness.Client });
+        var exception = await Assert.ThrowsAsync<CheqiApiException>(() => sdk.CompanyService.ListReceiptDestinationsAsync());
+        Assert.Equal(CheqiApiException.ErrorCodes.AUTHENTICATION_FAILED, exception.ErrorCode);
+        Assert.Empty(harness.Requests);
+    }
+
+    [Fact]
+    public async Task PerCallMaxRetriesOverridesConfiguredRetries()
+    {
+        using var harness = new SdkHarness(retries: true);
+        harness.Enqueue(503, "{}");
+        await Assert.ThrowsAsync<CheqiApiException>(() => harness.Sdk.MatchingService.MatchCustomerAsync(
+            SdkHarness.Identification(), new RequestOptions { MaxRetries = 0 }));
+        Assert.Single(harness.Requests);
+    }
+
+    [Fact]
+    public async Task PerCallTimeoutIsReportedAsTimeout()
+    {
+        using var harness = new SdkHarness();
+        harness.Enqueue(async (_, ct) =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(10), ct);
+            return new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        });
+        var exception = await Assert.ThrowsAsync<CheqiApiException>(() => harness.Sdk.CompanyService.ListReceiptDestinationsAsync(
+            new RequestOptions { Timeout = TimeSpan.FromMilliseconds(50) }));
+        Assert.Equal(CheqiApiException.ErrorCodes.TIMEOUT_ERROR, exception.ErrorCode);
+    }
+
+    [Fact]
+    public void RequestOptionsRejectBlankTokensAndHideTokenInToString()
+    {
+        Assert.Throws<ArgumentException>(() => RequestOptions.WithAccessToken(" "));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new RequestOptions { MaxRetries = -1 });
+        Assert.DoesNotContain("secret-token", RequestOptions.WithAccessToken("secret-token").ToString());
+        Assert.Equal(RequestOptions.WithAccessToken("a"), RequestOptions.WithAccessToken("a"));
     }
 }

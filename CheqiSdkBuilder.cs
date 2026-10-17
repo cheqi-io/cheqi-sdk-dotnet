@@ -34,12 +34,6 @@ public sealed class CheqiSdkBuilder
         return this;
     }
 
-    public CheqiSdkBuilder SupplierCredentials(string clientId, string clientSecret)
-    {
-        _configBuilder.SupplierCredentials(clientId, clientSecret);
-        return this;
-    }
-
     public CheqiSdkBuilder ReceiptDownloadBaseUrl(string baseUrl)
     {
         _configBuilder.ReceiptDownloadBaseUrl(baseUrl);

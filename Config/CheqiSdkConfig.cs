@@ -19,16 +19,11 @@ public sealed class CheqiSdkConfig
     public string ApiEndpoint { get; }
     public string? ReceiptDownloadBaseUrl { get; }
     public string? ApiKey { get; }
-    public string? SupplierClientId { get; }
-    public string? SupplierClientSecret { get; }
     public string? PrivateKeyBase64 { get; }
     public Encryption.EncryptionConfig? EncryptionConfig { get; }
     public int TimeoutSeconds { get; }
     public int MaxRetries { get; }
     
-    // Convenience properties for API client
-    public string? ClientId => SupplierClientId;
-    public string? ClientSecret => SupplierClientSecret;
     public TimeSpan Timeout => TimeSpan.FromSeconds(TimeoutSeconds);
 
     private CheqiSdkConfig(Builder builder)
@@ -40,8 +35,6 @@ public sealed class CheqiSdkConfig
                 ? Download.DownloadService.SandboxBaseUrl
                 : ApiEndpoint.TrimEnd('/') == "https://test.api.cheqi.io" ? "https://test.receipt.cheqi.io" : null);
         ApiKey = builder._apiKey;
-        SupplierClientId = builder._supplierClientId;
-        SupplierClientSecret = builder._supplierClientSecret;
         PrivateKeyBase64 = builder._privateKeyBase64;
         EncryptionConfig = builder._encryptionConfig;
         TimeoutSeconds = builder._timeoutSeconds;
@@ -71,12 +64,6 @@ public sealed class CheqiSdkConfig
             builder.ApiKey(options.ApiKey);
         }
 
-        if (!string.IsNullOrWhiteSpace(options.SupplierClientId) ||
-            !string.IsNullOrWhiteSpace(options.SupplierClientSecret))
-        {
-            builder.SupplierCredentials(options.SupplierClientId ?? string.Empty, options.SupplierClientSecret ?? string.Empty);
-        }
-
         if (!string.IsNullOrWhiteSpace(options.PrivateKey))
         {
             builder.PrivateKey(options.PrivateKey);
@@ -99,8 +86,6 @@ public sealed class CheqiSdkConfig
         internal string? _apiEndpoint;
         internal string? _receiptDownloadBaseUrl;
         internal string? _apiKey;
-        internal string? _supplierClientId;
-        internal string? _supplierClientSecret;
         internal string? _privateKeyBase64;
         internal Encryption.EncryptionConfig? _encryptionConfig;
         internal int _timeoutSeconds = 30;
@@ -130,10 +115,6 @@ public sealed class CheqiSdkConfig
             return this;
         }
 
-        /// <summary>
-        /// Sets the API key for direct company access.
-        /// Use this for companies accessing their own data.
-        /// </summary>
         public Builder ReceiptDownloadBaseUrl(string? baseUrl)
         {
             if (baseUrl != null) Download.DownloadService.ValidateBaseUrl(baseUrl);
@@ -141,20 +122,13 @@ public sealed class CheqiSdkConfig
             return this;
         }
 
+        /// <summary>
+        /// Sets the API key for direct company access. Calls use it unless
+        /// <see cref="Http.RequestOptions.AccessToken"/> is set for that call.
+        /// </summary>
         public Builder ApiKey(string apiKey)
         {
             _apiKey = apiKey;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets client credentials for OAuth token generation.
-        /// Only needed for client applications using OAuth flow.
-        /// </summary>
-        public Builder SupplierCredentials(string clientId, string clientSecret)
-        {
-            _supplierClientId = clientId;
-            _supplierClientSecret = clientSecret;
             return this;
         }
 
@@ -197,12 +171,10 @@ public sealed class CheqiSdkConfig
 
             // Optional authentication validation - log warning if no auth configured
             bool hasApiKey = !string.IsNullOrWhiteSpace(_apiKey);
-            bool hasClientCredentials = !string.IsNullOrWhiteSpace(_supplierClientId) &&
-                                       !string.IsNullOrWhiteSpace(_supplierClientSecret);
 
-            if (!hasApiKey && !hasClientCredentials)
+            if (!hasApiKey)
             {
-                logger.LogWarning("No authentication configured. API calls will fail unless access tokens are provided explicitly.");
+                logger.LogWarning("No API key configured. API calls will fail unless RequestOptions.AccessToken is provided per call.");
             }
 
             // Validate timeout
@@ -233,7 +205,7 @@ public sealed class CheqiSdkConfig
             }
 
             var config = new CheqiSdkConfig(this);
-            string authMode = hasApiKey ? "API Key" : (hasClientCredentials ? "OAuth Client Credentials" : "None (tokens required per-call)");
+            string authMode = hasApiKey ? "API Key" : "None (tokens required per-call)";
             logger.LogInformation("CheqiSDKConfig created: endpoint={Endpoint}, authMode={AuthMode}, timeout={Timeout}s, maxRetries={MaxRetries}",
                 _apiEndpoint, authMode, _timeoutSeconds, _maxRetries);
 

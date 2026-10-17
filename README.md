@@ -1,13 +1,13 @@
 # Cheqi .NET SDK
 
-The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 2.7.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
+The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 3.0.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
 
 Version 2.0 is a breaking migration from the old server-generated template flow. The library targets .NET 8 and is tested on .NET 8 and .NET 10.
 
 ## Installation and initialization
 
 ```sh
-dotnet add package cheqi-sdk --version 2.3.0
+dotnet add package cheqi-sdk --version 3.0.0
 ```
 
 ```csharp
@@ -25,7 +25,43 @@ using var sdk = CheqiSdk.Create(new CheqiSdkOptions
 
 Reuse the SDK instance. An injected `HttpClient` and `ILoggerFactory` remain owned by the caller. A client created internally is disposed with the SDK. An injected client can have its own handlers and retry policy; the SDK sets a request option to disable retries for encrypted digital submissions, which `RetryHandler` honors.
 
-API-key authentication is the default. Supply an OAuth token through the optional `accessToken` parameter on any HTTP operation. The .NET convenience configuration also supports `SupplierClientId` and `SupplierClientSecret`: it exchanges and caches a token using `/oauth/exchange`.
+## Request options and OAuth
+
+API-key authentication is the default. Every HTTP operation takes an optional `RequestOptions` before its `CancellationToken`. Use it to act on behalf of a connected company with its OAuth access token, or to override the timeout or retry count for one call:
+
+```csharp
+using Cheqi.Sdk.Http;
+
+var result = await sdk.ReceiptService.IssueReceiptAsync(
+    identification, payload, storeId,
+    options: RequestOptions.WithAccessToken(accessToken),
+    cancellationToken: cancellationToken);
+
+var slowCall = new RequestOptions
+{
+    AccessToken = accessToken,
+    Timeout = TimeSpan.FromSeconds(60),
+    MaxRetries = 0
+};
+```
+
+Company access tokens are short-lived and bound to one Grant, so an integration that serves several companies holds one token per Grant. Request one with the client-credentials grant:
+
+```csharp
+var token = await sdk.OAuthService.RequestAccessTokenAsync(new ClientCredentialsTokenRequest
+{
+    ClientId = clientId,
+    ClientSecret = clientSecret,
+    GrantId = grantId,
+    Scope = "receipt:issue"
+}, cancellationToken: cancellationToken);
+
+// token.AccessToken, token.ExpiresIn
+```
+
+The SDK does not cache or refresh tokens. Store each token with its expiry in your own token store, request a new one before it expires, and pass the current token with `RequestOptions`. A call with neither an access token nor a configured API key fails with `AUTHENTICATION_FAILED` before any request is sent.
+
+`RequestOptions.Timeout` applies per call. An injected `HttpClient` keeps its own `Timeout` as an upper bound.
 
 Register the SDK with dependency injection:
 
@@ -178,6 +214,12 @@ Validated customer returns use `customerNote`, line items with `productId`, `qua
 `StoreService` provides create, list, active list, get, update, delete, activate, and deactivate operations. IDs are `Guid`, requests are generated `CreateStoreRequest`, and results are generated `StoreDTO`. Activation and deactivation return `Task` and accept no-content responses. Active-only filtering is performed by the server.
 
 `VerificationService` retains the Java SDK’s canonical JSON format and SHA-256 hashing, UBL XML canonicalization, and cross-platform hash verification. Use `CheqiJson.CreateOptions()` whenever serializing generated models or persisted results to preserve wire enum values, explicit zero amounts, false booleans, optional field presence, plain-decimal money formatting, and ISO date offsets. Object and wire JSON hashing use the same serializer.
+
+## Migration from 2.x
+
+- Replace the trailing `accessToken` argument with `options: RequestOptions.WithAccessToken(accessToken)`.
+- `SupplierClientId`, `SupplierClientSecret`, `SupplierCredentials(...)` and `ICheqiApiClient.GetAccessTokenAsync` are removed. Request per-Grant tokens with `OAuthService.RequestAccessTokenAsync` and store them in your integration.
+- `InviteUsersAsync` and `GetStoresAsync` now take `resendPending` / `activeOnly` before `options` and `cancellationToken`.
 
 ## Migration from 1.x
 

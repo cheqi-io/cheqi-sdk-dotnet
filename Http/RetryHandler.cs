@@ -7,6 +7,7 @@ namespace Cheqi.Sdk.Http;
 public sealed class RetryHandler : DelegatingHandler
 {
     public static readonly HttpRequestOptionsKey<bool> DisableRetries = new("Cheqi.DisableRetries");
+    public static readonly HttpRequestOptionsKey<int> MaxRetriesOverride = new("Cheqi.MaxRetries");
     private readonly int _maxRetries;
     private readonly TimeSpan _baseDelay;
     private readonly ILogger? _logger;
@@ -27,6 +28,7 @@ public sealed class RetryHandler : DelegatingHandler
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
         // Buffer before the initial send, so every retry has identical content and headers.
         var content = request.Content == null ? null : await request.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+        var maxRetries = request.Options.TryGetValue(MaxRetriesOverride, out var overridden) ? overridden : _maxRetries;
         for (var attempt = 0; ; attempt++)
         {
             using var retry = attempt == 0 ? null : CloneRequest(request, content);
@@ -34,10 +36,10 @@ public sealed class RetryHandler : DelegatingHandler
             try
             {
                 response = await base.SendAsync(retry ?? request, cancellationToken).ConfigureAwait(false);
-                if (attempt >= _maxRetries || !IsRetryable(response.StatusCode)) return response;
+                if (attempt >= maxRetries || !IsRetryable(response.StatusCode)) return response;
             }
-            catch (HttpRequestException) when (attempt < _maxRetries) { }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && attempt < _maxRetries) { }
+            catch (HttpRequestException) when (attempt < maxRetries) { }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && attempt < maxRetries) { }
             var delay = Delay(attempt, response);
             response?.Dispose();
             _logger?.LogDebug("Retry attempt {Attempt} in {Delay}ms", attempt + 1, delay.TotalMilliseconds);

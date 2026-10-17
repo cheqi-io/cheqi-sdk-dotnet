@@ -21,7 +21,7 @@ public sealed class ReceiptServiceTests
         harness.Enqueue(202, SdkHarness.Submitted);
         var payload = SdkHarness.Payload();
         var store = Guid.NewGuid();
-        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), payload, store, "explicit-token");
+        var result = await harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), payload, store, Http.RequestOptions.WithAccessToken("explicit-token"));
         Assert.True(result.IsAccepted);
         Assert.Equal(ReceiptIssueState.DigitalSubmitted, result.State);
         Assert.Equal(new[] { "/recipient/resolve", "/receipt/encrypted" }, harness.Requests.Select(r => r.Path));
@@ -233,7 +233,7 @@ public sealed class ReceiptServiceTests
         payload.Products.Clear();
         await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), payload));
         await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.ResumeReceiptAsync(" ", SdkHarness.Payload()));
-        await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload(), accessToken: " "));
+        await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload(), options: new Http.RequestOptions { AccessToken = " " }));
         Assert.Empty(harness.Requests);
     }
 }

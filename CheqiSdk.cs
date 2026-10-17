@@ -6,6 +6,7 @@ using Cheqi.Sdk.Download;
 using Cheqi.Sdk.Encryption;
 using Cheqi.Sdk.Http;
 using Cheqi.Sdk.Matching;
+using Cheqi.Sdk.OAuth;
 using Cheqi.Sdk.Receipt;
 using Cheqi.Sdk.Verification;
 using Microsoft.Extensions.Logging;
@@ -28,6 +29,7 @@ public sealed class CheqiSdk : IDisposable
     public StoreService StoreService { get; }
     public CompanyService CompanyService { get; }
     public WebhookService WebhookService { get; }
+    public OAuthService OAuthService { get; }
     public VerificationService VerificationService { get; }
 
     public CheqiSdk(CheqiSdkOptions options, ILoggerFactory? loggerFactory = null, HttpClient? httpClient = null)
@@ -47,6 +49,7 @@ public sealed class CheqiSdk : IDisposable
         StoreService = new StoreService(ApiClient, logging.CreateLogger<StoreService>());
         CompanyService = new CompanyService(ApiClient);
         WebhookService = new WebhookService(ApiClient);
+        OAuthService = new OAuthService(ApiClient);
         VerificationService = new VerificationService();
     }
 

@@ -16,10 +16,6 @@ public sealed class CheqiSdkOptions
 
     public string? ApiKey { get; set; }
 
-    public string? SupplierClientId { get; set; }
-
-    public string? SupplierClientSecret { get; set; }
-
     public string? PrivateKey { get; set; }
 
     public Encryption.EncryptionConfig? EncryptionConfig { get; set; }
