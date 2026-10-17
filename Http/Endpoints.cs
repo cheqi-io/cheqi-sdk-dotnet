@@ -8,7 +8,7 @@ public static class Endpoints
     public const string ReceiptEmail = "/receipt/email";
     public const string RecipientResolve = "/recipient/resolve";
     public const string CreditNoteEncrypted = "/credit-note/encrypted";
-    public const string OAuthToken = "/oauth/exchange";
+    public const string OAuthToken = "/oauth2/token";
     public const string ReceiptDestinations = "/company/receipt-destinations";
     public static string ReceiptDestination(Guid id) => $"{ReceiptDestinations}/{id:D}";
     public static string ReceiptDestinationQueue(Guid id) => ReceiptDestination(id) + "/receipts/queue";

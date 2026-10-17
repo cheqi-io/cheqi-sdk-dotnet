@@ -14,12 +14,10 @@ public sealed class MatchingService
         _api = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _logger = logger;
     }
-    public Task<RecipientResolutionResponse> MatchCustomerAsync(IdentificationDetails identificationDetails, CancellationToken cancellationToken = default)
-        => MatchCustomerAsync(identificationDetails, null, cancellationToken);
-    public async Task<RecipientResolutionResponse> MatchCustomerAsync(IdentificationDetails identificationDetails, string? accessToken, CancellationToken cancellationToken = default)
+    public async Task<RecipientResolutionResponse> MatchCustomerAsync(IdentificationDetails identificationDetails,
+        RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(identificationDetails);
-        Receipt.ReceiptService.ValidateToken(accessToken);
         if (identificationDetails.PaymentType == null
             && string.IsNullOrWhiteSpace(identificationDetails.PairingCode)
             && string.IsNullOrWhiteSpace(identificationDetails.CheqiReceiptId)
@@ -27,7 +25,7 @@ public sealed class MatchingService
             && string.IsNullOrWhiteSpace(identificationDetails.CardDetails?.PaymentAccountReference)
             && string.IsNullOrWhiteSpace(identificationDetails.PaymentAccountDetails?.Identifier))
             throw new ArgumentException("IdentificationDetails must contain an identifier or payment type", nameof(identificationDetails));
-        var match = await _api.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken).ConfigureAwait(false);
+        var match = await _api.MatchCustomerAsync(identificationDetails, options, cancellationToken).ConfigureAwait(false);
         _logger?.LogDebug("Recipient route found: {RouteFound}", match.RouteFound);
         return match;
     }

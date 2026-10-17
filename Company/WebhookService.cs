@@ -11,9 +11,9 @@ public sealed class WebhookService
     public WebhookService(ICheqiApiClient apiClient)
         => _api = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
 
-    public Task<WebhookDTO> UpdateSubscriptionUrlAsync(Guid subscriptionId, string notificationUrl, string? accessToken = null, CancellationToken cancellationToken = default)
+    public Task<WebhookDTO> UpdateSubscriptionUrlAsync(Guid subscriptionId, string notificationUrl, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(notificationUrl)) throw new ArgumentException("Notification URL is required", nameof(notificationUrl));
-        return _api.UpdateWebhookSubscriptionUrlAsync(subscriptionId, notificationUrl, accessToken, cancellationToken);
+        return _api.UpdateWebhookSubscriptionUrlAsync(subscriptionId, notificationUrl, options, cancellationToken);
     }
 }

@@ -23,15 +23,12 @@ public sealed class CreditNoteService
 
     /// <summary>Accepts a serializable object or an already serialized JSON string; values are not recalculated.</summary>
     public async Task<CreditNoteResult> IssueCreditNoteAsync(IdentificationDetails identificationDetails, string parentCheqiReceiptId,
-        object creditNotePayload, Guid? storeId = null, string? accessToken = null, CancellationToken cancellationToken = default)
+        object creditNotePayload, Guid? storeId = null, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(identificationDetails);
         ArgumentNullException.ThrowIfNull(creditNotePayload);
         ReceiptService.RequireText(parentCheqiReceiptId, nameof(parentCheqiReceiptId));
-        ReceiptService.ValidateToken(accessToken);
-        var match = accessToken == null
-            ? await _matching.MatchCustomerAsync(identificationDetails, cancellationToken).ConfigureAwait(false)
-            : await _matching.MatchCustomerAsync(identificationDetails, accessToken, cancellationToken).ConfigureAwait(false);
+        var match = await _matching.MatchCustomerAsync(identificationDetails, options, cancellationToken).ConfigureAwait(false);
         if (match.RouteFound != true || match.Recipients == null || match.Recipients.Count == 0)
             throw new ArgumentException("Credit notes require a digital owner-device route");
         ReceiptService.RequireText(match.MatchId, "matchId");
@@ -39,7 +36,7 @@ public sealed class CreditNoteService
         var envelope = new EncryptedCreditNoteEnvelope(match.MatchId!, parentCheqiReceiptId,
             match.Recipients.Select(recipient => _encryption.EncryptCreditNoteForRecipient(plaintext, recipient)).ToList());
         if (storeId.HasValue) envelope.StoreId = storeId;
-        var response = await _api.SubmitEncryptedCreditNoteAsync(envelope, accessToken, cancellationToken).ConfigureAwait(false);
+        var response = await _api.SubmitEncryptedCreditNoteAsync(envelope, options, cancellationToken).ConfigureAwait(false);
         return CreditNoteResult.Accepted(parentCheqiReceiptId, response);
     }
 }
