@@ -103,9 +103,9 @@ var payload = new ReceiptPayload(
     products: new List<Product>
     {
         new("Coffee", "coffee-1", 1, UnitCode.C62, 10m, 10m, 12.10m)
-        { Taxes = new List<Tax> { new(21, "VAT", 10m) { Amount = 2.10m, Category = TaxCategoryCode.S } } }
+        { Taxes = new List<Tax> { new(21, "VAT", 10m) { Amount = 2.10m, Category = TaxCategoryCode.STANDARD } } }
     },
-    taxes: new List<Tax> { new(21, "VAT", 10m) { Amount = 2.10m, Category = TaxCategoryCode.S } },
+    taxes: new List<Tax> { new(21, "VAT", 10m) { Amount = 2.10m, Category = TaxCategoryCode.STANDARD } },
     paymentDetails: new PaymentDetails { PaymentMeansCode = "48", PaidAmount = 12.10m, AmountDue = 0m, RoundingAmount = 0m });
 
 var result = await sdk.ReceiptService.IssueReceiptAsync(
