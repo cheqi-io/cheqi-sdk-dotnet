@@ -45,4 +45,12 @@ public sealed class VerificationService
     {
         return _xmlCanonicalizer.Canonicalize(ublXml);
     }
+
+    public string CanonicalizeAndHashJson(string json) => CalculateCheqiReceiptHash(json);
+    public string CanonicalizeAndHashJson(object value) => CalculateCheqiReceiptHash(value);
+    public string CanonicalizeAndHashXml(string xml) => CalculateUblHash(xml);
+    public bool VerifyJsonHash(string json, string expectedHash)
+        => string.Equals(CanonicalizeAndHashJson(json), expectedHash, StringComparison.Ordinal);
+    public bool VerifyXmlHash(string xml, string expectedHash)
+        => string.Equals(CanonicalizeAndHashXml(xml), expectedHash, StringComparison.Ordinal);
 }

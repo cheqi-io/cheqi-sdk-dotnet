@@ -8,6 +8,17 @@ public sealed class VerificationServiceTests
     private readonly VerificationService _service = new();
 
     [Fact]
+    public void VerificationAcceptsEquivalentDocumentsAndRejectsChangedContent()
+    {
+        var jsonHash = _service.CanonicalizeAndHashJson(new { b = 2, a = 1 });
+        Assert.True(_service.VerifyJsonHash("{\"a\":1,\"b\":2}", jsonHash));
+        Assert.False(_service.VerifyJsonHash("{\"a\":2,\"b\":2}", jsonHash));
+        var xmlHash = _service.CanonicalizeAndHashXml("<Invoice><Total>10</Total></Invoice>");
+        Assert.True(_service.VerifyXmlHash("<Invoice>\n  <Total>10</Total>\n</Invoice>", xmlHash));
+        Assert.False(_service.VerifyXmlHash("<Invoice><Total>11</Total></Invoice>", xmlHash));
+    }
+
+    [Fact]
     public void CalculateUblHash_IgnoresFormattingWhitespaceBetweenElements()
     {
         const string compactXml = "<Invoice><AccountingCustomerParty><Party><Name>Cheqi</Name></Party></AccountingCustomerParty></Invoice>";
