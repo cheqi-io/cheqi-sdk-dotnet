@@ -13,6 +13,17 @@ namespace Cheqi.Sdk.Tests;
 public sealed class ReceiptServiceTests
 {
     [Fact]
+    public void LegacyDownloadDocumentPreservesPayloadAndAddsIdentification()
+    {
+        using var harness = new SdkHarness();
+        using var json = JsonDocument.Parse(harness.Sdk.ReceiptService.BuildDownloadCheqiDocument(
+            SdkHarness.Payload(), SdkHarness.Identification()));
+        Assert.Equal("POS-001", json.RootElement.GetProperty("documentNumber").GetString());
+        Assert.Equal(12.1m, json.RootElement.GetProperty("totalAmount").GetDecimal());
+        Assert.Equal("private-locator", json.RootElement.GetProperty("identificationDetails").GetProperty("pairingCode").GetString());
+        Assert.Empty(harness.Requests);
+    }
+    [Fact]
     public async Task DigitalEncryptsIdenticalDefinitivePayloadIndependentlyForEveryDevice()
     {
         using var rsa = RSA.Create(2048);
@@ -231,7 +242,9 @@ public sealed class ReceiptServiceTests
         using var harness = new SdkHarness();
         var payload = SdkHarness.Payload();
         payload.Products.Clear();
-        await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), payload));
+        var error = await Assert.ThrowsAsync<Exceptions.CheqiSdkException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), payload));
+        Assert.True(error.IsValidationError());
+        Assert.NotNull(error.ValidationReport);
         await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.ResumeReceiptAsync(" ", SdkHarness.Payload()));
         await Assert.ThrowsAsync<ArgumentException>(() => harness.Sdk.ReceiptService.IssueReceiptAsync(SdkHarness.Identification(), SdkHarness.Payload(), options: new Http.RequestOptions { AccessToken = " " }));
         Assert.Empty(harness.Requests);

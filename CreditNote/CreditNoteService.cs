@@ -36,7 +36,15 @@ public sealed class CreditNoteService
         var envelope = new EncryptedCreditNoteEnvelope(match.MatchId!, parentCheqiReceiptId,
             match.Recipients.Select(recipient => _encryption.EncryptCreditNoteForRecipient(plaintext, recipient)).ToList());
         if (storeId.HasValue) envelope.StoreId = storeId;
-        var response = await _api.SubmitEncryptedCreditNoteAsync(envelope, options, cancellationToken).ConfigureAwait(false);
+        var response = await SubmitEncryptedCreditNoteAsync(envelope, options, cancellationToken).ConfigureAwait(false);
         return CreditNoteResult.Accepted(parentCheqiReceiptId, response);
+    }
+
+    /// <summary>Submits an already encrypted credit note without matching again.</summary>
+    public Task<ReceiptSubmissionResponse> SubmitEncryptedCreditNoteAsync(EncryptedCreditNoteEnvelope envelope,
+        RequestOptions? options = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(envelope);
+        return _api.SubmitEncryptedCreditNoteAsync(envelope, options, cancellationToken);
     }
 }

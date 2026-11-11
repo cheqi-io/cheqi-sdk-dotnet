@@ -20,6 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Wasmtime" Version="50.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.5" />
@@ -28,6 +29,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Validation/Resources/*" LogicalName="Cheqi.Sdk.Validation.Resources.%(Filename)%(Extension)" />
+    <InternalsVisibleTo Include="cheqi-sdk.Tests" />
     <None Update="README.md" Pack="true" PackagePath="/" />
     <Compile Remove="tests/**/*.cs" />
     <EmbeddedResource Remove="tests/**/*" />

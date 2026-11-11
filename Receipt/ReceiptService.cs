@@ -9,6 +9,7 @@ using Cheqi.Sdk.Matching;
 using Cheqi.Sdk.Models.Generated;
 using Cheqi.Sdk.Serialization;
 using Cheqi.Sdk.Verification;
+using Cheqi.Sdk.Validation;
 using Route = Cheqi.Sdk.Models.Generated.RecipientResolutionResponse.DeliveryRouteTypeEnum;
 
 namespace Cheqi.Sdk.Receipt;
@@ -22,6 +23,10 @@ public sealed class ReceiptService
     private readonly DownloadService _downloads;
     private readonly string? _downloadBaseUrl;
     private readonly JsonSerializerOptions _json = CheqiJson.CreateOptions();
+    private readonly ReceiptPayloadValidator _validator = new();
+
+    /// <summary>Returns all receipt findings without changing values or making an API request.</summary>
+    public InvoiceValidationReport Validate(ReceiptPayload receiptPayload) => _validator.Validate(receiptPayload);
 
     public ReceiptService(ICheqiApiClient apiClient, EncryptionService encryptionService, MatchingService matchingService)
         : this(apiClient, encryptionService, matchingService, new DownloadService(), DownloadService.ProductionBaseUrl) { }
@@ -182,6 +187,16 @@ public sealed class ReceiptService
     public Task SendReceiptViaEmailAsync(string customerEmail, CheqiReceipt receipt, RequestOptions? options = null,
         CancellationToken cancellationToken = default) => _api.SendReceiptViaEmailAsync(customerEmail, receipt, options, cancellationToken);
 
+    /// <summary>Builds the legacy version 1 browser document; new downloads carry ReceiptPayload.</summary>
+    public string BuildDownloadCheqiDocument(ReceiptPayload receiptPayload, IdentificationDetails identificationDetails)
+    {
+        ArgumentNullException.ThrowIfNull(receiptPayload);
+        ArgumentNullException.ThrowIfNull(identificationDetails);
+        var document = JsonSerializer.SerializeToNode(receiptPayload, _json)!.AsObject();
+        document["identificationDetails"] = JsonSerializer.SerializeToNode(identificationDetails, _json);
+        return document.ToJsonString(_json);
+    }
+
     private async Task<ReceiptResult> DeliverDownloadAsync(string? matchId, ReceiptPayload payload, IdentificationDetails identification,
         RequestOptions? options, CancellationToken cancellationToken)
     {
@@ -232,12 +247,9 @@ public sealed class ReceiptService
         (match.Recipients?.Count > 0 ? Route.DIGITAL : throw new CheqiSdkException("Resolution did not include deliveryRouteType"));
     internal static void RequireText(string? value, string name)
     { if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException($"{name} is required", name); }
-    private static void ValidatePayload(ReceiptPayload payload)
+    private void ValidatePayload(ReceiptPayload payload)
     {
         ArgumentNullException.ThrowIfNull(payload);
-        RequireText(payload.DocumentNumber, "documentNumber");
-        RequireText(payload.Currency, "currency");
-        if (payload.Products == null || payload.Products.Count == 0 || payload.Products.Any(product => product == null))
-            throw new ArgumentException("Receipt must contain products", nameof(payload));
+        _validator.ValidateOrThrow(payload);
     }
 }

@@ -116,6 +116,38 @@ The SDK resolves a route, serializes the definitive values you supply, independe
 
 Pairing codes, card PARs, payment accounts, email addresses, and original Cheqi receipt IDs can identify customers. A payment type alone is valid anonymous payment context and can resolve a download fallback.
 
+## Validate receipt values
+
+The .NET SDK uses the same pinned, offline receipt validator as Java and Python
+(engine 0.4.4, ABI 1). Issuing, resuming, explicitly downloading, and generating an
+encrypted receipt envelope validate the supplied payload before HTTP or encryption.
+Invalid amounts or missing tax/payment data stop issuance with `VALIDATION_ERROR`;
+the SDK does not calculate, round, or repair caller-supplied values.
+
+```csharp
+var report = sdk.ReceiptService.Validate(payload);
+foreach (var issue in report.Issues)
+    Console.WriteLine($"{issue.RuleId}: {issue.Path} — {issue.Message}");
+
+// Also usable independently of an authenticated SDK instance:
+var validator = new Cheqi.Sdk.Validation.ReceiptPayloadValidator();
+var jsonReport = validator.ValidateJson(receiptJson);
+```
+
+`CheqiSdkException.ValidationReport` contains all detected findings when issuance
+fails validation. The report covers `EN16931_CORE_2017_V1` receipt-payload rules;
+`CompleteDocument` is false because final document validation happens in the wallet.
+Pre-encrypted submissions cannot inspect plaintext and do not run this validator.
+
+The NuGet package embeds the checksum-verified WASM module and its source manifest.
+Wasmtime 50.0.1 supplies a native runtime; deploy its NuGet runtime assets alongside
+the SDK. Validation is offline, limits each call to 64 MiB of WASM memory and
+200 million fuel units, and gives concurrent calls independent instances. A missing
+or unusable runtime raises `CONFIGURATION_ERROR` rather than skipping validation.
+The shared golden reports are tested on Linux, macOS, and Windows with .NET 8 and 10.
+
+See [Java/Python capability mapping](docs/sdk-parity.md) for the public service surface.
+
 ## Outcomes and recovery
 
 | `result.State` | Meaning | Integration action |
