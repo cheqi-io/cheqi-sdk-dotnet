@@ -117,9 +117,9 @@ namespace Cheqi.Sdk.Models.Generated
             StringBuilder sb = new StringBuilder();
             sb.Append("class AuthorizationCodeExchangeRequest {\n");
             sb.Append("  ClientId: ").Append(ClientId).Append("\n");
-            sb.Append("  ClientSecret: ").Append(ClientSecret).Append("\n");
-            sb.Append("  Code: ").Append(Code).Append("\n");
-            sb.Append("  CodeVerifier: ").Append(CodeVerifier).Append("\n");
+            sb.Append("  ClientSecret: ").Append("<redacted>").Append("\n");
+            sb.Append("  Code: ").Append("<redacted>").Append("\n");
+            sb.Append("  CodeVerifier: ").Append("<redacted>").Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

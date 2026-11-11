@@ -33,6 +33,7 @@ public static class CheqiJson
         options.Converters.Add(new CardDetailsJsonConverter());
         options.Converters.Add(new ChargeJsonConverter());
         options.Converters.Add(new CheqiReceiptJsonConverter());
+        options.Converters.Add(new ClientApplicationPublicKeyRequestJsonConverter());
         options.Converters.Add(new ClientCredentialsTokenRequestJsonConverter());
         options.Converters.Add(new ClientReceiptDownloadRequestJsonConverter());
         options.Converters.Add(new ClientReceiptDownloadResponseJsonConverter());
@@ -91,6 +92,7 @@ public static class CheqiJson
         options.Converters.Add(new PartyAddressJsonConverter());
         options.Converters.Add(new PaymentAccountDetailsJsonConverter());
         options.Converters.Add(new PaymentDetailsJsonConverter());
+        options.Converters.Add(new PaymentMethodJsonConverter());
         options.Converters.Add(new PaymentTypeJsonConverter());
         options.Converters.Add(new PaymentTypeNullableJsonConverter());
         options.Converters.Add(new PeriodJsonConverter());
@@ -100,6 +102,8 @@ public static class CheqiJson
         options.Converters.Add(new ReceiptCollectionResponseJsonConverter());
         options.Converters.Add(new ReceiptDeliveryRequestJsonConverter());
         options.Converters.Add(new ReceiptDeliverySubmissionJsonConverter());
+        options.Converters.Add(new ReceiptDocumentProfileJsonConverter());
+        options.Converters.Add(new ReceiptDocumentProfileNullableJsonConverter());
         options.Converters.Add(new ReceiptEnvelopeJsonConverter());
         options.Converters.Add(new ReceiptEnvelopeDocumentJsonConverter());
         options.Converters.Add(new ReceiptFormatJsonConverter());

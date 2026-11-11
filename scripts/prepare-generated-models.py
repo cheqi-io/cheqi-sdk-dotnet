@@ -7,6 +7,14 @@ models = root / "Models/Generated"
 for path in models.glob("*.cs"):
     source = path.read_text().replace("using Cheqi.Sdk.Client;", "").replace("namespace Cheqi.Sdk.Client", "namespace Cheqi.Sdk.Models.Generated")
     source = source.replace("JsonSerializer.Deserialize<DateTime>", "JsonSerializer.Deserialize<DateTimeOffset>")
+    # Diagnostic strings must never expose OAuth secrets; JSON remains unchanged.
+    sensitive = {"ClientSecret", "AccessToken", "RefreshToken", "IdToken", "CodeVerifier"}
+    if path.stem == "AuthorizationCodeExchangeRequest":
+        sensitive.add("Code")
+    for field in sensitive:
+        source = re.sub(r'(sb\.Append\("  ' + field + r': "\)\.Append\()' + field + r'(\))',
+                        r'\1"<redacted>"\2', source)
+
     # The generator's oneOf converter requires a full generated HTTP client and
     # cannot discriminate optional-property schemas. Discriminate by contract fields.
     if path.name == "SubmitEncryptedReceipt202Response.cs" and "ClientUtils.TryDeserialize" in source:

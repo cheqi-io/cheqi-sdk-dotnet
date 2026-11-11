@@ -189,7 +189,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  Scope: ").Append(Scope).Append("\n");
             sb.Append("  GrantType: ").Append(GrantType).Append("\n");
             sb.Append("  ClientId: ").Append(ClientId).Append("\n");
-            sb.Append("  ClientSecret: ").Append(ClientSecret).Append("\n");
+            sb.Append("  ClientSecret: ").Append("<redacted>").Append("\n");
             sb.Append("  GrantId: ").Append(GrantId).Append("\n");
             sb.Append("}\n");
             return sb.ToString();

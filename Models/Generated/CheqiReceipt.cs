@@ -33,6 +33,8 @@ namespace Cheqi.Sdk.Models.Generated
         /// Initializes a new instance of the <see cref="CheqiReceipt" /> class.
         /// </summary>
         /// <param name="totalAmount">The total amount of the receipt</param>
+        /// <param name="totalDiscountAmount">Issuer-supplied sum of the receipt-level discounts.</param>
+        /// <param name="totalChargeAmount">Issuer-supplied sum of the receipt-level charges.</param>
         /// <param name="documentNumber">The document number of the receipt, given by the seller, for example invoice number.</param>
         /// <param name="identifiers">The identifiers for the purchase, given by the seller, for example order reference, transaction number</param>
         /// <param name="issueDate">The issue date of the receipt</param>
@@ -56,9 +58,11 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="jurisdictionalData">jurisdictionalData</param>
         /// <param name="receiptUuid">The verification nonce of the receipt</param>
         [JsonConstructor]
-        public CheqiReceipt(Option<decimal?> totalAmount = default, Option<string?> documentNumber = default, Option<List<Identifier>?> identifiers = default, Option<DateTimeOffset?> issueDate = default, Option<string?> currency = default, Option<decimal?> receiptSubtotal = default, Option<decimal?> totalBeforeTax = default, Option<decimal?> totalTaxAmount = default, Option<List<Product>?> products = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Tax>?> taxes = default, Option<DateTimeOffset?> transactionDate = default, Option<DateTimeOffset?> purchaseDate = default, Option<Period?> period = default, Option<string?> note = default, Option<SellingParty?> sellingParty = default, Option<StoreDTO?> store = default, Option<ReceivingParty?> receivingParty = default, Option<PaymentDetails?> paymentMeans = default, Option<List<Barcode>?> barcodes = default, Option<JurisdictionalData?> jurisdictionalData = default, Option<string?> receiptUuid = default)
+        public CheqiReceipt(Option<decimal?> totalAmount = default, Option<decimal?> totalDiscountAmount = default, Option<decimal?> totalChargeAmount = default, Option<string?> documentNumber = default, Option<List<Identifier>?> identifiers = default, Option<DateTimeOffset?> issueDate = default, Option<string?> currency = default, Option<decimal?> receiptSubtotal = default, Option<decimal?> totalBeforeTax = default, Option<decimal?> totalTaxAmount = default, Option<List<Product>?> products = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Tax>?> taxes = default, Option<DateTimeOffset?> transactionDate = default, Option<DateTimeOffset?> purchaseDate = default, Option<Period?> period = default, Option<string?> note = default, Option<SellingParty?> sellingParty = default, Option<StoreDTO?> store = default, Option<ReceivingParty?> receivingParty = default, Option<PaymentDetails?> paymentMeans = default, Option<List<Barcode>?> barcodes = default, Option<JurisdictionalData?> jurisdictionalData = default, Option<string?> receiptUuid = default)
         {
             TotalAmountOption = totalAmount;
+            TotalDiscountAmountOption = totalDiscountAmount;
+            TotalChargeAmountOption = totalChargeAmount;
             DocumentNumberOption = documentNumber;
             IdentifiersOption = identifiers;
             IssueDateOption = issueDate;
@@ -100,6 +104,36 @@ namespace Cheqi.Sdk.Models.Generated
         /* <example>10.0</example> */
         [JsonPropertyName("totalAmount")]
         public decimal? TotalAmount { get { return this.TotalAmountOption; } set { this.TotalAmountOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of TotalDiscountAmount
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<decimal?> TotalDiscountAmountOption { get; private set; }
+
+        /// <summary>
+        /// Issuer-supplied sum of the receipt-level discounts.
+        /// </summary>
+        /// <value>Issuer-supplied sum of the receipt-level discounts.</value>
+        /* <example>1.0</example> */
+        [JsonPropertyName("totalDiscountAmount")]
+        public decimal? TotalDiscountAmount { get { return this.TotalDiscountAmountOption; } set { this.TotalDiscountAmountOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of TotalChargeAmount
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<decimal?> TotalChargeAmountOption { get; private set; }
+
+        /// <summary>
+        /// Issuer-supplied sum of the receipt-level charges.
+        /// </summary>
+        /// <value>Issuer-supplied sum of the receipt-level charges.</value>
+        /* <example>2.0</example> */
+        [JsonPropertyName("totalChargeAmount")]
+        public decimal? TotalChargeAmount { get { return this.TotalChargeAmountOption; } set { this.TotalChargeAmountOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of DocumentNumber
@@ -420,6 +454,8 @@ namespace Cheqi.Sdk.Models.Generated
             StringBuilder sb = new StringBuilder();
             sb.Append("class CheqiReceipt {\n");
             sb.Append("  TotalAmount: ").Append(TotalAmount).Append("\n");
+            sb.Append("  TotalDiscountAmount: ").Append(TotalDiscountAmount).Append("\n");
+            sb.Append("  TotalChargeAmount: ").Append(TotalChargeAmount).Append("\n");
             sb.Append("  DocumentNumber: ").Append(DocumentNumber).Append("\n");
             sb.Append("  Identifiers: ").Append(Identifiers).Append("\n");
             sb.Append("  IssueDate: ").Append(IssueDate).Append("\n");
@@ -485,6 +521,8 @@ namespace Cheqi.Sdk.Models.Generated
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
             Option<decimal?> totalAmount = default;
+            Option<decimal?> totalDiscountAmount = default;
+            Option<decimal?> totalChargeAmount = default;
             Option<string?> documentNumber = default;
             Option<List<Identifier>?> identifiers = default;
             Option<DateTimeOffset?> issueDate = default;
@@ -525,6 +563,12 @@ namespace Cheqi.Sdk.Models.Generated
                     {
                         case "totalAmount":
                             totalAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
+                            break;
+                        case "totalDiscountAmount":
+                            totalDiscountAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
+                            break;
+                        case "totalChargeAmount":
+                            totalChargeAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "documentNumber":
                             documentNumber = new Option<string?>(utf8JsonReader.GetString()!);
@@ -601,6 +645,12 @@ namespace Cheqi.Sdk.Models.Generated
             if (totalAmount.IsSet && totalAmount.Value == null)
                 throw new ArgumentNullException(nameof(totalAmount), "Property is not nullable for class CheqiReceipt.");
 
+            if (totalDiscountAmount.IsSet && totalDiscountAmount.Value == null)
+                throw new ArgumentNullException(nameof(totalDiscountAmount), "Property is not nullable for class CheqiReceipt.");
+
+            if (totalChargeAmount.IsSet && totalChargeAmount.Value == null)
+                throw new ArgumentNullException(nameof(totalChargeAmount), "Property is not nullable for class CheqiReceipt.");
+
             if (documentNumber.IsSet && documentNumber.Value == null)
                 throw new ArgumentNullException(nameof(documentNumber), "Property is not nullable for class CheqiReceipt.");
 
@@ -667,7 +717,7 @@ namespace Cheqi.Sdk.Models.Generated
             if (receiptUuid.IsSet && receiptUuid.Value == null)
                 throw new ArgumentNullException(nameof(receiptUuid), "Property is not nullable for class CheqiReceipt.");
 
-            return new CheqiReceipt(totalAmount, documentNumber, identifiers, issueDate, currency, receiptSubtotal, totalBeforeTax, totalTaxAmount, products, discounts, charges, taxes, transactionDate, purchaseDate, period, note, sellingParty, store, receivingParty, paymentMeans, barcodes, jurisdictionalData, receiptUuid);
+            return new CheqiReceipt(totalAmount, totalDiscountAmount, totalChargeAmount, documentNumber, identifiers, issueDate, currency, receiptSubtotal, totalBeforeTax, totalTaxAmount, products, discounts, charges, taxes, transactionDate, purchaseDate, period, note, sellingParty, store, receivingParty, paymentMeans, barcodes, jurisdictionalData, receiptUuid);
         }
 
         /// <summary>
@@ -746,6 +796,18 @@ namespace Cheqi.Sdk.Models.Generated
                 {
                     writer.WritePropertyName("totalAmount");
                     JsonSerializer.Serialize(writer, cheqiReceipt.TotalAmountOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (cheqiReceipt.TotalDiscountAmountOption.IsSet)
+                {
+                    writer.WritePropertyName("totalDiscountAmount");
+                    JsonSerializer.Serialize(writer, cheqiReceipt.TotalDiscountAmountOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (cheqiReceipt.TotalChargeAmountOption.IsSet)
+                {
+                    writer.WritePropertyName("totalChargeAmount");
+                    JsonSerializer.Serialize(writer, cheqiReceipt.TotalChargeAmountOption.Value!.Value, jsonSerializerOptions);
                 }
 
             if (cheqiReceipt.DocumentNumberOption.IsSet)

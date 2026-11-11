@@ -216,7 +216,7 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class OAuthTokenExchangeResponse {\n");
-            sb.Append("  AccessToken: ").Append(AccessToken).Append("\n");
+            sb.Append("  AccessToken: ").Append("<redacted>").Append("\n");
             sb.Append("  TokenType: ").Append(TokenType).Append("\n");
             sb.Append("  ExpiresIn: ").Append(ExpiresIn).Append("\n");
             sb.Append("  Scope: ").Append(Scope).Append("\n");
