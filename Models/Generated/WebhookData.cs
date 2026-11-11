@@ -35,13 +35,15 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="companyInvitationAccepted">companyInvitationAccepted</param>
         /// <param name="encryptedReceipt">encryptedReceipt</param>
         /// <param name="encryptedCreditNote">encryptedCreditNote</param>
+        /// <param name="encryptedSelfBilledInvoice">encryptedSelfBilledInvoice</param>
         /// <param name="creditNoteInitiationRequest">creditNoteInitiationRequest</param>
         [JsonConstructor]
-        public WebhookData(Option<WebhookCompanyInvitationAccepted?> companyInvitationAccepted = default, Option<WebhookReceiptEnvelope?> encryptedReceipt = default, Option<WebhookReceiptEnvelope?> encryptedCreditNote = default, Option<WebhookCreditNoteInitiationRequest?> creditNoteInitiationRequest = default)
+        public WebhookData(Option<WebhookCompanyInvitationAccepted?> companyInvitationAccepted = default, Option<WebhookReceiptEnvelope?> encryptedReceipt = default, Option<WebhookReceiptEnvelope?> encryptedCreditNote = default, Option<WebhookReceiptEnvelope?> encryptedSelfBilledInvoice = default, Option<WebhookCreditNoteInitiationRequest?> creditNoteInitiationRequest = default)
         {
             CompanyInvitationAcceptedOption = companyInvitationAccepted;
             EncryptedReceiptOption = encryptedReceipt;
             EncryptedCreditNoteOption = encryptedCreditNote;
+            EncryptedSelfBilledInvoiceOption = encryptedSelfBilledInvoice;
             CreditNoteInitiationRequestOption = creditNoteInitiationRequest;
             OnCreated();
         }
@@ -88,6 +90,19 @@ namespace Cheqi.Sdk.Models.Generated
         public WebhookReceiptEnvelope? EncryptedCreditNote { get { return this.EncryptedCreditNoteOption; } set { this.EncryptedCreditNoteOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of EncryptedSelfBilledInvoice
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<WebhookReceiptEnvelope?> EncryptedSelfBilledInvoiceOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets EncryptedSelfBilledInvoice
+        /// </summary>
+        [JsonPropertyName("encryptedSelfBilledInvoice")]
+        public WebhookReceiptEnvelope? EncryptedSelfBilledInvoice { get { return this.EncryptedSelfBilledInvoiceOption; } set { this.EncryptedSelfBilledInvoiceOption = new(value); } }
+
+        /// <summary>
         /// Used to track the state of CreditNoteInitiationRequest
         /// </summary>
         [JsonIgnore]
@@ -111,6 +126,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  CompanyInvitationAccepted: ").Append(CompanyInvitationAccepted).Append("\n");
             sb.Append("  EncryptedReceipt: ").Append(EncryptedReceipt).Append("\n");
             sb.Append("  EncryptedCreditNote: ").Append(EncryptedCreditNote).Append("\n");
+            sb.Append("  EncryptedSelfBilledInvoice: ").Append(EncryptedSelfBilledInvoice).Append("\n");
             sb.Append("  CreditNoteInitiationRequest: ").Append(CreditNoteInitiationRequest).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -142,6 +158,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<WebhookCompanyInvitationAccepted?> companyInvitationAccepted = default;
             Option<WebhookReceiptEnvelope?> encryptedReceipt = default;
             Option<WebhookReceiptEnvelope?> encryptedCreditNote = default;
+            Option<WebhookReceiptEnvelope?> encryptedSelfBilledInvoice = default;
             Option<WebhookCreditNoteInitiationRequest?> creditNoteInitiationRequest = default;
 
             while (utf8JsonReader.Read())
@@ -168,6 +185,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "encryptedCreditNote":
                             encryptedCreditNote = new Option<WebhookReceiptEnvelope?>(JsonSerializer.Deserialize<WebhookReceiptEnvelope>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
+                        case "encryptedSelfBilledInvoice":
+                            encryptedSelfBilledInvoice = new Option<WebhookReceiptEnvelope?>(JsonSerializer.Deserialize<WebhookReceiptEnvelope>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
                         case "creditNoteInitiationRequest":
                             creditNoteInitiationRequest = new Option<WebhookCreditNoteInitiationRequest?>(JsonSerializer.Deserialize<WebhookCreditNoteInitiationRequest>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
@@ -186,10 +206,13 @@ namespace Cheqi.Sdk.Models.Generated
             if (encryptedCreditNote.IsSet && encryptedCreditNote.Value == null)
                 throw new ArgumentNullException(nameof(encryptedCreditNote), "Property is not nullable for class WebhookData.");
 
+            if (encryptedSelfBilledInvoice.IsSet && encryptedSelfBilledInvoice.Value == null)
+                throw new ArgumentNullException(nameof(encryptedSelfBilledInvoice), "Property is not nullable for class WebhookData.");
+
             if (creditNoteInitiationRequest.IsSet && creditNoteInitiationRequest.Value == null)
                 throw new ArgumentNullException(nameof(creditNoteInitiationRequest), "Property is not nullable for class WebhookData.");
 
-            return new WebhookData(companyInvitationAccepted, encryptedReceipt, encryptedCreditNote, creditNoteInitiationRequest);
+            return new WebhookData(companyInvitationAccepted, encryptedReceipt, encryptedCreditNote, encryptedSelfBilledInvoice, creditNoteInitiationRequest);
         }
 
         /// <summary>
@@ -225,6 +248,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (webhookData.EncryptedCreditNoteOption.IsSet && webhookData.EncryptedCreditNote == null)
                 throw new ArgumentNullException(nameof(webhookData.EncryptedCreditNote), "Property is required for class WebhookData.");
 
+            if (webhookData.EncryptedSelfBilledInvoiceOption.IsSet && webhookData.EncryptedSelfBilledInvoice == null)
+                throw new ArgumentNullException(nameof(webhookData.EncryptedSelfBilledInvoice), "Property is required for class WebhookData.");
+
             if (webhookData.CreditNoteInitiationRequestOption.IsSet && webhookData.CreditNoteInitiationRequest == null)
                 throw new ArgumentNullException(nameof(webhookData.CreditNoteInitiationRequest), "Property is required for class WebhookData.");
 
@@ -242,6 +268,11 @@ namespace Cheqi.Sdk.Models.Generated
             {
                 writer.WritePropertyName("encryptedCreditNote");
                 JsonSerializer.Serialize(writer, webhookData.EncryptedCreditNote, jsonSerializerOptions);
+            }
+            if (webhookData.EncryptedSelfBilledInvoiceOption.IsSet)
+            {
+                writer.WritePropertyName("encryptedSelfBilledInvoice");
+                JsonSerializer.Serialize(writer, webhookData.EncryptedSelfBilledInvoice, jsonSerializerOptions);
             }
             if (webhookData.CreditNoteInitiationRequestOption.IsSet)
             {

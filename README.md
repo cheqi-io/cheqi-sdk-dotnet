@@ -103,7 +103,10 @@ var payload = new ReceiptPayload(
     products: new List<Product>
     {
         new("Coffee", "coffee-1", 1, UnitCode.C62, 10m, 10m, 12.10m)
-    });
+        { Taxes = new List<Tax> { new(21, "VAT", 10m) { Amount = 2.10m, Category = TaxCategoryCode.S } } }
+    },
+    taxes: new List<Tax> { new(21, "VAT", 10m) { Amount = 2.10m, Category = TaxCategoryCode.S } },
+    paymentDetails: new PaymentDetails { PaymentMeansCode = "48", PaidAmount = 12.10m, AmountDue = 0m, RoundingAmount = 0m });
 
 var result = await sdk.ReceiptService.IssueReceiptAsync(
     identification, payload, cancellationToken: cancellationToken);
@@ -252,3 +255,12 @@ make spec-check ENV=prod
 Model generation uses OpenAPI Generator 7.14.0 and runs `scripts/prepare-generated-models.py` to register generated JSON converters, preserve optional enum absence, normalize numeric and date serialization, and fix the model-only generator's submission-response union. Schema drift checks compare parsed YAML so mapping-order changes do not cause false failures.
 
 MIT licensed. Support: support@cheqi.io.
+
+### OAuth diagnostic redaction
+
+OAuth client secrets, access tokens, authorization codes, and PKCE verifiers are
+redacted in SDK model diagnostic strings. Token-endpoint errors omit response
+bodies and parser details that could contain credentials. Explicit JSON
+serialization and credential properties retain their values for authentication.
+Model regeneration preserves retired public DTOs for source compatibility while
+refreshing models still present in the production OpenAPI contract.

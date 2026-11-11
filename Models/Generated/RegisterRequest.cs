@@ -36,13 +36,15 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="publicKey">publicKey</param>
         /// <param name="keyAlgorithm">keyAlgorithm</param>
         /// <param name="acceptsEmployeeSubmissions">acceptsEmployeeSubmissions</param>
+        /// <param name="formatPreferences">formatPreferences</param>
         [JsonConstructor]
-        public RegisterRequest(string name, string publicKey, string keyAlgorithm, Option<bool?> acceptsEmployeeSubmissions = default)
+        public RegisterRequest(string name, string publicKey, string keyAlgorithm, Option<bool?> acceptsEmployeeSubmissions = default, Option<List<ReceiptFormat>?> formatPreferences = default)
         {
             Name = name;
             PublicKey = publicKey;
             KeyAlgorithm = keyAlgorithm;
             AcceptsEmployeeSubmissionsOption = acceptsEmployeeSubmissions;
+            FormatPreferencesOption = formatPreferences;
             OnCreated();
         }
 
@@ -80,6 +82,19 @@ namespace Cheqi.Sdk.Models.Generated
         public bool? AcceptsEmployeeSubmissions { get { return this.AcceptsEmployeeSubmissionsOption; } set { this.AcceptsEmployeeSubmissionsOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of FormatPreferences
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<List<ReceiptFormat>?> FormatPreferencesOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets FormatPreferences
+        /// </summary>
+        [JsonPropertyName("formatPreferences")]
+        public List<ReceiptFormat>? FormatPreferences { get { return this.FormatPreferencesOption; } set { this.FormatPreferencesOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -91,6 +106,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  PublicKey: ").Append(PublicKey).Append("\n");
             sb.Append("  KeyAlgorithm: ").Append(KeyAlgorithm).Append("\n");
             sb.Append("  AcceptsEmployeeSubmissions: ").Append(AcceptsEmployeeSubmissions).Append("\n");
+            sb.Append("  FormatPreferences: ").Append(FormatPreferences).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -122,6 +138,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> publicKey = default;
             Option<string?> keyAlgorithm = default;
             Option<bool?> acceptsEmployeeSubmissions = default;
+            Option<List<ReceiptFormat>?> formatPreferences = default;
 
             while (utf8JsonReader.Read())
             {
@@ -150,6 +167,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "acceptsEmployeeSubmissions":
                             acceptsEmployeeSubmissions = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
+                        case "formatPreferences":
+                            formatPreferences = new Option<List<ReceiptFormat>?>(JsonSerializer.Deserialize<List<ReceiptFormat>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
                         default:
                             break;
                     }
@@ -177,7 +197,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (acceptsEmployeeSubmissions.IsSet && acceptsEmployeeSubmissions.Value == null)
                 throw new ArgumentNullException(nameof(acceptsEmployeeSubmissions), "Property is not nullable for class RegisterRequest.");
 
-            return new RegisterRequest(name.Value!, publicKey.Value!, keyAlgorithm.Value!, acceptsEmployeeSubmissions);
+            if (formatPreferences.IsSet && formatPreferences.Value == null)
+                throw new ArgumentNullException(nameof(formatPreferences), "Property is not nullable for class RegisterRequest.");
+
+            return new RegisterRequest(name.Value!, publicKey.Value!, keyAlgorithm.Value!, acceptsEmployeeSubmissions, formatPreferences);
         }
 
         /// <summary>
@@ -213,6 +236,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (registerRequest.KeyAlgorithm == null)
                 throw new ArgumentNullException(nameof(registerRequest.KeyAlgorithm), "Property is required for class RegisterRequest.");
 
+            if (registerRequest.FormatPreferencesOption.IsSet && registerRequest.FormatPreferences == null)
+                throw new ArgumentNullException(nameof(registerRequest.FormatPreferences), "Property is required for class RegisterRequest.");
+
             writer.WriteString("name", registerRequest.Name);
 
             writer.WriteString("publicKey", registerRequest.PublicKey);
@@ -221,6 +247,12 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (registerRequest.AcceptsEmployeeSubmissionsOption.IsSet)
                 writer.WriteBoolean("acceptsEmployeeSubmissions", registerRequest.AcceptsEmployeeSubmissionsOption.Value!.Value);
+
+            if (registerRequest.FormatPreferencesOption.IsSet)
+            {
+                writer.WritePropertyName("formatPreferences");
+                JsonSerializer.Serialize(writer, registerRequest.FormatPreferences, jsonSerializerOptions);
+            }
         }
     }
 }

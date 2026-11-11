@@ -40,8 +40,14 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="accountIdentifierType">Type of the payment-account identifier when applicable.</param>
         /// <param name="merchantId">Merchant identifier assigned by the card acquirer or payment processor.</param>
         /// <param name="paymentTerminalId">Terminal identifier assigned by the card acquirer or payment processor.</param>
+        /// <param name="paidAmount">Issuer-supplied amount paid when the receipt was issued, across all payment methods. Required in new ReceiptPayloads, including zero when unpaid. Cheqi never calculates or fills in this value; later payments do not change it.</param>
+        /// <param name="amountDue">Issuer-supplied amount still owed after the receipt was issued, for example 0 for a receipt paid in full. Required in every new ReceiptPayload. Must equal totalAmount minus paidAmount plus roundingAmount.</param>
+        /// <param name="roundingAmount">Issuer-supplied rounding applied to the amount due, for example cash rounding. Required in new ReceiptPayloads; explicitly send zero when there is no rounding.</param>
+        /// <param name="dueDate">Date by which a remaining amountDue must be paid (YYYY-MM-DD). When amountDue is positive, supply dueDate or paymentTerms.</param>
+        /// <param name="paymentTerms">Free-text payment terms for a remaining amountDue.</param>
+        /// <param name="paymentMethods">Split payment only: every payment method used, each with the amount paid with it. Their amounts must add up to paidAmount. When present, leave the single-method fields (paymentMeansCode, card and account fields) empty; a receipt paid with one method uses those fields instead of this list.</param>
         [JsonConstructor]
-        public PaymentDetails(Option<string?> paymentMeansCode = default, Option<string?> description = default, Option<string?> cardProvider = default, Option<string?> cardLastFour = default, Option<string?> accountIdentifier = default, Option<string?> accountIdentifierType = default, Option<string?> merchantId = default, Option<string?> paymentTerminalId = default)
+        public PaymentDetails(Option<string?> paymentMeansCode = default, Option<string?> description = default, Option<string?> cardProvider = default, Option<string?> cardLastFour = default, Option<string?> accountIdentifier = default, Option<string?> accountIdentifierType = default, Option<string?> merchantId = default, Option<string?> paymentTerminalId = default, Option<decimal?> paidAmount = default, Option<decimal?> amountDue = default, Option<decimal?> roundingAmount = default, Option<DateOnly?> dueDate = default, Option<string?> paymentTerms = default, Option<List<PaymentMethod>?> paymentMethods = default)
         {
             PaymentMeansCodeOption = paymentMeansCode;
             DescriptionOption = description;
@@ -51,6 +57,12 @@ namespace Cheqi.Sdk.Models.Generated
             AccountIdentifierTypeOption = accountIdentifierType;
             MerchantIdOption = merchantId;
             PaymentTerminalIdOption = paymentTerminalId;
+            PaidAmountOption = paidAmount;
+            AmountDueOption = amountDue;
+            RoundingAmountOption = roundingAmount;
+            DueDateOption = dueDate;
+            PaymentTermsOption = paymentTerms;
+            PaymentMethodsOption = paymentMethods;
             OnCreated();
         }
 
@@ -175,6 +187,95 @@ namespace Cheqi.Sdk.Models.Generated
         public string? PaymentTerminalId { get { return this.PaymentTerminalIdOption; } set { this.PaymentTerminalIdOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of PaidAmount
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<decimal?> PaidAmountOption { get; private set; }
+
+        /// <summary>
+        /// Issuer-supplied amount paid when the receipt was issued, across all payment methods. Required in new ReceiptPayloads, including zero when unpaid. Cheqi never calculates or fills in this value; later payments do not change it.
+        /// </summary>
+        /// <value>Issuer-supplied amount paid when the receipt was issued, across all payment methods. Required in new ReceiptPayloads, including zero when unpaid. Cheqi never calculates or fills in this value; later payments do not change it.</value>
+        /* <example>50.0</example> */
+        [JsonPropertyName("paidAmount")]
+        public decimal? PaidAmount { get { return this.PaidAmountOption; } set { this.PaidAmountOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of AmountDue
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<decimal?> AmountDueOption { get; private set; }
+
+        /// <summary>
+        /// Issuer-supplied amount still owed after the receipt was issued, for example 0 for a receipt paid in full. Required in every new ReceiptPayload. Must equal totalAmount minus paidAmount plus roundingAmount.
+        /// </summary>
+        /// <value>Issuer-supplied amount still owed after the receipt was issued, for example 0 for a receipt paid in full. Required in every new ReceiptPayload. Must equal totalAmount minus paidAmount plus roundingAmount.</value>
+        /* <example>0.0</example> */
+        [JsonPropertyName("amountDue")]
+        public decimal? AmountDue { get { return this.AmountDueOption; } set { this.AmountDueOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of RoundingAmount
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<decimal?> RoundingAmountOption { get; private set; }
+
+        /// <summary>
+        /// Issuer-supplied rounding applied to the amount due, for example cash rounding. Required in new ReceiptPayloads; explicitly send zero when there is no rounding.
+        /// </summary>
+        /// <value>Issuer-supplied rounding applied to the amount due, for example cash rounding. Required in new ReceiptPayloads; explicitly send zero when there is no rounding.</value>
+        /* <example>-0.01</example> */
+        [JsonPropertyName("roundingAmount")]
+        public decimal? RoundingAmount { get { return this.RoundingAmountOption; } set { this.RoundingAmountOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of DueDate
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<DateOnly?> DueDateOption { get; private set; }
+
+        /// <summary>
+        /// Date by which a remaining amountDue must be paid (YYYY-MM-DD). When amountDue is positive, supply dueDate or paymentTerms.
+        /// </summary>
+        /// <value>Date by which a remaining amountDue must be paid (YYYY-MM-DD). When amountDue is positive, supply dueDate or paymentTerms.</value>
+        /* <example>Mon Nov 30 01:00:00 CET 2026</example> */
+        [JsonPropertyName("dueDate")]
+        public DateOnly? DueDate { get { return this.DueDateOption; } set { this.DueDateOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of PaymentTerms
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> PaymentTermsOption { get; private set; }
+
+        /// <summary>
+        /// Free-text payment terms for a remaining amountDue.
+        /// </summary>
+        /// <value>Free-text payment terms for a remaining amountDue.</value>
+        /* <example>Pay within 30 days</example> */
+        [JsonPropertyName("paymentTerms")]
+        public string? PaymentTerms { get { return this.PaymentTermsOption; } set { this.PaymentTermsOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of PaymentMethods
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<List<PaymentMethod>?> PaymentMethodsOption { get; private set; }
+
+        /// <summary>
+        /// Split payment only: every payment method used, each with the amount paid with it. Their amounts must add up to paidAmount. When present, leave the single-method fields (paymentMeansCode, card and account fields) empty; a receipt paid with one method uses those fields instead of this list.
+        /// </summary>
+        /// <value>Split payment only: every payment method used, each with the amount paid with it. Their amounts must add up to paidAmount. When present, leave the single-method fields (paymentMeansCode, card and account fields) empty; a receipt paid with one method uses those fields instead of this list.</value>
+        [JsonPropertyName("paymentMethods")]
+        public List<PaymentMethod>? PaymentMethods { get { return this.PaymentMethodsOption; } set { this.PaymentMethodsOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -190,6 +291,12 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  AccountIdentifierType: ").Append(AccountIdentifierType).Append("\n");
             sb.Append("  MerchantId: ").Append(MerchantId).Append("\n");
             sb.Append("  PaymentTerminalId: ").Append(PaymentTerminalId).Append("\n");
+            sb.Append("  PaidAmount: ").Append(PaidAmount).Append("\n");
+            sb.Append("  AmountDue: ").Append(AmountDue).Append("\n");
+            sb.Append("  RoundingAmount: ").Append(RoundingAmount).Append("\n");
+            sb.Append("  DueDate: ").Append(DueDate).Append("\n");
+            sb.Append("  PaymentTerms: ").Append(PaymentTerms).Append("\n");
+            sb.Append("  PaymentMethods: ").Append(PaymentMethods).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -200,6 +307,11 @@ namespace Cheqi.Sdk.Models.Generated
     /// </summary>
     public class PaymentDetailsJsonConverter : JsonConverter<PaymentDetails>
     {
+        /// <summary>
+        /// The format to use to serialize DueDate
+        /// </summary>
+        public static string DueDateFormat { get; set; } = "yyyy'-'MM'-'dd";
+
         /// <summary>
         /// Deserializes json to <see cref="PaymentDetails" />
         /// </summary>
@@ -225,6 +337,12 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> accountIdentifierType = default;
             Option<string?> merchantId = default;
             Option<string?> paymentTerminalId = default;
+            Option<decimal?> paidAmount = default;
+            Option<decimal?> amountDue = default;
+            Option<decimal?> roundingAmount = default;
+            Option<DateOnly?> dueDate = default;
+            Option<string?> paymentTerms = default;
+            Option<List<PaymentMethod>?> paymentMethods = default;
 
             while (utf8JsonReader.Read())
             {
@@ -265,6 +383,24 @@ namespace Cheqi.Sdk.Models.Generated
                         case "paymentTerminalId":
                             paymentTerminalId = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
+                        case "paidAmount":
+                            paidAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
+                            break;
+                        case "amountDue":
+                            amountDue = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
+                            break;
+                        case "roundingAmount":
+                            roundingAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
+                            break;
+                        case "dueDate":
+                            dueDate = new Option<DateOnly?>(JsonSerializer.Deserialize<DateOnly>(ref utf8JsonReader, jsonSerializerOptions));
+                            break;
+                        case "paymentTerms":
+                            paymentTerms = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "paymentMethods":
+                            paymentMethods = new Option<List<PaymentMethod>?>(JsonSerializer.Deserialize<List<PaymentMethod>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
                         default:
                             break;
                     }
@@ -295,7 +431,25 @@ namespace Cheqi.Sdk.Models.Generated
             if (paymentTerminalId.IsSet && paymentTerminalId.Value == null)
                 throw new ArgumentNullException(nameof(paymentTerminalId), "Property is not nullable for class PaymentDetails.");
 
-            return new PaymentDetails(paymentMeansCode, description, cardProvider, cardLastFour, accountIdentifier, accountIdentifierType, merchantId, paymentTerminalId);
+            if (paidAmount.IsSet && paidAmount.Value == null)
+                throw new ArgumentNullException(nameof(paidAmount), "Property is not nullable for class PaymentDetails.");
+
+            if (amountDue.IsSet && amountDue.Value == null)
+                throw new ArgumentNullException(nameof(amountDue), "Property is not nullable for class PaymentDetails.");
+
+            if (roundingAmount.IsSet && roundingAmount.Value == null)
+                throw new ArgumentNullException(nameof(roundingAmount), "Property is not nullable for class PaymentDetails.");
+
+            if (dueDate.IsSet && dueDate.Value == null)
+                throw new ArgumentNullException(nameof(dueDate), "Property is not nullable for class PaymentDetails.");
+
+            if (paymentTerms.IsSet && paymentTerms.Value == null)
+                throw new ArgumentNullException(nameof(paymentTerms), "Property is not nullable for class PaymentDetails.");
+
+            if (paymentMethods.IsSet && paymentMethods.Value == null)
+                throw new ArgumentNullException(nameof(paymentMethods), "Property is not nullable for class PaymentDetails.");
+
+            return new PaymentDetails(paymentMeansCode, description, cardProvider, cardLastFour, accountIdentifier, accountIdentifierType, merchantId, paymentTerminalId, paidAmount, amountDue, roundingAmount, dueDate, paymentTerms, paymentMethods);
         }
 
         /// <summary>
@@ -346,6 +500,12 @@ namespace Cheqi.Sdk.Models.Generated
             if (paymentDetails.PaymentTerminalIdOption.IsSet && paymentDetails.PaymentTerminalId == null)
                 throw new ArgumentNullException(nameof(paymentDetails.PaymentTerminalId), "Property is required for class PaymentDetails.");
 
+            if (paymentDetails.PaymentTermsOption.IsSet && paymentDetails.PaymentTerms == null)
+                throw new ArgumentNullException(nameof(paymentDetails.PaymentTerms), "Property is required for class PaymentDetails.");
+
+            if (paymentDetails.PaymentMethodsOption.IsSet && paymentDetails.PaymentMethods == null)
+                throw new ArgumentNullException(nameof(paymentDetails.PaymentMethods), "Property is required for class PaymentDetails.");
+
             if (paymentDetails.PaymentMeansCodeOption.IsSet)
                 writer.WriteString("paymentMeansCode", paymentDetails.PaymentMeansCode);
 
@@ -369,6 +529,39 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (paymentDetails.PaymentTerminalIdOption.IsSet)
                 writer.WriteString("paymentTerminalId", paymentDetails.PaymentTerminalId);
+
+            if (paymentDetails.PaidAmountOption.IsSet)
+                {
+                    writer.WritePropertyName("paidAmount");
+                    JsonSerializer.Serialize(writer, paymentDetails.PaidAmountOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (paymentDetails.AmountDueOption.IsSet)
+                {
+                    writer.WritePropertyName("amountDue");
+                    JsonSerializer.Serialize(writer, paymentDetails.AmountDueOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (paymentDetails.RoundingAmountOption.IsSet)
+                {
+                    writer.WritePropertyName("roundingAmount");
+                    JsonSerializer.Serialize(writer, paymentDetails.RoundingAmountOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (paymentDetails.DueDateOption.IsSet)
+                {
+                    writer.WritePropertyName("dueDate");
+                    JsonSerializer.Serialize(writer, paymentDetails.DueDateOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (paymentDetails.PaymentTermsOption.IsSet)
+                writer.WriteString("paymentTerms", paymentDetails.PaymentTerms);
+
+            if (paymentDetails.PaymentMethodsOption.IsSet)
+            {
+                writer.WritePropertyName("paymentMethods");
+                JsonSerializer.Serialize(writer, paymentDetails.PaymentMethods, jsonSerializerOptions);
+            }
         }
     }
 }
