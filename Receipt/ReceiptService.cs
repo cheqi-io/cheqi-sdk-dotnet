@@ -130,7 +130,6 @@ public sealed class ReceiptService
             throw new ArgumentException("Match must contain owner devices", nameof(recipients));
         var envelope = new EncryptedReceiptEnvelope(matchId, _encryption.EncryptReceiptForRecipients(JsonSerializer.Serialize(payload, _json), recipients));
         if (storeId.HasValue) envelope.StoreId = storeId;
-        envelope.DocumentReferenceHash = DocumentReferences.Hash(payload.DocumentNumber);
         return envelope;
     }
 
@@ -207,10 +206,8 @@ public sealed class ReceiptService
                 ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson);
         var envelope = new ReceiptEnvelope(link.DownloadId,
             documents, 2, "receipt-payload-v1", Guid.NewGuid());
-        var publicKey = DocumentReferences.AddDownloadRecipient(envelope);
         var request = new ClientReceiptDownloadRequest(link.DownloadId, _downloads.EncryptDownloadEnvelope(envelope, link.ContentKey))
-        { TemplateHash = new VerificationService().CalculateCheqiReceiptHash(plaintext),
-          DocumentReferenceHash = DocumentReferences.Hash(payload.DocumentNumber), CreditNotePublicKey = publicKey };
+        { TemplateHash = new VerificationService().CalculateCheqiReceiptHash(plaintext) };
         return new PreparedReceiptDownload(link.Url, request);
     }
 

@@ -35,15 +35,13 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         /// <param name="matchId">Device-processing match ID returned by POST /recipient/resolve.</param>
         /// <param name="deviceDeliveries">Independently encrypted copies of the definitive receipt payload for the matched devices.</param>
-        /// <param name="documentReferenceHash">SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact documentNumber; scoped to the authenticated issuer for credit-note resolution.</param>
         /// <param name="childCompanyId">Deprecated compatibility field. It may only equal the company in the authentication context and no longer grants parent-to-child issuance.</param>
         /// <param name="storeId">Optional store/location issuing the receipt. It must be owned by the company in the authentication context, which remains the legal receipt issuer.</param>
         [JsonConstructor]
-        public EncryptedReceiptEnvelope(string matchId, List<EncryptedReceiptPayload> deviceDeliveries, Option<string?> documentReferenceHash = default, Option<Guid?> childCompanyId = default, Option<Guid?> storeId = default)
+        public EncryptedReceiptEnvelope(string matchId, List<EncryptedReceiptPayload> deviceDeliveries, Option<Guid?> childCompanyId = default, Option<Guid?> storeId = default)
         {
             MatchId = matchId;
             DeviceDeliveries = deviceDeliveries;
-            DocumentReferenceHashOption = documentReferenceHash;
             ChildCompanyIdOption = childCompanyId;
             StoreIdOption = storeId;
             OnCreated();
@@ -64,20 +62,6 @@ namespace Cheqi.Sdk.Models.Generated
         /// <value>Independently encrypted copies of the definitive receipt payload for the matched devices.</value>
         [JsonPropertyName("deviceDeliveries")]
         public List<EncryptedReceiptPayload> DeviceDeliveries { get; set; }
-
-        /// <summary>
-        /// Used to track the state of DocumentReferenceHash
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<string?> DocumentReferenceHashOption { get; private set; }
-
-        /// <summary>
-        /// SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact documentNumber; scoped to the authenticated issuer for credit-note resolution.
-        /// </summary>
-        /// <value>SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact documentNumber; scoped to the authenticated issuer for credit-note resolution.</value>
-        [JsonPropertyName("documentReferenceHash")]
-        public string? DocumentReferenceHash { get { return this.DocumentReferenceHashOption; } set { this.DocumentReferenceHashOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of ChildCompanyId
@@ -118,7 +102,6 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("class EncryptedReceiptEnvelope {\n");
             sb.Append("  MatchId: ").Append(MatchId).Append("\n");
             sb.Append("  DeviceDeliveries: ").Append(DeviceDeliveries).Append("\n");
-            sb.Append("  DocumentReferenceHash: ").Append(DocumentReferenceHash).Append("\n");
             sb.Append("  ChildCompanyId: ").Append(ChildCompanyId).Append("\n");
             sb.Append("  StoreId: ").Append(StoreId).Append("\n");
             sb.Append("}\n");
@@ -150,7 +133,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             Option<string?> matchId = default;
             Option<List<EncryptedReceiptPayload>?> deviceDeliveries = default;
-            Option<string?> documentReferenceHash = default;
             Option<Guid?> childCompanyId = default;
             Option<Guid?> storeId = default;
 
@@ -174,9 +156,6 @@ namespace Cheqi.Sdk.Models.Generated
                             break;
                         case "deviceDeliveries":
                             deviceDeliveries = new Option<List<EncryptedReceiptPayload>?>(JsonSerializer.Deserialize<List<EncryptedReceiptPayload>>(ref utf8JsonReader, jsonSerializerOptions)!);
-                            break;
-                        case "documentReferenceHash":
-                            documentReferenceHash = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         case "childCompanyId":
                             childCompanyId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
@@ -202,16 +181,13 @@ namespace Cheqi.Sdk.Models.Generated
             if (deviceDeliveries.IsSet && deviceDeliveries.Value == null)
                 throw new ArgumentNullException(nameof(deviceDeliveries), "Property is not nullable for class EncryptedReceiptEnvelope.");
 
-            if (documentReferenceHash.IsSet && documentReferenceHash.Value == null)
-                throw new ArgumentNullException(nameof(documentReferenceHash), "Property is not nullable for class EncryptedReceiptEnvelope.");
-
             if (childCompanyId.IsSet && childCompanyId.Value == null)
                 throw new ArgumentNullException(nameof(childCompanyId), "Property is not nullable for class EncryptedReceiptEnvelope.");
 
             if (storeId.IsSet && storeId.Value == null)
                 throw new ArgumentNullException(nameof(storeId), "Property is not nullable for class EncryptedReceiptEnvelope.");
 
-            return new EncryptedReceiptEnvelope(matchId.Value!, deviceDeliveries.Value!, documentReferenceHash, childCompanyId, storeId);
+            return new EncryptedReceiptEnvelope(matchId.Value!, deviceDeliveries.Value!, childCompanyId, storeId);
         }
 
         /// <summary>
@@ -244,16 +220,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (encryptedReceiptEnvelope.DeviceDeliveries == null)
                 throw new ArgumentNullException(nameof(encryptedReceiptEnvelope.DeviceDeliveries), "Property is required for class EncryptedReceiptEnvelope.");
 
-            if (encryptedReceiptEnvelope.DocumentReferenceHashOption.IsSet && encryptedReceiptEnvelope.DocumentReferenceHash == null)
-                throw new ArgumentNullException(nameof(encryptedReceiptEnvelope.DocumentReferenceHash), "Property is required for class EncryptedReceiptEnvelope.");
-
             writer.WriteString("matchId", encryptedReceiptEnvelope.MatchId);
 
             writer.WritePropertyName("deviceDeliveries");
             JsonSerializer.Serialize(writer, encryptedReceiptEnvelope.DeviceDeliveries, jsonSerializerOptions);
-            if (encryptedReceiptEnvelope.DocumentReferenceHashOption.IsSet)
-                writer.WriteString("documentReferenceHash", encryptedReceiptEnvelope.DocumentReferenceHash);
-
             if (encryptedReceiptEnvelope.ChildCompanyIdOption.IsSet)
                 writer.WriteString("childCompanyId", encryptedReceiptEnvelope.ChildCompanyIdOption.Value!.Value);
 

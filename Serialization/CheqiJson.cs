@@ -35,7 +35,6 @@ public static class CheqiJson
         options.Converters.Add(new CheqiReceiptJsonConverter());
         options.Converters.Add(new ClientApplicationPublicKeyRequestJsonConverter());
         options.Converters.Add(new ClientCredentialsTokenRequestJsonConverter());
-        options.Converters.Add(new ClientReceiptDownloadContentResponseJsonConverter());
         options.Converters.Add(new ClientReceiptDownloadRequestJsonConverter());
         options.Converters.Add(new ClientReceiptDownloadResponseJsonConverter());
         options.Converters.Add(new CompanyAuthorizationResponseJsonConverter());
@@ -49,11 +48,7 @@ public static class CheqiJson
         options.Converters.Add(new CreateChildCompanyRequestJsonConverter());
         options.Converters.Add(new CreateStoreRequestJsonConverter());
         options.Converters.Add(new CreditNoteContextEnvelopeJsonConverter());
-        options.Converters.Add(new CreditNoteDocumentReferenceJsonConverter());
         options.Converters.Add(new CreditNoteInitiationRequestJsonConverter());
-        options.Converters.Add(new CreditNoteLinkJsonConverter());
-        options.Converters.Add(new CreditNoteLinksJsonConverter());
-        options.Converters.Add(new CreditNoteReferenceResolutionJsonConverter());
         options.Converters.Add(new DestinationResponseJsonConverter());
         options.Converters.Add(new DiscountJsonConverter());
         options.Converters.Add(new DocumentTypeJsonConverter());
@@ -83,9 +78,6 @@ public static class CheqiJson
         options.Converters.Add(new MatchStateNullableJsonConverter());
         options.Converters.Add(new MatchStatusResponseJsonConverter());
         options.Converters.Add(new MatchedRecipientJsonConverter());
-        options.Converters.Add(new MerchantJsonConverter());
-        options.Converters.Add(new MerchantAddressJsonConverter());
-        options.Converters.Add(new MerchantIdentifierJsonConverter());
         options.Converters.Add(new OAuthGrantCompanyResponseJsonConverter());
         options.Converters.Add(new OAuthGrantDetailsResponseJsonConverter());
         options.Converters.Add(new OAuthTokenExchangeResponseJsonConverter());
@@ -99,7 +91,6 @@ public static class CheqiJson
         options.Converters.Add(new PaymentTypeNullableJsonConverter());
         options.Converters.Add(new PeriodJsonConverter());
         options.Converters.Add(new PermanentFailureAcknowledgeRequestJsonConverter());
-        options.Converters.Add(new PreparedCreditNoteJsonConverter());
         options.Converters.Add(new ProductJsonConverter());
         options.Converters.Add(new PublicKeyResponseJsonConverter());
         options.Converters.Add(new ReceiptDocumentProfileJsonConverter());
@@ -108,7 +99,6 @@ public static class CheqiJson
         options.Converters.Add(new ReceiptEnvelopeDocumentJsonConverter());
         options.Converters.Add(new ReceiptFormatJsonConverter());
         options.Converters.Add(new ReceiptFormatNullableJsonConverter());
-        options.Converters.Add(new ReceiptGenerationSupplierPartyJsonConverter());
         options.Converters.Add(new ReceiptPayloadJsonConverter());
         options.Converters.Add(new ReceiptSubmissionResponseJsonConverter());
         options.Converters.Add(new ReceivingPartyJsonConverter());
@@ -131,7 +121,6 @@ public static class CheqiJson
         options.Converters.Add(new SortObjectJsonConverter());
         options.Converters.Add(new StoreDTOJsonConverter());
         options.Converters.Add(new SubmitEncryptedReceipt202ResponseJsonConverter());
-        options.Converters.Add(new SupplierAddressJsonConverter());
         options.Converters.Add(new TaxJsonConverter());
         options.Converters.Add(new TaxCategoryCodeJsonConverter());
         options.Converters.Add(new TaxCategoryCodeNullableJsonConverter());

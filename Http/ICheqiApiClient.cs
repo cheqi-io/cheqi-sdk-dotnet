@@ -8,9 +8,6 @@ namespace Cheqi.Sdk.Http;
 /// </summary>
 public interface ICheqiApiClient : IDisposable
 {
-    Task<CreditNoteReferenceResolution> ResolveCreditNoteReferenceAsync(CreditNoteDocumentReference request,
-        RequestOptions? options = null, CancellationToken cancellationToken = default)
-        => throw new NotSupportedException("API client does not support document-reference resolution");
     /// <summary>Exchanges client credentials for a short-lived Company token bound to one Grant.</summary>
     Task<OAuthTokenExchangeResponse> RequestAccessTokenAsync(ClientCredentialsTokenRequest request, RequestOptions? options = null, CancellationToken cancellationToken = default);
     Task<RecipientResolutionResponse> ResolveRecipientsAsync(IdentificationDetails identificationDetails, RequestOptions? options = null, CancellationToken cancellationToken = default);

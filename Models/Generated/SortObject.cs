@@ -32,32 +32,19 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="SortObject" /> class.
         /// </summary>
-        /// <param name="unsorted">unsorted</param>
         /// <param name="sorted">sorted</param>
+        /// <param name="unsorted">unsorted</param>
         /// <param name="empty">empty</param>
         [JsonConstructor]
-        public SortObject(Option<bool?> unsorted = default, Option<bool?> sorted = default, Option<bool?> empty = default)
+        public SortObject(Option<bool?> sorted = default, Option<bool?> unsorted = default, Option<bool?> empty = default)
         {
-            UnsortedOption = unsorted;
             SortedOption = sorted;
+            UnsortedOption = unsorted;
             EmptyOption = empty;
             OnCreated();
         }
 
         partial void OnCreated();
-
-        /// <summary>
-        /// Used to track the state of Unsorted
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<bool?> UnsortedOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets Unsorted
-        /// </summary>
-        [JsonPropertyName("unsorted")]
-        public bool? Unsorted { get { return this.UnsortedOption; } set { this.UnsortedOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Sorted
@@ -71,6 +58,19 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         [JsonPropertyName("sorted")]
         public bool? Sorted { get { return this.SortedOption; } set { this.SortedOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of Unsorted
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<bool?> UnsortedOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets Unsorted
+        /// </summary>
+        [JsonPropertyName("unsorted")]
+        public bool? Unsorted { get { return this.UnsortedOption; } set { this.UnsortedOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Empty
@@ -93,8 +93,8 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class SortObject {\n");
-            sb.Append("  Unsorted: ").Append(Unsorted).Append("\n");
             sb.Append("  Sorted: ").Append(Sorted).Append("\n");
+            sb.Append("  Unsorted: ").Append(Unsorted).Append("\n");
             sb.Append("  Empty: ").Append(Empty).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -123,8 +123,8 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<bool?> unsorted = default;
             Option<bool?> sorted = default;
+            Option<bool?> unsorted = default;
             Option<bool?> empty = default;
 
             while (utf8JsonReader.Read())
@@ -142,11 +142,11 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
-                        case "unsorted":
-                            unsorted = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
-                            break;
                         case "sorted":
                             sorted = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
+                            break;
+                        case "unsorted":
+                            unsorted = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
                         case "empty":
                             empty = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
@@ -157,16 +157,16 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
-            if (unsorted.IsSet && unsorted.Value == null)
-                throw new ArgumentNullException(nameof(unsorted), "Property is not nullable for class SortObject.");
-
             if (sorted.IsSet && sorted.Value == null)
                 throw new ArgumentNullException(nameof(sorted), "Property is not nullable for class SortObject.");
+
+            if (unsorted.IsSet && unsorted.Value == null)
+                throw new ArgumentNullException(nameof(unsorted), "Property is not nullable for class SortObject.");
 
             if (empty.IsSet && empty.Value == null)
                 throw new ArgumentNullException(nameof(empty), "Property is not nullable for class SortObject.");
 
-            return new SortObject(unsorted, sorted, empty);
+            return new SortObject(sorted, unsorted, empty);
         }
 
         /// <summary>
@@ -193,11 +193,11 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, SortObject sortObject, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (sortObject.UnsortedOption.IsSet)
-                writer.WriteBoolean("unsorted", sortObject.UnsortedOption.Value!.Value);
-
             if (sortObject.SortedOption.IsSet)
                 writer.WriteBoolean("sorted", sortObject.SortedOption.Value!.Value);
+
+            if (sortObject.UnsortedOption.IsSet)
+                writer.WriteBoolean("unsorted", sortObject.UnsortedOption.Value!.Value);
 
             if (sortObject.EmptyOption.IsSet)
                 writer.WriteBoolean("empty", sortObject.EmptyOption.Value!.Value);
