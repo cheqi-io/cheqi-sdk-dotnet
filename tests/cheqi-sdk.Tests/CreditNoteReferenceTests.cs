@@ -17,7 +17,11 @@ public sealed class CreditNoteReferenceTests
         using var harness = new SdkHarness();
         harness.Enqueue(200, JsonSerializer.Serialize(new { deliveryRoute = "DOWNLOAD", parentCheqiReceiptId = "original",
             creditNotePublicKey = Convert.ToBase64String(rsa.ExportSubjectPublicKeyInfo()) }));
-        var prepared = await harness.Sdk.CreditNoteService.PrepareCreditNoteAsync(Payload);
+        var prepared = await harness.Sdk.CreditNoteService.PrepareCreditNoteAsync(new {
+            taxesApplied = true, creditNoteTemplateRequest = new {
+                documentNumber = "CN-123", originatorDocumentReference = "INV-123", totalAmount = 12.123456789012345678m
+            }
+        });
         var serialized = JsonSerializer.Serialize(prepared, CheqiJson.CreateOptions());
         Assert.DoesNotContain("INV-123", serialized);
         Assert.DoesNotContain("contentKey", serialized);
@@ -31,6 +35,7 @@ public sealed class CreditNoteReferenceTests
         var note = new Download.DownloadService().DecryptDownloadEnvelope(request.Ciphertext,
             link.RootElement.GetProperty("contentKey").GetString()!);
         using var content = JsonDocument.Parse(note.Documents["CREDIT_NOTE_PAYLOAD"].Content);
+        Assert.True(content.RootElement.GetProperty("taxesApplied").GetBoolean());
         Assert.Equal(12.123456789012345678m, content.RootElement.GetProperty("totalAmount").GetDecimal());
         harness.Enqueue(200, SdkHarness.DownloadAccepted);
         harness.Enqueue(200, SdkHarness.DownloadAccepted);

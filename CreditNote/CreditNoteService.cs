@@ -38,10 +38,10 @@ public sealed class CreditNoteService
             options, cancellationToken).ConfigureAwait(false);
         ReceiptService.RequireText(original.ParentCheqiReceiptId, "resolved parentCheqiReceiptId");
         var parent = original.ParentCheqiReceiptId!;
+        if (node["taxesApplied"] is not JsonValue taxes || !taxes.TryGetValue<bool>(out var taxesApplied))
+            throw new ArgumentException("taxesApplied must be a boolean");
         if (original.DeliveryRoute == "DIGITAL")
         {
-            if (node["taxesApplied"] is not JsonValue taxes || !taxes.TryGetValue<bool>(out var taxesApplied))
-                throw new ArgumentException("taxesApplied must be a boolean for device generation");
             var match = await _matching.MatchCustomerAsync(new IdentificationDetails { CheqiReceiptId = parent }, options, cancellationToken).ConfigureAwait(false);
             if (match.RouteFound != true || match.DeliveryRouteType != RecipientResolutionResponse.DeliveryRouteTypeEnum.DIGITAL
                 || string.IsNullOrWhiteSpace(match.MatchId) || match.Recipients == null || match.Recipients.Count == 0)
@@ -56,12 +56,14 @@ public sealed class CreditNoteService
         if (original.DeliveryRoute != "DOWNLOAD") throw new ArgumentException("Unsupported original document route");
         if (storeId.HasValue) throw new ArgumentException("Download delivery does not support store-scoped issuance");
         ReceiptService.RequireText(original.CreditNotePublicKey, "creditNotePublicKey");
+        var downloadPayload = body.DeepClone().AsObject();
+        downloadPayload["taxesApplied"] = taxesApplied;
         var downloads = new DownloadService();
         var child = downloads.GenerateDownloadLink("https://receipt.cheqi.io");
         var link = _encryption.EncryptForDevice(JsonSerializer.Serialize(new { version = 2, parentCheqiReceiptId = parent,
             downloadId = child.DownloadId, contentKey = child.ContentKey }), new MatchedRecipient { Id = parent, PublicKey = original.CreditNotePublicKey });
         var envelope = new ReceiptEnvelope(child.DownloadId, new Dictionary<string, ReceiptEnvelopeDocument> {
-            ["CREDIT_NOTE_PAYLOAD"] = new(body.ToJsonString(), ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson)
+            ["CREDIT_NOTE_PAYLOAD"] = new(downloadPayload.ToJsonString(), ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson)
         }, 2, "credit-note-payload-v1", Guid.NewGuid());
         var request = new ClientReceiptDownloadRequest(child.DownloadId, downloads.EncryptDownloadEnvelope(envelope, child.ContentKey)) {
             ParentCheqiReceiptId = parent, EncryptedParentLink = link.EncryptedContent, EncryptedParentLinkKey = link.EncryptedAesKey };
