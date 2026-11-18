@@ -128,6 +128,10 @@ public sealed class CheqiApiClient : ICheqiApiClient
     public Task<ReceiptSubmissionResponse> SubmitEncryptedCreditNoteAsync(EncryptedCreditNoteEnvelope request, RequestOptions? options = null, CancellationToken cancellationToken = default)
         => PostAsync<ReceiptSubmissionResponse>(Endpoints.CreditNoteEncrypted, request, options, cancellationToken);
 
+    public Task<CreditNoteReferenceResolution> ResolveCreditNoteReferenceAsync(CreditNoteDocumentReference request,
+        RequestOptions? options = null, CancellationToken cancellationToken = default)
+        => PostAsync<CreditNoteReferenceResolution>("/credit-note/resolve", request, options, cancellationToken);
+
     public Task<ClientReceiptDownloadResponse> UploadEncryptedDownloadReceiptAsync(ClientReceiptDownloadRequest request, RequestOptions? options = null, CancellationToken cancellationToken = default)
         => PostAsync<ClientReceiptDownloadResponse>(Endpoints.ReceiptDownload, request, options, cancellationToken);
 

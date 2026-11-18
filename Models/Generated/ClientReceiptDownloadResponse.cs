@@ -9,6 +9,7 @@
  */
 
 #nullable enable
+#pragma warning disable CS0612 // Generated code references its own deprecated wire properties.
 
 using System;
 using System.Collections;
@@ -34,7 +35,7 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         /// <param name="cheqiReceiptId">Stable Cheqi receipt identifier minted at upload time, for merchant back-office reconciliation. The customer-facing reference is the download URL itself.</param>
         /// <param name="createdAt">Timestamp when Cheqi first accepted this upload.</param>
-        /// <param name="expiresAt">Timestamp after which the download link stops resolving.</param>
+        /// <param name="expiresAt">Always null: client-encrypted download links do not expire.</param>
         [JsonConstructor]
         public ClientReceiptDownloadResponse(Option<string?> cheqiReceiptId = default, Option<DateTimeOffset?> createdAt = default, Option<DateTimeOffset?> expiresAt = default)
         {
@@ -83,10 +84,11 @@ namespace Cheqi.Sdk.Models.Generated
         public Option<DateTimeOffset?> ExpiresAtOption { get; private set; }
 
         /// <summary>
-        /// Timestamp after which the download link stops resolving.
+        /// Always null: client-encrypted download links do not expire.
         /// </summary>
-        /// <value>Timestamp after which the download link stops resolving.</value>
+        /// <value>Always null: client-encrypted download links do not expire.</value>
         [JsonPropertyName("expiresAt")]
+        [Obsolete]
         public DateTimeOffset? ExpiresAt { get { return this.ExpiresAtOption; } set { this.ExpiresAtOption = new(value); } }
 
         /// <summary>
@@ -163,7 +165,7 @@ namespace Cheqi.Sdk.Models.Generated
                             createdAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         case "expiresAt":
-                            expiresAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
+                            expiresAt = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTime?>(ref utf8JsonReader, jsonSerializerOptions));
                             break;
                         default:
                             break;
@@ -176,9 +178,6 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (createdAt.IsSet && createdAt.Value == null)
                 throw new ArgumentNullException(nameof(createdAt), "Property is not nullable for class ClientReceiptDownloadResponse.");
-
-            if (expiresAt.IsSet && expiresAt.Value == null)
-                throw new ArgumentNullException(nameof(expiresAt), "Property is not nullable for class ClientReceiptDownloadResponse.");
 
             return new ClientReceiptDownloadResponse(cheqiReceiptId, createdAt, expiresAt);
         }
@@ -220,10 +219,13 @@ namespace Cheqi.Sdk.Models.Generated
                 }
 
             if (clientReceiptDownloadResponse.ExpiresAtOption.IsSet)
-                {
-                    writer.WritePropertyName("expiresAt");
-                    JsonSerializer.Serialize(writer, clientReceiptDownloadResponse.ExpiresAtOption.Value!.Value, jsonSerializerOptions);
-                }
+                if (clientReceiptDownloadResponse.ExpiresAtOption.Value != null)
+                    {
+                        writer.WritePropertyName("expiresAt");
+                        JsonSerializer.Serialize(writer, clientReceiptDownloadResponse.ExpiresAtOption.Value!.Value, jsonSerializerOptions);
+                    }
+                else
+                    writer.WriteNull("expiresAt");
         }
     }
 }

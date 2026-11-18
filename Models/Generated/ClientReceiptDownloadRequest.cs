@@ -9,6 +9,7 @@
  */
 
 #nullable enable
+#pragma warning disable CS0612 // Generated code references its own deprecated wire properties.
 
 using System;
 using System.Collections;
@@ -25,7 +26,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Client-encrypted receipt payload
+    /// ClientReceiptDownloadRequest
     /// </summary>
     public partial class ClientReceiptDownloadRequest
     {
@@ -35,12 +36,24 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="downloadId">Client-generated download identifier: at least 16 CSPRNG bytes encoded as base64url without padding. Must be exactly the id embedded in the QR URL path. Resubmitting the same id with identical payload bytes is an idempotent replay.</param>
         /// <param name="ciphertext">Base64-encoded AES-256-GCM blob framed as iv || ciphertext || tag (12-byte IV, 128-bit tag) of the receipt envelope, encrypted client-side with the key from the QR URL fragment. Cheqi never receives that key and cannot decrypt this payload.</param>
         /// <param name="templateHash">Optional locally computed template hash for audit and reconciliation.</param>
+        /// <param name="parentDownloadId">Legacy symmetric-link protocol. For a credit note, the original invoice download ID. Must belong to the same issuing company and application. Supply together with encryptedParentLink; never include a URL fragment or key.</param>
+        /// <param name="encryptedParentLink">SDK-generated AES-GCM encrypted child link. Version 2 plaintext: {version:2,parentCheqiReceiptId,downloadId,contentKey}; its fresh AES key is wrapped in encryptedParentLinkKey. Never supply keys manually.</param>
+        /// <param name="documentReferenceHash">SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact documentNumber. Indexed within the authenticated issuing company for later credit-note resolution. This is a routing identifier, not encryption.</param>
+        /// <param name="creditNotePublicKey">SDK-generated RSA public receiving key, base64 SPKI, 2048-4096 bits, RSA-OAEP SHA-256/MGF1 SHA-256. The corresponding PKCS8 private key is only inside the encrypted original envelope.</param>
+        /// <param name="parentCheqiReceiptId">SDK-internal original identifier returned by POST /credit-note/resolve. Merchants supply originatorDocumentReference in their encrypted credit-note payload.</param>
+        /// <param name="encryptedParentLinkKey">SDK-generated base64 RSA-OAEP SHA-256/MGF1 SHA-256 wrapped AES key for encryptedParentLink. Supply with parentCheqiReceiptId and encryptedParentLink.</param>
         [JsonConstructor]
-        public ClientReceiptDownloadRequest(string downloadId, string ciphertext, Option<string?> templateHash = default)
+        public ClientReceiptDownloadRequest(string downloadId, string ciphertext, Option<string?> templateHash = default, Option<string?> parentDownloadId = default, Option<string?> encryptedParentLink = default, Option<string?> documentReferenceHash = default, Option<string?> creditNotePublicKey = default, Option<string?> parentCheqiReceiptId = default, Option<string?> encryptedParentLinkKey = default)
         {
             DownloadId = downloadId;
             Ciphertext = ciphertext;
             TemplateHashOption = templateHash;
+            ParentDownloadIdOption = parentDownloadId;
+            EncryptedParentLinkOption = encryptedParentLink;
+            DocumentReferenceHashOption = documentReferenceHash;
+            CreditNotePublicKeyOption = creditNotePublicKey;
+            ParentCheqiReceiptIdOption = parentCheqiReceiptId;
+            EncryptedParentLinkKeyOption = encryptedParentLinkKey;
             OnCreated();
         }
 
@@ -76,6 +89,91 @@ namespace Cheqi.Sdk.Models.Generated
         public string? TemplateHash { get { return this.TemplateHashOption; } set { this.TemplateHashOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of ParentDownloadId
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> ParentDownloadIdOption { get; private set; }
+
+        /// <summary>
+        /// Legacy symmetric-link protocol. For a credit note, the original invoice download ID. Must belong to the same issuing company and application. Supply together with encryptedParentLink; never include a URL fragment or key.
+        /// </summary>
+        /// <value>Legacy symmetric-link protocol. For a credit note, the original invoice download ID. Must belong to the same issuing company and application. Supply together with encryptedParentLink; never include a URL fragment or key.</value>
+        [JsonPropertyName("parentDownloadId")]
+        [Obsolete]
+        public string? ParentDownloadId { get { return this.ParentDownloadIdOption; } set { this.ParentDownloadIdOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of EncryptedParentLink
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> EncryptedParentLinkOption { get; private set; }
+
+        /// <summary>
+        /// SDK-generated AES-GCM encrypted child link. Version 2 plaintext: {version:2,parentCheqiReceiptId,downloadId,contentKey}; its fresh AES key is wrapped in encryptedParentLinkKey. Never supply keys manually.
+        /// </summary>
+        /// <value>SDK-generated AES-GCM encrypted child link. Version 2 plaintext: {version:2,parentCheqiReceiptId,downloadId,contentKey}; its fresh AES key is wrapped in encryptedParentLinkKey. Never supply keys manually.</value>
+        [JsonPropertyName("encryptedParentLink")]
+        public string? EncryptedParentLink { get { return this.EncryptedParentLinkOption; } set { this.EncryptedParentLinkOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of DocumentReferenceHash
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> DocumentReferenceHashOption { get; private set; }
+
+        /// <summary>
+        /// SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact documentNumber. Indexed within the authenticated issuing company for later credit-note resolution. This is a routing identifier, not encryption.
+        /// </summary>
+        /// <value>SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact documentNumber. Indexed within the authenticated issuing company for later credit-note resolution. This is a routing identifier, not encryption.</value>
+        [JsonPropertyName("documentReferenceHash")]
+        public string? DocumentReferenceHash { get { return this.DocumentReferenceHashOption; } set { this.DocumentReferenceHashOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of CreditNotePublicKey
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> CreditNotePublicKeyOption { get; private set; }
+
+        /// <summary>
+        /// SDK-generated RSA public receiving key, base64 SPKI, 2048-4096 bits, RSA-OAEP SHA-256/MGF1 SHA-256. The corresponding PKCS8 private key is only inside the encrypted original envelope.
+        /// </summary>
+        /// <value>SDK-generated RSA public receiving key, base64 SPKI, 2048-4096 bits, RSA-OAEP SHA-256/MGF1 SHA-256. The corresponding PKCS8 private key is only inside the encrypted original envelope.</value>
+        [JsonPropertyName("creditNotePublicKey")]
+        public string? CreditNotePublicKey { get { return this.CreditNotePublicKeyOption; } set { this.CreditNotePublicKeyOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of ParentCheqiReceiptId
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> ParentCheqiReceiptIdOption { get; private set; }
+
+        /// <summary>
+        /// SDK-internal original identifier returned by POST /credit-note/resolve. Merchants supply originatorDocumentReference in their encrypted credit-note payload.
+        /// </summary>
+        /// <value>SDK-internal original identifier returned by POST /credit-note/resolve. Merchants supply originatorDocumentReference in their encrypted credit-note payload.</value>
+        [JsonPropertyName("parentCheqiReceiptId")]
+        public string? ParentCheqiReceiptId { get { return this.ParentCheqiReceiptIdOption; } set { this.ParentCheqiReceiptIdOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of EncryptedParentLinkKey
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<string?> EncryptedParentLinkKeyOption { get; private set; }
+
+        /// <summary>
+        /// SDK-generated base64 RSA-OAEP SHA-256/MGF1 SHA-256 wrapped AES key for encryptedParentLink. Supply with parentCheqiReceiptId and encryptedParentLink.
+        /// </summary>
+        /// <value>SDK-generated base64 RSA-OAEP SHA-256/MGF1 SHA-256 wrapped AES key for encryptedParentLink. Supply with parentCheqiReceiptId and encryptedParentLink.</value>
+        [JsonPropertyName("encryptedParentLinkKey")]
+        public string? EncryptedParentLinkKey { get { return this.EncryptedParentLinkKeyOption; } set { this.EncryptedParentLinkKeyOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -86,6 +184,12 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  DownloadId: ").Append(DownloadId).Append("\n");
             sb.Append("  Ciphertext: ").Append(Ciphertext).Append("\n");
             sb.Append("  TemplateHash: ").Append(TemplateHash).Append("\n");
+            sb.Append("  ParentDownloadId: ").Append(ParentDownloadId).Append("\n");
+            sb.Append("  EncryptedParentLink: ").Append(EncryptedParentLink).Append("\n");
+            sb.Append("  DocumentReferenceHash: ").Append(DocumentReferenceHash).Append("\n");
+            sb.Append("  CreditNotePublicKey: ").Append(CreditNotePublicKey).Append("\n");
+            sb.Append("  ParentCheqiReceiptId: ").Append(ParentCheqiReceiptId).Append("\n");
+            sb.Append("  EncryptedParentLinkKey: ").Append(EncryptedParentLinkKey).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -116,6 +220,12 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> downloadId = default;
             Option<string?> ciphertext = default;
             Option<string?> templateHash = default;
+            Option<string?> parentDownloadId = default;
+            Option<string?> encryptedParentLink = default;
+            Option<string?> documentReferenceHash = default;
+            Option<string?> creditNotePublicKey = default;
+            Option<string?> parentCheqiReceiptId = default;
+            Option<string?> encryptedParentLinkKey = default;
 
             while (utf8JsonReader.Read())
             {
@@ -141,6 +251,24 @@ namespace Cheqi.Sdk.Models.Generated
                         case "templateHash":
                             templateHash = new Option<string?>(utf8JsonReader.GetString());
                             break;
+                        case "parentDownloadId":
+                            parentDownloadId = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "encryptedParentLink":
+                            encryptedParentLink = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "documentReferenceHash":
+                            documentReferenceHash = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "creditNotePublicKey":
+                            creditNotePublicKey = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "parentCheqiReceiptId":
+                            parentCheqiReceiptId = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
+                        case "encryptedParentLinkKey":
+                            encryptedParentLinkKey = new Option<string?>(utf8JsonReader.GetString()!);
+                            break;
                         default:
                             break;
                     }
@@ -159,7 +287,25 @@ namespace Cheqi.Sdk.Models.Generated
             if (ciphertext.IsSet && ciphertext.Value == null)
                 throw new ArgumentNullException(nameof(ciphertext), "Property is not nullable for class ClientReceiptDownloadRequest.");
 
-            return new ClientReceiptDownloadRequest(downloadId.Value!, ciphertext.Value!, templateHash);
+            if (parentDownloadId.IsSet && parentDownloadId.Value == null)
+                throw new ArgumentNullException(nameof(parentDownloadId), "Property is not nullable for class ClientReceiptDownloadRequest.");
+
+            if (encryptedParentLink.IsSet && encryptedParentLink.Value == null)
+                throw new ArgumentNullException(nameof(encryptedParentLink), "Property is not nullable for class ClientReceiptDownloadRequest.");
+
+            if (documentReferenceHash.IsSet && documentReferenceHash.Value == null)
+                throw new ArgumentNullException(nameof(documentReferenceHash), "Property is not nullable for class ClientReceiptDownloadRequest.");
+
+            if (creditNotePublicKey.IsSet && creditNotePublicKey.Value == null)
+                throw new ArgumentNullException(nameof(creditNotePublicKey), "Property is not nullable for class ClientReceiptDownloadRequest.");
+
+            if (parentCheqiReceiptId.IsSet && parentCheqiReceiptId.Value == null)
+                throw new ArgumentNullException(nameof(parentCheqiReceiptId), "Property is not nullable for class ClientReceiptDownloadRequest.");
+
+            if (encryptedParentLinkKey.IsSet && encryptedParentLinkKey.Value == null)
+                throw new ArgumentNullException(nameof(encryptedParentLinkKey), "Property is not nullable for class ClientReceiptDownloadRequest.");
+
+            return new ClientReceiptDownloadRequest(downloadId.Value!, ciphertext.Value!, templateHash, parentDownloadId, encryptedParentLink, documentReferenceHash, creditNotePublicKey, parentCheqiReceiptId, encryptedParentLinkKey);
         }
 
         /// <summary>
@@ -192,6 +338,24 @@ namespace Cheqi.Sdk.Models.Generated
             if (clientReceiptDownloadRequest.Ciphertext == null)
                 throw new ArgumentNullException(nameof(clientReceiptDownloadRequest.Ciphertext), "Property is required for class ClientReceiptDownloadRequest.");
 
+            if (clientReceiptDownloadRequest.ParentDownloadIdOption.IsSet && clientReceiptDownloadRequest.ParentDownloadId == null)
+                throw new ArgumentNullException(nameof(clientReceiptDownloadRequest.ParentDownloadId), "Property is required for class ClientReceiptDownloadRequest.");
+
+            if (clientReceiptDownloadRequest.EncryptedParentLinkOption.IsSet && clientReceiptDownloadRequest.EncryptedParentLink == null)
+                throw new ArgumentNullException(nameof(clientReceiptDownloadRequest.EncryptedParentLink), "Property is required for class ClientReceiptDownloadRequest.");
+
+            if (clientReceiptDownloadRequest.DocumentReferenceHashOption.IsSet && clientReceiptDownloadRequest.DocumentReferenceHash == null)
+                throw new ArgumentNullException(nameof(clientReceiptDownloadRequest.DocumentReferenceHash), "Property is required for class ClientReceiptDownloadRequest.");
+
+            if (clientReceiptDownloadRequest.CreditNotePublicKeyOption.IsSet && clientReceiptDownloadRequest.CreditNotePublicKey == null)
+                throw new ArgumentNullException(nameof(clientReceiptDownloadRequest.CreditNotePublicKey), "Property is required for class ClientReceiptDownloadRequest.");
+
+            if (clientReceiptDownloadRequest.ParentCheqiReceiptIdOption.IsSet && clientReceiptDownloadRequest.ParentCheqiReceiptId == null)
+                throw new ArgumentNullException(nameof(clientReceiptDownloadRequest.ParentCheqiReceiptId), "Property is required for class ClientReceiptDownloadRequest.");
+
+            if (clientReceiptDownloadRequest.EncryptedParentLinkKeyOption.IsSet && clientReceiptDownloadRequest.EncryptedParentLinkKey == null)
+                throw new ArgumentNullException(nameof(clientReceiptDownloadRequest.EncryptedParentLinkKey), "Property is required for class ClientReceiptDownloadRequest.");
+
             writer.WriteString("downloadId", clientReceiptDownloadRequest.DownloadId);
 
             writer.WriteString("ciphertext", clientReceiptDownloadRequest.Ciphertext);
@@ -201,6 +365,24 @@ namespace Cheqi.Sdk.Models.Generated
                     writer.WriteString("templateHash", clientReceiptDownloadRequest.TemplateHash);
                 else
                     writer.WriteNull("templateHash");
+
+            if (clientReceiptDownloadRequest.ParentDownloadIdOption.IsSet)
+                writer.WriteString("parentDownloadId", clientReceiptDownloadRequest.ParentDownloadId);
+
+            if (clientReceiptDownloadRequest.EncryptedParentLinkOption.IsSet)
+                writer.WriteString("encryptedParentLink", clientReceiptDownloadRequest.EncryptedParentLink);
+
+            if (clientReceiptDownloadRequest.DocumentReferenceHashOption.IsSet)
+                writer.WriteString("documentReferenceHash", clientReceiptDownloadRequest.DocumentReferenceHash);
+
+            if (clientReceiptDownloadRequest.CreditNotePublicKeyOption.IsSet)
+                writer.WriteString("creditNotePublicKey", clientReceiptDownloadRequest.CreditNotePublicKey);
+
+            if (clientReceiptDownloadRequest.ParentCheqiReceiptIdOption.IsSet)
+                writer.WriteString("parentCheqiReceiptId", clientReceiptDownloadRequest.ParentCheqiReceiptId);
+
+            if (clientReceiptDownloadRequest.EncryptedParentLinkKeyOption.IsSet)
+                writer.WriteString("encryptedParentLinkKey", clientReceiptDownloadRequest.EncryptedParentLinkKey);
         }
     }
 }

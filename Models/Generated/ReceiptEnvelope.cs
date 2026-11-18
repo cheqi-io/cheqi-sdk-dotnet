@@ -38,8 +38,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="receiptGeneratorVersion">Generated-document engine version for version 1; payload schema marker for version 2 download envelopes.</param>
         /// <param name="receiptUuid">Shared UUID embedded in every generated representation of this receipt.</param>
         /// <param name="expenseSubmission">expenseSubmission</param>
+        /// <param name="documentProfiles">Versioned profiles of documents inside this encrypted envelope. Recipients validate their decrypted documents against these profiles.</param>
         [JsonConstructor]
-        public ReceiptEnvelope(string cheqiReceiptId, Dictionary<string, ReceiptEnvelopeDocument> documents, int envelopeVersion, string receiptGeneratorVersion, Guid receiptUuid, Option<ExpenseSubmissionEnvelope?> expenseSubmission = default)
+        public ReceiptEnvelope(string cheqiReceiptId, Dictionary<string, ReceiptEnvelopeDocument> documents, int envelopeVersion, string receiptGeneratorVersion, Guid receiptUuid, Option<ExpenseSubmissionEnvelope?> expenseSubmission = default, Option<List<ReceiptDocumentProfile>?> documentProfiles = default)
         {
             CheqiReceiptId = cheqiReceiptId;
             Documents = documents;
@@ -47,6 +48,7 @@ namespace Cheqi.Sdk.Models.Generated
             ReceiptGeneratorVersion = receiptGeneratorVersion;
             ReceiptUuid = receiptUuid;
             ExpenseSubmissionOption = expenseSubmission;
+            DocumentProfilesOption = documentProfiles;
             OnCreated();
         }
 
@@ -105,6 +107,20 @@ namespace Cheqi.Sdk.Models.Generated
         public ExpenseSubmissionEnvelope? ExpenseSubmission { get { return this.ExpenseSubmissionOption; } set { this.ExpenseSubmissionOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of DocumentProfiles
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<List<ReceiptDocumentProfile>?> DocumentProfilesOption { get; private set; }
+
+        /// <summary>
+        /// Versioned profiles of documents inside this encrypted envelope. Recipients validate their decrypted documents against these profiles.
+        /// </summary>
+        /// <value>Versioned profiles of documents inside this encrypted envelope. Recipients validate their decrypted documents against these profiles.</value>
+        [JsonPropertyName("documentProfiles")]
+        public List<ReceiptDocumentProfile>? DocumentProfiles { get { return this.DocumentProfilesOption; } set { this.DocumentProfilesOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -118,6 +134,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  ReceiptGeneratorVersion: ").Append(ReceiptGeneratorVersion).Append("\n");
             sb.Append("  ReceiptUuid: ").Append(ReceiptUuid).Append("\n");
             sb.Append("  ExpenseSubmission: ").Append(ExpenseSubmission).Append("\n");
+            sb.Append("  DocumentProfiles: ").Append(DocumentProfiles).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -151,6 +168,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> receiptGeneratorVersion = default;
             Option<Guid?> receiptUuid = default;
             Option<ExpenseSubmissionEnvelope?> expenseSubmission = default;
+            Option<List<ReceiptDocumentProfile>?> documentProfiles = default;
 
             while (utf8JsonReader.Read())
             {
@@ -184,6 +202,9 @@ namespace Cheqi.Sdk.Models.Generated
                             break;
                         case "expenseSubmission":
                             expenseSubmission = new Option<ExpenseSubmissionEnvelope?>(JsonSerializer.Deserialize<ExpenseSubmissionEnvelope>(ref utf8JsonReader, jsonSerializerOptions));
+                            break;
+                        case "documentProfiles":
+                            documentProfiles = new Option<List<ReceiptDocumentProfile>?>(JsonSerializer.Deserialize<List<ReceiptDocumentProfile>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         default:
                             break;
@@ -221,7 +242,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (receiptUuid.IsSet && receiptUuid.Value == null)
                 throw new ArgumentNullException(nameof(receiptUuid), "Property is not nullable for class ReceiptEnvelope.");
 
-            return new ReceiptEnvelope(cheqiReceiptId.Value!, documents.Value!, envelopeVersion.Value!.Value!, receiptGeneratorVersion.Value!, receiptUuid.Value!.Value!, expenseSubmission);
+            if (documentProfiles.IsSet && documentProfiles.Value == null)
+                throw new ArgumentNullException(nameof(documentProfiles), "Property is not nullable for class ReceiptEnvelope.");
+
+            return new ReceiptEnvelope(cheqiReceiptId.Value!, documents.Value!, envelopeVersion.Value!.Value!, receiptGeneratorVersion.Value!, receiptUuid.Value!.Value!, expenseSubmission, documentProfiles);
         }
 
         /// <summary>
@@ -257,6 +281,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (receiptEnvelope.ReceiptGeneratorVersion == null)
                 throw new ArgumentNullException(nameof(receiptEnvelope.ReceiptGeneratorVersion), "Property is required for class ReceiptEnvelope.");
 
+            if (receiptEnvelope.DocumentProfilesOption.IsSet && receiptEnvelope.DocumentProfiles == null)
+                throw new ArgumentNullException(nameof(receiptEnvelope.DocumentProfiles), "Property is required for class ReceiptEnvelope.");
+
             writer.WriteString("cheqiReceiptId", receiptEnvelope.CheqiReceiptId);
 
             writer.WritePropertyName("documents");
@@ -278,6 +305,11 @@ namespace Cheqi.Sdk.Models.Generated
                 }
                 else
                     writer.WriteNull("expenseSubmission");
+            if (receiptEnvelope.DocumentProfilesOption.IsSet)
+            {
+                writer.WritePropertyName("documentProfiles");
+                JsonSerializer.Serialize(writer, receiptEnvelope.DocumentProfiles, jsonSerializerOptions);
+            }
         }
     }
 }

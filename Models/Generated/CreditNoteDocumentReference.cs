@@ -25,35 +25,29 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// ResolveCollectionRecipientsRequest
+    /// CreditNoteDocumentReference
     /// </summary>
-    public partial class ResolveCollectionRecipientsRequest
+    public partial class CreditNoteDocumentReference
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ResolveCollectionRecipientsRequest" /> class.
+        /// Initializes a new instance of the <see cref="CreditNoteDocumentReference" /> class.
         /// </summary>
-        /// <param name="paymentAccountId">paymentAccountId</param>
+        /// <param name="documentReferenceHash">SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact original documentNumber.</param>
         [JsonConstructor]
-        public ResolveCollectionRecipientsRequest(Option<Guid?> paymentAccountId = default)
+        public CreditNoteDocumentReference(string documentReferenceHash)
         {
-            PaymentAccountIdOption = paymentAccountId;
+            DocumentReferenceHash = documentReferenceHash;
             OnCreated();
         }
 
         partial void OnCreated();
 
         /// <summary>
-        /// Used to track the state of PaymentAccountId
+        /// SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact original documentNumber.
         /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<Guid?> PaymentAccountIdOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets PaymentAccountId
-        /// </summary>
-        [JsonPropertyName("paymentAccountId")]
-        public Guid? PaymentAccountId { get { return this.PaymentAccountIdOption; } set { this.PaymentAccountIdOption = new(value); } }
+        /// <value>SDK-computed SHA-256 hex of UTF-8 cheqi:issuer-document:v1: followed by the exact original documentNumber.</value>
+        [JsonPropertyName("documentReferenceHash")]
+        public string DocumentReferenceHash { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -62,27 +56,27 @@ namespace Cheqi.Sdk.Models.Generated
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("class ResolveCollectionRecipientsRequest {\n");
-            sb.Append("  PaymentAccountId: ").Append(PaymentAccountId).Append("\n");
+            sb.Append("class CreditNoteDocumentReference {\n");
+            sb.Append("  DocumentReferenceHash: ").Append(DocumentReferenceHash).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
     }
 
     /// <summary>
-    /// A Json converter for type <see cref="ResolveCollectionRecipientsRequest" />
+    /// A Json converter for type <see cref="CreditNoteDocumentReference" />
     /// </summary>
-    public class ResolveCollectionRecipientsRequestJsonConverter : JsonConverter<ResolveCollectionRecipientsRequest>
+    public class CreditNoteDocumentReferenceJsonConverter : JsonConverter<CreditNoteDocumentReference>
     {
         /// <summary>
-        /// Deserializes json to <see cref="ResolveCollectionRecipientsRequest" />
+        /// Deserializes json to <see cref="CreditNoteDocumentReference" />
         /// </summary>
         /// <param name="utf8JsonReader"></param>
         /// <param name="typeToConvert"></param>
         /// <param name="jsonSerializerOptions"></param>
         /// <returns></returns>
         /// <exception cref="JsonException"></exception>
-        public override ResolveCollectionRecipientsRequest Read(ref Utf8JsonReader utf8JsonReader, Type typeToConvert, JsonSerializerOptions jsonSerializerOptions)
+        public override CreditNoteDocumentReference Read(ref Utf8JsonReader utf8JsonReader, Type typeToConvert, JsonSerializerOptions jsonSerializerOptions)
         {
             int currentDepth = utf8JsonReader.CurrentDepth;
 
@@ -91,7 +85,7 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<Guid?> paymentAccountId = default;
+            Option<string?> documentReferenceHash = default;
 
             while (utf8JsonReader.Read())
             {
@@ -108,8 +102,8 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
-                        case "paymentAccountId":
-                            paymentAccountId = new Option<Guid?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (Guid?)null : utf8JsonReader.GetGuid());
+                        case "documentReferenceHash":
+                            documentReferenceHash = new Option<string?>(utf8JsonReader.GetString()!);
                             break;
                         default:
                             break;
@@ -117,38 +111,43 @@ namespace Cheqi.Sdk.Models.Generated
                 }
             }
 
-            if (paymentAccountId.IsSet && paymentAccountId.Value == null)
-                throw new ArgumentNullException(nameof(paymentAccountId), "Property is not nullable for class ResolveCollectionRecipientsRequest.");
+            if (!documentReferenceHash.IsSet)
+                throw new ArgumentException("Property is required for class CreditNoteDocumentReference.", nameof(documentReferenceHash));
 
-            return new ResolveCollectionRecipientsRequest(paymentAccountId);
+            if (documentReferenceHash.IsSet && documentReferenceHash.Value == null)
+                throw new ArgumentNullException(nameof(documentReferenceHash), "Property is not nullable for class CreditNoteDocumentReference.");
+
+            return new CreditNoteDocumentReference(documentReferenceHash.Value!);
         }
 
         /// <summary>
-        /// Serializes a <see cref="ResolveCollectionRecipientsRequest" />
+        /// Serializes a <see cref="CreditNoteDocumentReference" />
         /// </summary>
         /// <param name="writer"></param>
-        /// <param name="resolveCollectionRecipientsRequest"></param>
+        /// <param name="creditNoteDocumentReference"></param>
         /// <param name="jsonSerializerOptions"></param>
         /// <exception cref="NotImplementedException"></exception>
-        public override void Write(Utf8JsonWriter writer, ResolveCollectionRecipientsRequest resolveCollectionRecipientsRequest, JsonSerializerOptions jsonSerializerOptions)
+        public override void Write(Utf8JsonWriter writer, CreditNoteDocumentReference creditNoteDocumentReference, JsonSerializerOptions jsonSerializerOptions)
         {
             writer.WriteStartObject();
 
-            WriteProperties(writer, resolveCollectionRecipientsRequest, jsonSerializerOptions);
+            WriteProperties(writer, creditNoteDocumentReference, jsonSerializerOptions);
             writer.WriteEndObject();
         }
 
         /// <summary>
-        /// Serializes the properties of <see cref="ResolveCollectionRecipientsRequest" />
+        /// Serializes the properties of <see cref="CreditNoteDocumentReference" />
         /// </summary>
         /// <param name="writer"></param>
-        /// <param name="resolveCollectionRecipientsRequest"></param>
+        /// <param name="creditNoteDocumentReference"></param>
         /// <param name="jsonSerializerOptions"></param>
         /// <exception cref="NotImplementedException"></exception>
-        public void WriteProperties(Utf8JsonWriter writer, ResolveCollectionRecipientsRequest resolveCollectionRecipientsRequest, JsonSerializerOptions jsonSerializerOptions)
+        public void WriteProperties(Utf8JsonWriter writer, CreditNoteDocumentReference creditNoteDocumentReference, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (resolveCollectionRecipientsRequest.PaymentAccountIdOption.IsSet)
-                writer.WriteString("paymentAccountId", resolveCollectionRecipientsRequest.PaymentAccountIdOption.Value!.Value);
+            if (creditNoteDocumentReference.DocumentReferenceHash == null)
+                throw new ArgumentNullException(nameof(creditNoteDocumentReference.DocumentReferenceHash), "Property is required for class CreditNoteDocumentReference.");
+
+            writer.WriteString("documentReferenceHash", creditNoteDocumentReference.DocumentReferenceHash);
         }
     }
 }

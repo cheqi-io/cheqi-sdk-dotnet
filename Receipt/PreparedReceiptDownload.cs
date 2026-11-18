@@ -26,6 +26,11 @@ public sealed class PreparedReceiptDownload
     {
         var copy = new ClientReceiptDownloadRequest(request.DownloadId, request.Ciphertext);
         if (request.TemplateHash != null) copy.TemplateHash = request.TemplateHash;
+        if (request.DocumentReferenceHash != null) copy.DocumentReferenceHash = request.DocumentReferenceHash;
+        if (request.CreditNotePublicKey != null) copy.CreditNotePublicKey = request.CreditNotePublicKey;
+        if (request.ParentCheqiReceiptId != null) copy.ParentCheqiReceiptId = request.ParentCheqiReceiptId;
+        if (request.EncryptedParentLink != null) copy.EncryptedParentLink = request.EncryptedParentLink;
+        if (request.EncryptedParentLinkKey != null) copy.EncryptedParentLinkKey = request.EncryptedParentLinkKey;
         return copy;
     }
     public override string ToString() => "PreparedReceiptDownload { Url = <redacted>, Ciphertext = <redacted> }";

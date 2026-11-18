@@ -71,7 +71,12 @@ namespace Cheqi.Sdk.Models.Generated
             /// <summary>
             /// Enum COMPANYINVITATIONACCEPTED for value: COMPANY_INVITATION_ACCEPTED
             /// </summary>
-            COMPANYINVITATIONACCEPTED = 4
+            COMPANYINVITATIONACCEPTED = 4,
+
+            /// <summary>
+            /// Enum SELFBILLEDINVOICECREATED for value: SELF_BILLED_INVOICE_CREATED
+            /// </summary>
+            SELFBILLEDINVOICECREATED = 5
         }
 
         /// <summary>
@@ -93,6 +98,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value.Equals("COMPANY_INVITATION_ACCEPTED"))
                 return EventsEnum.COMPANYINVITATIONACCEPTED;
+
+            if (value.Equals("SELF_BILLED_INVOICE_CREATED"))
+                return EventsEnum.SELFBILLEDINVOICECREATED;
 
             throw new NotImplementedException($"Could not convert value to type EventsEnum: '{value}'");
         }
@@ -116,6 +124,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("COMPANY_INVITATION_ACCEPTED"))
                 return EventsEnum.COMPANYINVITATIONACCEPTED;
 
+            if (value.Equals("SELF_BILLED_INVOICE_CREATED"))
+                return EventsEnum.SELFBILLEDINVOICECREATED;
+
             return null;
         }
 
@@ -138,6 +149,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value == EventsEnum.COMPANYINVITATIONACCEPTED)
                 return "COMPANY_INVITATION_ACCEPTED";
+
+            if (value == EventsEnum.SELFBILLEDINVOICECREATED)
+                return "SELF_BILLED_INVOICE_CREATED";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }

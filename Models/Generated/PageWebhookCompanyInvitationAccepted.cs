@@ -34,28 +34,28 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         /// <param name="totalElements">totalElements</param>
         /// <param name="totalPages">totalPages</param>
-        /// <param name="size">size</param>
-        /// <param name="content">content</param>
-        /// <param name="number">number</param>
         /// <param name="pageable">pageable</param>
         /// <param name="sort">sort</param>
         /// <param name="first">first</param>
         /// <param name="last">last</param>
         /// <param name="numberOfElements">numberOfElements</param>
+        /// <param name="size">size</param>
+        /// <param name="content">content</param>
+        /// <param name="number">number</param>
         /// <param name="empty">empty</param>
         [JsonConstructor]
-        public PageWebhookCompanyInvitationAccepted(Option<long?> totalElements = default, Option<int?> totalPages = default, Option<int?> size = default, Option<List<WebhookCompanyInvitationAccepted>?> content = default, Option<int?> number = default, Option<PageableObject?> pageable = default, Option<SortObject?> sort = default, Option<bool?> first = default, Option<bool?> last = default, Option<int?> numberOfElements = default, Option<bool?> empty = default)
+        public PageWebhookCompanyInvitationAccepted(Option<long?> totalElements = default, Option<int?> totalPages = default, Option<PageableObject?> pageable = default, Option<SortObject?> sort = default, Option<bool?> first = default, Option<bool?> last = default, Option<int?> numberOfElements = default, Option<int?> size = default, Option<List<WebhookCompanyInvitationAccepted>?> content = default, Option<int?> number = default, Option<bool?> empty = default)
         {
             TotalElementsOption = totalElements;
             TotalPagesOption = totalPages;
-            SizeOption = size;
-            ContentOption = content;
-            NumberOption = number;
             PageableOption = pageable;
             SortOption = sort;
             FirstOption = first;
             LastOption = last;
             NumberOfElementsOption = numberOfElements;
+            SizeOption = size;
+            ContentOption = content;
+            NumberOption = number;
             EmptyOption = empty;
             OnCreated();
         }
@@ -87,45 +87,6 @@ namespace Cheqi.Sdk.Models.Generated
         /// </summary>
         [JsonPropertyName("totalPages")]
         public int? TotalPages { get { return this.TotalPagesOption; } set { this.TotalPagesOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of Size
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<int?> SizeOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets Size
-        /// </summary>
-        [JsonPropertyName("size")]
-        public int? Size { get { return this.SizeOption; } set { this.SizeOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of Content
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<List<WebhookCompanyInvitationAccepted>?> ContentOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets Content
-        /// </summary>
-        [JsonPropertyName("content")]
-        public List<WebhookCompanyInvitationAccepted>? Content { get { return this.ContentOption; } set { this.ContentOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of Number
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<int?> NumberOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets Number
-        /// </summary>
-        [JsonPropertyName("number")]
-        public int? Number { get { return this.NumberOption; } set { this.NumberOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Pageable
@@ -193,6 +154,45 @@ namespace Cheqi.Sdk.Models.Generated
         public int? NumberOfElements { get { return this.NumberOfElementsOption; } set { this.NumberOfElementsOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of Size
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<int?> SizeOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets Size
+        /// </summary>
+        [JsonPropertyName("size")]
+        public int? Size { get { return this.SizeOption; } set { this.SizeOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of Content
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<List<WebhookCompanyInvitationAccepted>?> ContentOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets Content
+        /// </summary>
+        [JsonPropertyName("content")]
+        public List<WebhookCompanyInvitationAccepted>? Content { get { return this.ContentOption; } set { this.ContentOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of Number
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<int?> NumberOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets Number
+        /// </summary>
+        [JsonPropertyName("number")]
+        public int? Number { get { return this.NumberOption; } set { this.NumberOption = new(value); } }
+
+        /// <summary>
         /// Used to track the state of Empty
         /// </summary>
         [JsonIgnore]
@@ -215,14 +215,14 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("class PageWebhookCompanyInvitationAccepted {\n");
             sb.Append("  TotalElements: ").Append(TotalElements).Append("\n");
             sb.Append("  TotalPages: ").Append(TotalPages).Append("\n");
-            sb.Append("  Size: ").Append(Size).Append("\n");
-            sb.Append("  Content: ").Append(Content).Append("\n");
-            sb.Append("  Number: ").Append(Number).Append("\n");
             sb.Append("  Pageable: ").Append(Pageable).Append("\n");
             sb.Append("  Sort: ").Append(Sort).Append("\n");
             sb.Append("  First: ").Append(First).Append("\n");
             sb.Append("  Last: ").Append(Last).Append("\n");
             sb.Append("  NumberOfElements: ").Append(NumberOfElements).Append("\n");
+            sb.Append("  Size: ").Append(Size).Append("\n");
+            sb.Append("  Content: ").Append(Content).Append("\n");
+            sb.Append("  Number: ").Append(Number).Append("\n");
             sb.Append("  Empty: ").Append(Empty).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -253,14 +253,14 @@ namespace Cheqi.Sdk.Models.Generated
 
             Option<long?> totalElements = default;
             Option<int?> totalPages = default;
-            Option<int?> size = default;
-            Option<List<WebhookCompanyInvitationAccepted>?> content = default;
-            Option<int?> number = default;
             Option<PageableObject?> pageable = default;
             Option<SortObject?> sort = default;
             Option<bool?> first = default;
             Option<bool?> last = default;
             Option<int?> numberOfElements = default;
+            Option<int?> size = default;
+            Option<List<WebhookCompanyInvitationAccepted>?> content = default;
+            Option<int?> number = default;
             Option<bool?> empty = default;
 
             while (utf8JsonReader.Read())
@@ -284,15 +284,6 @@ namespace Cheqi.Sdk.Models.Generated
                         case "totalPages":
                             totalPages = new Option<int?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (int?)null : utf8JsonReader.GetInt32());
                             break;
-                        case "size":
-                            size = new Option<int?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (int?)null : utf8JsonReader.GetInt32());
-                            break;
-                        case "content":
-                            content = new Option<List<WebhookCompanyInvitationAccepted>?>(JsonSerializer.Deserialize<List<WebhookCompanyInvitationAccepted>>(ref utf8JsonReader, jsonSerializerOptions)!);
-                            break;
-                        case "number":
-                            number = new Option<int?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (int?)null : utf8JsonReader.GetInt32());
-                            break;
                         case "pageable":
                             pageable = new Option<PageableObject?>(JsonSerializer.Deserialize<PageableObject>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
@@ -307,6 +298,15 @@ namespace Cheqi.Sdk.Models.Generated
                             break;
                         case "numberOfElements":
                             numberOfElements = new Option<int?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (int?)null : utf8JsonReader.GetInt32());
+                            break;
+                        case "size":
+                            size = new Option<int?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (int?)null : utf8JsonReader.GetInt32());
+                            break;
+                        case "content":
+                            content = new Option<List<WebhookCompanyInvitationAccepted>?>(JsonSerializer.Deserialize<List<WebhookCompanyInvitationAccepted>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
+                        case "number":
+                            number = new Option<int?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (int?)null : utf8JsonReader.GetInt32());
                             break;
                         case "empty":
                             empty = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
@@ -323,15 +323,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (totalPages.IsSet && totalPages.Value == null)
                 throw new ArgumentNullException(nameof(totalPages), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
 
-            if (size.IsSet && size.Value == null)
-                throw new ArgumentNullException(nameof(size), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
-
-            if (content.IsSet && content.Value == null)
-                throw new ArgumentNullException(nameof(content), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
-
-            if (number.IsSet && number.Value == null)
-                throw new ArgumentNullException(nameof(number), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
-
             if (pageable.IsSet && pageable.Value == null)
                 throw new ArgumentNullException(nameof(pageable), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
 
@@ -347,10 +338,19 @@ namespace Cheqi.Sdk.Models.Generated
             if (numberOfElements.IsSet && numberOfElements.Value == null)
                 throw new ArgumentNullException(nameof(numberOfElements), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
 
+            if (size.IsSet && size.Value == null)
+                throw new ArgumentNullException(nameof(size), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
+
+            if (content.IsSet && content.Value == null)
+                throw new ArgumentNullException(nameof(content), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
+
+            if (number.IsSet && number.Value == null)
+                throw new ArgumentNullException(nameof(number), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
+
             if (empty.IsSet && empty.Value == null)
                 throw new ArgumentNullException(nameof(empty), "Property is not nullable for class PageWebhookCompanyInvitationAccepted.");
 
-            return new PageWebhookCompanyInvitationAccepted(totalElements, totalPages, size, content, number, pageable, sort, first, last, numberOfElements, empty);
+            return new PageWebhookCompanyInvitationAccepted(totalElements, totalPages, pageable, sort, first, last, numberOfElements, size, content, number, empty);
         }
 
         /// <summary>
@@ -377,14 +377,14 @@ namespace Cheqi.Sdk.Models.Generated
         /// <exception cref="NotImplementedException"></exception>
         public void WriteProperties(Utf8JsonWriter writer, PageWebhookCompanyInvitationAccepted pageWebhookCompanyInvitationAccepted, JsonSerializerOptions jsonSerializerOptions)
         {
-            if (pageWebhookCompanyInvitationAccepted.ContentOption.IsSet && pageWebhookCompanyInvitationAccepted.Content == null)
-                throw new ArgumentNullException(nameof(pageWebhookCompanyInvitationAccepted.Content), "Property is required for class PageWebhookCompanyInvitationAccepted.");
-
             if (pageWebhookCompanyInvitationAccepted.PageableOption.IsSet && pageWebhookCompanyInvitationAccepted.Pageable == null)
                 throw new ArgumentNullException(nameof(pageWebhookCompanyInvitationAccepted.Pageable), "Property is required for class PageWebhookCompanyInvitationAccepted.");
 
             if (pageWebhookCompanyInvitationAccepted.SortOption.IsSet && pageWebhookCompanyInvitationAccepted.Sort == null)
                 throw new ArgumentNullException(nameof(pageWebhookCompanyInvitationAccepted.Sort), "Property is required for class PageWebhookCompanyInvitationAccepted.");
+
+            if (pageWebhookCompanyInvitationAccepted.ContentOption.IsSet && pageWebhookCompanyInvitationAccepted.Content == null)
+                throw new ArgumentNullException(nameof(pageWebhookCompanyInvitationAccepted.Content), "Property is required for class PageWebhookCompanyInvitationAccepted.");
 
             if (pageWebhookCompanyInvitationAccepted.TotalElementsOption.IsSet)
                 {
@@ -396,23 +396,6 @@ namespace Cheqi.Sdk.Models.Generated
                 {
                     writer.WritePropertyName("totalPages");
                     JsonSerializer.Serialize(writer, pageWebhookCompanyInvitationAccepted.TotalPagesOption.Value!.Value, jsonSerializerOptions);
-                }
-
-            if (pageWebhookCompanyInvitationAccepted.SizeOption.IsSet)
-                {
-                    writer.WritePropertyName("size");
-                    JsonSerializer.Serialize(writer, pageWebhookCompanyInvitationAccepted.SizeOption.Value!.Value, jsonSerializerOptions);
-                }
-
-            if (pageWebhookCompanyInvitationAccepted.ContentOption.IsSet)
-            {
-                writer.WritePropertyName("content");
-                JsonSerializer.Serialize(writer, pageWebhookCompanyInvitationAccepted.Content, jsonSerializerOptions);
-            }
-            if (pageWebhookCompanyInvitationAccepted.NumberOption.IsSet)
-                {
-                    writer.WritePropertyName("number");
-                    JsonSerializer.Serialize(writer, pageWebhookCompanyInvitationAccepted.NumberOption.Value!.Value, jsonSerializerOptions);
                 }
 
             if (pageWebhookCompanyInvitationAccepted.PageableOption.IsSet)
@@ -435,6 +418,23 @@ namespace Cheqi.Sdk.Models.Generated
                 {
                     writer.WritePropertyName("numberOfElements");
                     JsonSerializer.Serialize(writer, pageWebhookCompanyInvitationAccepted.NumberOfElementsOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (pageWebhookCompanyInvitationAccepted.SizeOption.IsSet)
+                {
+                    writer.WritePropertyName("size");
+                    JsonSerializer.Serialize(writer, pageWebhookCompanyInvitationAccepted.SizeOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (pageWebhookCompanyInvitationAccepted.ContentOption.IsSet)
+            {
+                writer.WritePropertyName("content");
+                JsonSerializer.Serialize(writer, pageWebhookCompanyInvitationAccepted.Content, jsonSerializerOptions);
+            }
+            if (pageWebhookCompanyInvitationAccepted.NumberOption.IsSet)
+                {
+                    writer.WritePropertyName("number");
+                    JsonSerializer.Serialize(writer, pageWebhookCompanyInvitationAccepted.NumberOption.Value!.Value, jsonSerializerOptions);
                 }
 
             if (pageWebhookCompanyInvitationAccepted.EmptyOption.IsSet)

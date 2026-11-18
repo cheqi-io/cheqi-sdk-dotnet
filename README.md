@@ -103,7 +103,9 @@ var payload = new ReceiptPayload(
     products: new List<Product>
     {
         new("Coffee", "coffee-1", 1, UnitCode.C62, 10m, 10m, 12.10m)
-    });
+    },
+    taxes: new List<Tax> { new(21, "VAT", 10m, amount: 2.10m, category: TaxCategoryCode.STANDARD) },
+    paymentDetails: new PaymentDetails(paidAmount: 12.10m, amountDue: 0m, roundingAmount: 0m));
 
 var result = await sdk.ReceiptService.IssueReceiptAsync(
     identification, payload, cancellationToken: cancellationToken);
@@ -252,3 +254,29 @@ make spec-check ENV=prod
 Model generation uses OpenAPI Generator 7.14.0 and runs `scripts/prepare-generated-models.py` to register generated JSON converters, preserve optional enum absence, normalize numeric and date serialization, and fix the model-only generator's submission-response union. Schema drift checks compare parsed YAML so mapping-order changes do not cause false failures.
 
 MIT licensed. Support: support@cheqi.io.
+
+## Credit notes by document number
+
+Issue the original receipt normally with your own `documentNumber`. Supply that exact
+number as the credit note's `originatorDocumentReference`, alongside its own
+`documentNumber` and definitive positive credit amounts. Preserve `taxesApplied`
+in the generation input. No Cheqi ID, original download URL, or decryption key is
+needed from your integration.
+
+The SDK resolves the reference within the authenticated issuing company and
+prepares encrypted delivery through the original device or browser route.
+A missing original returns 404; an ambiguous number returns 409. Do not create a
+new prepared submission after an uncertain upload: persist and retry the same
+ciphertext. `PreparedCreditNote` is generated from the backend OpenAPI schema;
+the SDK implements preparation and submission, not independent data models.
+
+This flow requires the updated backend reference endpoint and originals issued
+with document-reference support. Older encrypted originals cannot be upgraded
+automatically. The browser saves credit notes as separate documents under the
+original invoice, with normal viewing, PDF and XML export.
+
+```csharp
+var prepared = await sdk.CreditNoteService.PrepareCreditNoteAsync(generationInput);
+// Persist with JsonSerializer and CheqiJson.CreateOptions() before submitting.
+var result = await sdk.CreditNoteService.SubmitPreparedCreditNoteAsync(prepared);
+```

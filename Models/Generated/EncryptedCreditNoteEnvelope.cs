@@ -26,7 +26,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Independently encrypted credit-note generation request for every owner device
+    /// Encrypted definitive credit-note payloads submitted for on-device formatting.
     /// </summary>
     public partial class EncryptedCreditNoteEnvelope
     {

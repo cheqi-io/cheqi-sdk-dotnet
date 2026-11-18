@@ -48,7 +48,9 @@ internal sealed class SdkHarness : IDisposable
     public static string Pem(string label, byte[] bytes) => new(PemEncoding.Write(label, bytes));
     public static IdentificationDetails Identification() => new() { PaymentType = PaymentType.CARDPAYMENT, PairingCode = "private-locator" };
     public static ReceiptPayload Payload() => new("POS-001", DateTimeOffset.Parse("2026-09-29T10:00:00Z"), "EUR",
-        10m, 10m, 2.1m, 12.1m, true, new List<Product> { new("Coffee", "coffee-1", 1, UnitCode.C62, 10m, 10m, 12.1m) });
+        10m, 10m, 2.1m, 12.1m, true, new List<Product> { new("Coffee", "coffee-1", 1, UnitCode.C62, 10m, 10m, 12.1m) },
+        new List<Tax> { new(21, "VAT", 10m, amount: 2.1m, category: TaxCategoryCode.STANDARD) },
+        new PaymentDetails(paidAmount: 12.1m, amountDue: 0m, roundingAmount: 0m));
     public static string Decrypt(EncryptedReceiptPayload payload, RSA rsa)
     {
         var key = rsa.Decrypt(Convert.FromBase64String(payload.EncryptedAesKey), RSAEncryptionPadding.OaepSHA256);

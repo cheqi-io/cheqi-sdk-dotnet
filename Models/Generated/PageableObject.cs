@@ -32,38 +32,25 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Initializes a new instance of the <see cref="PageableObject" /> class.
         /// </summary>
-        /// <param name="offset">offset</param>
         /// <param name="paged">paged</param>
         /// <param name="pageNumber">pageNumber</param>
         /// <param name="pageSize">pageSize</param>
         /// <param name="sort">sort</param>
         /// <param name="unpaged">unpaged</param>
+        /// <param name="offset">offset</param>
         [JsonConstructor]
-        public PageableObject(Option<long?> offset = default, Option<bool?> paged = default, Option<int?> pageNumber = default, Option<int?> pageSize = default, Option<SortObject?> sort = default, Option<bool?> unpaged = default)
+        public PageableObject(Option<bool?> paged = default, Option<int?> pageNumber = default, Option<int?> pageSize = default, Option<SortObject?> sort = default, Option<bool?> unpaged = default, Option<long?> offset = default)
         {
-            OffsetOption = offset;
             PagedOption = paged;
             PageNumberOption = pageNumber;
             PageSizeOption = pageSize;
             SortOption = sort;
             UnpagedOption = unpaged;
+            OffsetOption = offset;
             OnCreated();
         }
 
         partial void OnCreated();
-
-        /// <summary>
-        /// Used to track the state of Offset
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<long?> OffsetOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets Offset
-        /// </summary>
-        [JsonPropertyName("offset")]
-        public long? Offset { get { return this.OffsetOption; } set { this.OffsetOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Paged
@@ -131,6 +118,19 @@ namespace Cheqi.Sdk.Models.Generated
         public bool? Unpaged { get { return this.UnpagedOption; } set { this.UnpagedOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of Offset
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<long?> OffsetOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets Offset
+        /// </summary>
+        [JsonPropertyName("offset")]
+        public long? Offset { get { return this.OffsetOption; } set { this.OffsetOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -138,12 +138,12 @@ namespace Cheqi.Sdk.Models.Generated
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class PageableObject {\n");
-            sb.Append("  Offset: ").Append(Offset).Append("\n");
             sb.Append("  Paged: ").Append(Paged).Append("\n");
             sb.Append("  PageNumber: ").Append(PageNumber).Append("\n");
             sb.Append("  PageSize: ").Append(PageSize).Append("\n");
             sb.Append("  Sort: ").Append(Sort).Append("\n");
             sb.Append("  Unpaged: ").Append(Unpaged).Append("\n");
+            sb.Append("  Offset: ").Append(Offset).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -171,12 +171,12 @@ namespace Cheqi.Sdk.Models.Generated
 
             JsonTokenType startingTokenType = utf8JsonReader.TokenType;
 
-            Option<long?> offset = default;
             Option<bool?> paged = default;
             Option<int?> pageNumber = default;
             Option<int?> pageSize = default;
             Option<SortObject?> sort = default;
             Option<bool?> unpaged = default;
+            Option<long?> offset = default;
 
             while (utf8JsonReader.Read())
             {
@@ -193,9 +193,6 @@ namespace Cheqi.Sdk.Models.Generated
 
                     switch (localVarJsonPropertyName)
                     {
-                        case "offset":
-                            offset = new Option<long?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (long?)null : utf8JsonReader.GetInt64());
-                            break;
                         case "paged":
                             paged = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
@@ -211,14 +208,14 @@ namespace Cheqi.Sdk.Models.Generated
                         case "unpaged":
                             unpaged = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
+                        case "offset":
+                            offset = new Option<long?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (long?)null : utf8JsonReader.GetInt64());
+                            break;
                         default:
                             break;
                     }
                 }
             }
-
-            if (offset.IsSet && offset.Value == null)
-                throw new ArgumentNullException(nameof(offset), "Property is not nullable for class PageableObject.");
 
             if (paged.IsSet && paged.Value == null)
                 throw new ArgumentNullException(nameof(paged), "Property is not nullable for class PageableObject.");
@@ -235,7 +232,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (unpaged.IsSet && unpaged.Value == null)
                 throw new ArgumentNullException(nameof(unpaged), "Property is not nullable for class PageableObject.");
 
-            return new PageableObject(offset, paged, pageNumber, pageSize, sort, unpaged);
+            if (offset.IsSet && offset.Value == null)
+                throw new ArgumentNullException(nameof(offset), "Property is not nullable for class PageableObject.");
+
+            return new PageableObject(paged, pageNumber, pageSize, sort, unpaged, offset);
         }
 
         /// <summary>
@@ -265,12 +265,6 @@ namespace Cheqi.Sdk.Models.Generated
             if (pageableObject.SortOption.IsSet && pageableObject.Sort == null)
                 throw new ArgumentNullException(nameof(pageableObject.Sort), "Property is required for class PageableObject.");
 
-            if (pageableObject.OffsetOption.IsSet)
-                {
-                    writer.WritePropertyName("offset");
-                    JsonSerializer.Serialize(writer, pageableObject.OffsetOption.Value!.Value, jsonSerializerOptions);
-                }
-
             if (pageableObject.PagedOption.IsSet)
                 writer.WriteBoolean("paged", pageableObject.PagedOption.Value!.Value);
 
@@ -293,6 +287,12 @@ namespace Cheqi.Sdk.Models.Generated
             }
             if (pageableObject.UnpagedOption.IsSet)
                 writer.WriteBoolean("unpaged", pageableObject.UnpagedOption.Value!.Value);
+
+            if (pageableObject.OffsetOption.IsSet)
+                {
+                    writer.WritePropertyName("offset");
+                    JsonSerializer.Serialize(writer, pageableObject.OffsetOption.Value!.Value, jsonSerializerOptions);
+                }
         }
     }
 }
