@@ -16,10 +16,17 @@ public sealed class DownloadService
     public const int ContentKeyLength = 32;
     public const string ProductionBaseUrl = "https://receipt.cheqi.io";
     public const string SandboxBaseUrl = "https://sandbox.receipt.cheqi.io";
+    public const string TestBaseUrl = "https://test.receipt.cheqi.io";
     private readonly JsonSerializerOptions _json = CheqiJson.CreateOptions();
 
     public DownloadLink GenerateDownloadLink(CheqiApiEnvironment environment)
-        => GenerateDownloadLink(environment == CheqiApiEnvironment.Production ? ProductionBaseUrl : SandboxBaseUrl);
+        => GenerateDownloadLink(environment switch
+        {
+            CheqiApiEnvironment.Production => ProductionBaseUrl,
+            CheqiApiEnvironment.Sandbox => SandboxBaseUrl,
+            CheqiApiEnvironment.Test => TestBaseUrl,
+            _ => throw new ArgumentOutOfRangeException(nameof(environment), environment, "Unknown environment")
+        });
 
     public DownloadLink GenerateDownloadLink(string baseUrl)
     {

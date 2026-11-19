@@ -38,7 +38,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Enum CREDITNOTE for value: CREDIT_NOTE
         /// </summary>
-        CREDITNOTE = 2
+        CREDITNOTE = 2,
+
+        /// <summary>
+        /// Enum SELFBILLEDINVOICE for value: SELF_BILLED_INVOICE
+        /// </summary>
+        SELFBILLEDINVOICE = 3
     }
 
     /// <summary>
@@ -59,6 +64,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("CREDIT_NOTE"))
                 return DocumentType.CREDITNOTE;
 
+            if (value.Equals("SELF_BILLED_INVOICE"))
+                return DocumentType.SELFBILLEDINVOICE;
+
             throw new NotImplementedException($"Could not convert value to type DocumentType: '{value}'");
         }
 
@@ -74,6 +82,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value.Equals("CREDIT_NOTE"))
                 return DocumentType.CREDITNOTE;
+
+            if (value.Equals("SELF_BILLED_INVOICE"))
+                return DocumentType.SELFBILLEDINVOICE;
 
             return null;
         }
@@ -91,6 +102,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value == DocumentType.CREDITNOTE)
                 return "CREDIT_NOTE";
+
+            if (value == DocumentType.SELFBILLEDINVOICE)
+                return "SELF_BILLED_INVOICE";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }

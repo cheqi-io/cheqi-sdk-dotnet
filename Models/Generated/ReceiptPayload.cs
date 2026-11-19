@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Definitive merchant-supplied receipt values encrypted independently for each matched owner device. Cheqi never receives this object in plaintext. All monetary, tax, fiscalization, signature, sequence, and QR values must be provided by the issuer; the SDK does not calculate them.
+    /// Definitive merchant-supplied receipt values encrypted independently for each matched owner device. Cheqi never receives this object in plaintext. All monetary, tax, fiscalization, signature, sequence, and QR values must be provided by the issuer. Every new payload must satisfy the shared issuer validator, regardless of receiver formats; no financial values are inferred or repaired.
     /// </summary>
     public partial class ReceiptPayload
     {
@@ -40,19 +40,21 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="totalTaxAmount">Issuer-supplied total tax amount.</param>
         /// <param name="totalAmount">Issuer-supplied final receipt total.</param>
         /// <param name="taxesApplied">Issuer-supplied indication whether taxes apply to this receipt.</param>
-        /// <param name="products">Issuer-supplied receipt line items.</param>
+        /// <param name="products">Issuer-supplied receipt line items. Each line must have exactly one VAT entry with an explicit category and tax amount, including zero tax.</param>
+        /// <param name="taxes">Issuer-supplied VAT breakdown, including zero tax. Each entry must state category, rate, taxableAmount and amount.</param>
+        /// <param name="paymentDetails">paymentDetails</param>
         /// <param name="identifiers">Additional issuer-supplied receipt references.</param>
+        /// <param name="totalDiscountAmount">Issuer-supplied sum of the receipt-level discounts. Cheqi never calculates or fills in this value; it only checks it against the discounts. Required whenever receipt-level discounts are present.</param>
+        /// <param name="totalChargeAmount">Issuer-supplied sum of the receipt-level charges. Cheqi never calculates or fills in this value; it only checks it against the charges. Required whenever receipt-level charges are present.</param>
         /// <param name="discounts">Issuer-supplied receipt-level discounts.</param>
         /// <param name="charges">Issuer-supplied receipt-level charges.</param>
-        /// <param name="taxes">Issuer-supplied receipt-level tax breakdown.</param>
         /// <param name="transactionDate">Transaction date when it differs from the issue date.</param>
         /// <param name="purchaseDate">Purchase date when it differs from the issue date.</param>
         /// <param name="period">period</param>
         /// <param name="barcodes">Issuer-supplied receipt-level barcodes or QR-code payloads.</param>
-        /// <param name="paymentDetails">paymentDetails</param>
         /// <param name="jurisdictionalData">jurisdictionalData</param>
         [JsonConstructor]
-        public ReceiptPayload(string documentNumber, DateTimeOffset issueDate, string currency, decimal receiptSubtotal, decimal totalBeforeTax, decimal totalTaxAmount, decimal totalAmount, bool taxesApplied, List<Product> products, Option<List<Identifier>?> identifiers = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<List<Tax>?> taxes = default, Option<DateTimeOffset?> transactionDate = default, Option<DateTimeOffset?> purchaseDate = default, Option<Period?> period = default, Option<List<Barcode>?> barcodes = default, Option<PaymentDetails?> paymentDetails = default, Option<JurisdictionalData?> jurisdictionalData = default)
+        public ReceiptPayload(string documentNumber, DateTimeOffset issueDate, string currency, decimal receiptSubtotal, decimal totalBeforeTax, decimal totalTaxAmount, decimal totalAmount, bool taxesApplied, List<Product> products, List<Tax> taxes, PaymentDetails paymentDetails, Option<List<Identifier>?> identifiers = default, Option<decimal?> totalDiscountAmount = default, Option<decimal?> totalChargeAmount = default, Option<List<Discount>?> discounts = default, Option<List<Charge>?> charges = default, Option<DateTimeOffset?> transactionDate = default, Option<DateTimeOffset?> purchaseDate = default, Option<Period?> period = default, Option<List<Barcode>?> barcodes = default, Option<JurisdictionalData?> jurisdictionalData = default)
         {
             DocumentNumber = documentNumber;
             IssueDate = issueDate;
@@ -63,15 +65,17 @@ namespace Cheqi.Sdk.Models.Generated
             TotalAmount = totalAmount;
             TaxesApplied = taxesApplied;
             Products = products;
+            Taxes = taxes;
+            PaymentDetails = paymentDetails;
             IdentifiersOption = identifiers;
+            TotalDiscountAmountOption = totalDiscountAmount;
+            TotalChargeAmountOption = totalChargeAmount;
             DiscountsOption = discounts;
             ChargesOption = charges;
-            TaxesOption = taxes;
             TransactionDateOption = transactionDate;
             PurchaseDateOption = purchaseDate;
             PeriodOption = period;
             BarcodesOption = barcodes;
-            PaymentDetailsOption = paymentDetails;
             JurisdictionalDataOption = jurisdictionalData;
             OnCreated();
         }
@@ -137,11 +141,24 @@ namespace Cheqi.Sdk.Models.Generated
         public bool TaxesApplied { get; set; }
 
         /// <summary>
-        /// Issuer-supplied receipt line items.
+        /// Issuer-supplied receipt line items. Each line must have exactly one VAT entry with an explicit category and tax amount, including zero tax.
         /// </summary>
-        /// <value>Issuer-supplied receipt line items.</value>
+        /// <value>Issuer-supplied receipt line items. Each line must have exactly one VAT entry with an explicit category and tax amount, including zero tax.</value>
         [JsonPropertyName("products")]
         public List<Product> Products { get; set; }
+
+        /// <summary>
+        /// Issuer-supplied VAT breakdown, including zero tax. Each entry must state category, rate, taxableAmount and amount.
+        /// </summary>
+        /// <value>Issuer-supplied VAT breakdown, including zero tax. Each entry must state category, rate, taxableAmount and amount.</value>
+        [JsonPropertyName("taxes")]
+        public List<Tax> Taxes { get; set; }
+
+        /// <summary>
+        /// Gets or Sets PaymentDetails
+        /// </summary>
+        [JsonPropertyName("paymentDetails")]
+        public PaymentDetails PaymentDetails { get; set; }
 
         /// <summary>
         /// Used to track the state of Identifiers
@@ -156,6 +173,36 @@ namespace Cheqi.Sdk.Models.Generated
         /// <value>Additional issuer-supplied receipt references.</value>
         [JsonPropertyName("identifiers")]
         public List<Identifier>? Identifiers { get { return this.IdentifiersOption; } set { this.IdentifiersOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of TotalDiscountAmount
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<decimal?> TotalDiscountAmountOption { get; private set; }
+
+        /// <summary>
+        /// Issuer-supplied sum of the receipt-level discounts. Cheqi never calculates or fills in this value; it only checks it against the discounts. Required whenever receipt-level discounts are present.
+        /// </summary>
+        /// <value>Issuer-supplied sum of the receipt-level discounts. Cheqi never calculates or fills in this value; it only checks it against the discounts. Required whenever receipt-level discounts are present.</value>
+        /* <example>1.0</example> */
+        [JsonPropertyName("totalDiscountAmount")]
+        public decimal? TotalDiscountAmount { get { return this.TotalDiscountAmountOption; } set { this.TotalDiscountAmountOption = new(value); } }
+
+        /// <summary>
+        /// Used to track the state of TotalChargeAmount
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<decimal?> TotalChargeAmountOption { get; private set; }
+
+        /// <summary>
+        /// Issuer-supplied sum of the receipt-level charges. Cheqi never calculates or fills in this value; it only checks it against the charges. Required whenever receipt-level charges are present.
+        /// </summary>
+        /// <value>Issuer-supplied sum of the receipt-level charges. Cheqi never calculates or fills in this value; it only checks it against the charges. Required whenever receipt-level charges are present.</value>
+        /* <example>2.0</example> */
+        [JsonPropertyName("totalChargeAmount")]
+        public decimal? TotalChargeAmount { get { return this.TotalChargeAmountOption; } set { this.TotalChargeAmountOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of Discounts
@@ -184,20 +231,6 @@ namespace Cheqi.Sdk.Models.Generated
         /// <value>Issuer-supplied receipt-level charges.</value>
         [JsonPropertyName("charges")]
         public List<Charge>? Charges { get { return this.ChargesOption; } set { this.ChargesOption = new(value); } }
-
-        /// <summary>
-        /// Used to track the state of Taxes
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<List<Tax>?> TaxesOption { get; private set; }
-
-        /// <summary>
-        /// Issuer-supplied receipt-level tax breakdown.
-        /// </summary>
-        /// <value>Issuer-supplied receipt-level tax breakdown.</value>
-        [JsonPropertyName("taxes")]
-        public List<Tax>? Taxes { get { return this.TaxesOption; } set { this.TaxesOption = new(value); } }
 
         /// <summary>
         /// Used to track the state of TransactionDate
@@ -255,19 +288,6 @@ namespace Cheqi.Sdk.Models.Generated
         public List<Barcode>? Barcodes { get { return this.BarcodesOption; } set { this.BarcodesOption = new(value); } }
 
         /// <summary>
-        /// Used to track the state of PaymentDetails
-        /// </summary>
-        [JsonIgnore]
-        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        public Option<PaymentDetails?> PaymentDetailsOption { get; private set; }
-
-        /// <summary>
-        /// Gets or Sets PaymentDetails
-        /// </summary>
-        [JsonPropertyName("paymentDetails")]
-        public PaymentDetails? PaymentDetails { get { return this.PaymentDetailsOption; } set { this.PaymentDetailsOption = new(value); } }
-
-        /// <summary>
         /// Used to track the state of JurisdictionalData
         /// </summary>
         [JsonIgnore]
@@ -297,15 +317,17 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  TotalAmount: ").Append(TotalAmount).Append("\n");
             sb.Append("  TaxesApplied: ").Append(TaxesApplied).Append("\n");
             sb.Append("  Products: ").Append(Products).Append("\n");
+            sb.Append("  Taxes: ").Append(Taxes).Append("\n");
+            sb.Append("  PaymentDetails: ").Append(PaymentDetails).Append("\n");
             sb.Append("  Identifiers: ").Append(Identifiers).Append("\n");
+            sb.Append("  TotalDiscountAmount: ").Append(TotalDiscountAmount).Append("\n");
+            sb.Append("  TotalChargeAmount: ").Append(TotalChargeAmount).Append("\n");
             sb.Append("  Discounts: ").Append(Discounts).Append("\n");
             sb.Append("  Charges: ").Append(Charges).Append("\n");
-            sb.Append("  Taxes: ").Append(Taxes).Append("\n");
             sb.Append("  TransactionDate: ").Append(TransactionDate).Append("\n");
             sb.Append("  PurchaseDate: ").Append(PurchaseDate).Append("\n");
             sb.Append("  Period: ").Append(Period).Append("\n");
             sb.Append("  Barcodes: ").Append(Barcodes).Append("\n");
-            sb.Append("  PaymentDetails: ").Append(PaymentDetails).Append("\n");
             sb.Append("  JurisdictionalData: ").Append(JurisdictionalData).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -358,15 +380,17 @@ namespace Cheqi.Sdk.Models.Generated
             Option<decimal?> totalAmount = default;
             Option<bool?> taxesApplied = default;
             Option<List<Product>?> products = default;
+            Option<List<Tax>?> taxes = default;
+            Option<PaymentDetails?> paymentDetails = default;
             Option<List<Identifier>?> identifiers = default;
+            Option<decimal?> totalDiscountAmount = default;
+            Option<decimal?> totalChargeAmount = default;
             Option<List<Discount>?> discounts = default;
             Option<List<Charge>?> charges = default;
-            Option<List<Tax>?> taxes = default;
             Option<DateTimeOffset?> transactionDate = default;
             Option<DateTimeOffset?> purchaseDate = default;
             Option<Period?> period = default;
             Option<List<Barcode>?> barcodes = default;
-            Option<PaymentDetails?> paymentDetails = default;
             Option<JurisdictionalData?> jurisdictionalData = default;
 
             while (utf8JsonReader.Read())
@@ -411,17 +435,26 @@ namespace Cheqi.Sdk.Models.Generated
                         case "products":
                             products = new Option<List<Product>?>(JsonSerializer.Deserialize<List<Product>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
+                        case "taxes":
+                            taxes = new Option<List<Tax>?>(JsonSerializer.Deserialize<List<Tax>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
+                        case "paymentDetails":
+                            paymentDetails = new Option<PaymentDetails?>(JsonSerializer.Deserialize<PaymentDetails>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
                         case "identifiers":
                             identifiers = new Option<List<Identifier>?>(JsonSerializer.Deserialize<List<Identifier>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
+                        case "totalDiscountAmount":
+                            totalDiscountAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
+                            break;
+                        case "totalChargeAmount":
+                            totalChargeAmount = new Option<decimal?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (decimal?)null : utf8JsonReader.GetDecimal());
                             break;
                         case "discounts":
                             discounts = new Option<List<Discount>?>(JsonSerializer.Deserialize<List<Discount>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "charges":
                             charges = new Option<List<Charge>?>(JsonSerializer.Deserialize<List<Charge>>(ref utf8JsonReader, jsonSerializerOptions)!);
-                            break;
-                        case "taxes":
-                            taxes = new Option<List<Tax>?>(JsonSerializer.Deserialize<List<Tax>>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "transactionDate":
                             transactionDate = new Option<DateTimeOffset?>(JsonSerializer.Deserialize<DateTimeOffset>(ref utf8JsonReader, jsonSerializerOptions));
@@ -434,9 +467,6 @@ namespace Cheqi.Sdk.Models.Generated
                             break;
                         case "barcodes":
                             barcodes = new Option<List<Barcode>?>(JsonSerializer.Deserialize<List<Barcode>>(ref utf8JsonReader, jsonSerializerOptions)!);
-                            break;
-                        case "paymentDetails":
-                            paymentDetails = new Option<PaymentDetails?>(JsonSerializer.Deserialize<PaymentDetails>(ref utf8JsonReader, jsonSerializerOptions)!);
                             break;
                         case "jurisdictionalData":
                             jurisdictionalData = new Option<JurisdictionalData?>(JsonSerializer.Deserialize<JurisdictionalData>(ref utf8JsonReader, jsonSerializerOptions)!);
@@ -474,6 +504,12 @@ namespace Cheqi.Sdk.Models.Generated
             if (!products.IsSet)
                 throw new ArgumentException("Property is required for class ReceiptPayload.", nameof(products));
 
+            if (!taxes.IsSet)
+                throw new ArgumentException("Property is required for class ReceiptPayload.", nameof(taxes));
+
+            if (!paymentDetails.IsSet)
+                throw new ArgumentException("Property is required for class ReceiptPayload.", nameof(paymentDetails));
+
             if (documentNumber.IsSet && documentNumber.Value == null)
                 throw new ArgumentNullException(nameof(documentNumber), "Property is not nullable for class ReceiptPayload.");
 
@@ -501,17 +537,26 @@ namespace Cheqi.Sdk.Models.Generated
             if (products.IsSet && products.Value == null)
                 throw new ArgumentNullException(nameof(products), "Property is not nullable for class ReceiptPayload.");
 
+            if (taxes.IsSet && taxes.Value == null)
+                throw new ArgumentNullException(nameof(taxes), "Property is not nullable for class ReceiptPayload.");
+
+            if (paymentDetails.IsSet && paymentDetails.Value == null)
+                throw new ArgumentNullException(nameof(paymentDetails), "Property is not nullable for class ReceiptPayload.");
+
             if (identifiers.IsSet && identifiers.Value == null)
                 throw new ArgumentNullException(nameof(identifiers), "Property is not nullable for class ReceiptPayload.");
+
+            if (totalDiscountAmount.IsSet && totalDiscountAmount.Value == null)
+                throw new ArgumentNullException(nameof(totalDiscountAmount), "Property is not nullable for class ReceiptPayload.");
+
+            if (totalChargeAmount.IsSet && totalChargeAmount.Value == null)
+                throw new ArgumentNullException(nameof(totalChargeAmount), "Property is not nullable for class ReceiptPayload.");
 
             if (discounts.IsSet && discounts.Value == null)
                 throw new ArgumentNullException(nameof(discounts), "Property is not nullable for class ReceiptPayload.");
 
             if (charges.IsSet && charges.Value == null)
                 throw new ArgumentNullException(nameof(charges), "Property is not nullable for class ReceiptPayload.");
-
-            if (taxes.IsSet && taxes.Value == null)
-                throw new ArgumentNullException(nameof(taxes), "Property is not nullable for class ReceiptPayload.");
 
             if (transactionDate.IsSet && transactionDate.Value == null)
                 throw new ArgumentNullException(nameof(transactionDate), "Property is not nullable for class ReceiptPayload.");
@@ -525,13 +570,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (barcodes.IsSet && barcodes.Value == null)
                 throw new ArgumentNullException(nameof(barcodes), "Property is not nullable for class ReceiptPayload.");
 
-            if (paymentDetails.IsSet && paymentDetails.Value == null)
-                throw new ArgumentNullException(nameof(paymentDetails), "Property is not nullable for class ReceiptPayload.");
-
             if (jurisdictionalData.IsSet && jurisdictionalData.Value == null)
                 throw new ArgumentNullException(nameof(jurisdictionalData), "Property is not nullable for class ReceiptPayload.");
 
-            return new ReceiptPayload(documentNumber.Value!, issueDate.Value!.Value!, currency.Value!, receiptSubtotal.Value!.Value!, totalBeforeTax.Value!.Value!, totalTaxAmount.Value!.Value!, totalAmount.Value!.Value!, taxesApplied.Value!.Value!, products.Value!, identifiers, discounts, charges, taxes, transactionDate, purchaseDate, period, barcodes, paymentDetails, jurisdictionalData);
+            return new ReceiptPayload(documentNumber.Value!, issueDate.Value!.Value!, currency.Value!, receiptSubtotal.Value!.Value!, totalBeforeTax.Value!.Value!, totalTaxAmount.Value!.Value!, totalAmount.Value!.Value!, taxesApplied.Value!.Value!, products.Value!, taxes.Value!, paymentDetails.Value!, identifiers, totalDiscountAmount, totalChargeAmount, discounts, charges, transactionDate, purchaseDate, period, barcodes, jurisdictionalData);
         }
 
         /// <summary>
@@ -567,6 +609,12 @@ namespace Cheqi.Sdk.Models.Generated
             if (receiptPayload.Products == null)
                 throw new ArgumentNullException(nameof(receiptPayload.Products), "Property is required for class ReceiptPayload.");
 
+            if (receiptPayload.Taxes == null)
+                throw new ArgumentNullException(nameof(receiptPayload.Taxes), "Property is required for class ReceiptPayload.");
+
+            if (receiptPayload.PaymentDetails == null)
+                throw new ArgumentNullException(nameof(receiptPayload.PaymentDetails), "Property is required for class ReceiptPayload.");
+
             if (receiptPayload.IdentifiersOption.IsSet && receiptPayload.Identifiers == null)
                 throw new ArgumentNullException(nameof(receiptPayload.Identifiers), "Property is required for class ReceiptPayload.");
 
@@ -576,17 +624,11 @@ namespace Cheqi.Sdk.Models.Generated
             if (receiptPayload.ChargesOption.IsSet && receiptPayload.Charges == null)
                 throw new ArgumentNullException(nameof(receiptPayload.Charges), "Property is required for class ReceiptPayload.");
 
-            if (receiptPayload.TaxesOption.IsSet && receiptPayload.Taxes == null)
-                throw new ArgumentNullException(nameof(receiptPayload.Taxes), "Property is required for class ReceiptPayload.");
-
             if (receiptPayload.PeriodOption.IsSet && receiptPayload.Period == null)
                 throw new ArgumentNullException(nameof(receiptPayload.Period), "Property is required for class ReceiptPayload.");
 
             if (receiptPayload.BarcodesOption.IsSet && receiptPayload.Barcodes == null)
                 throw new ArgumentNullException(nameof(receiptPayload.Barcodes), "Property is required for class ReceiptPayload.");
-
-            if (receiptPayload.PaymentDetailsOption.IsSet && receiptPayload.PaymentDetails == null)
-                throw new ArgumentNullException(nameof(receiptPayload.PaymentDetails), "Property is required for class ReceiptPayload.");
 
             if (receiptPayload.JurisdictionalDataOption.IsSet && receiptPayload.JurisdictionalData == null)
                 throw new ArgumentNullException(nameof(receiptPayload.JurisdictionalData), "Property is required for class ReceiptPayload.");
@@ -624,11 +666,27 @@ namespace Cheqi.Sdk.Models.Generated
 
             writer.WritePropertyName("products");
             JsonSerializer.Serialize(writer, receiptPayload.Products, jsonSerializerOptions);
+            writer.WritePropertyName("taxes");
+            JsonSerializer.Serialize(writer, receiptPayload.Taxes, jsonSerializerOptions);
+            writer.WritePropertyName("paymentDetails");
+            JsonSerializer.Serialize(writer, receiptPayload.PaymentDetails, jsonSerializerOptions);
             if (receiptPayload.IdentifiersOption.IsSet)
             {
                 writer.WritePropertyName("identifiers");
                 JsonSerializer.Serialize(writer, receiptPayload.Identifiers, jsonSerializerOptions);
             }
+            if (receiptPayload.TotalDiscountAmountOption.IsSet)
+                {
+                    writer.WritePropertyName("totalDiscountAmount");
+                    JsonSerializer.Serialize(writer, receiptPayload.TotalDiscountAmountOption.Value!.Value, jsonSerializerOptions);
+                }
+
+            if (receiptPayload.TotalChargeAmountOption.IsSet)
+                {
+                    writer.WritePropertyName("totalChargeAmount");
+                    JsonSerializer.Serialize(writer, receiptPayload.TotalChargeAmountOption.Value!.Value, jsonSerializerOptions);
+                }
+
             if (receiptPayload.DiscountsOption.IsSet)
             {
                 writer.WritePropertyName("discounts");
@@ -638,11 +696,6 @@ namespace Cheqi.Sdk.Models.Generated
             {
                 writer.WritePropertyName("charges");
                 JsonSerializer.Serialize(writer, receiptPayload.Charges, jsonSerializerOptions);
-            }
-            if (receiptPayload.TaxesOption.IsSet)
-            {
-                writer.WritePropertyName("taxes");
-                JsonSerializer.Serialize(writer, receiptPayload.Taxes, jsonSerializerOptions);
             }
             if (receiptPayload.TransactionDateOption.IsSet)
                 {
@@ -665,11 +718,6 @@ namespace Cheqi.Sdk.Models.Generated
             {
                 writer.WritePropertyName("barcodes");
                 JsonSerializer.Serialize(writer, receiptPayload.Barcodes, jsonSerializerOptions);
-            }
-            if (receiptPayload.PaymentDetailsOption.IsSet)
-            {
-                writer.WritePropertyName("paymentDetails");
-                JsonSerializer.Serialize(writer, receiptPayload.PaymentDetails, jsonSerializerOptions);
             }
             if (receiptPayload.JurisdictionalDataOption.IsSet)
             {

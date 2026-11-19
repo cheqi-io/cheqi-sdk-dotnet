@@ -38,8 +38,9 @@ namespace Cheqi.Sdk.Models.Generated
         /// <param name="keyAlgorithm">keyAlgorithm</param>
         /// <param name="active">active</param>
         /// <param name="acceptsEmployeeSubmissions">acceptsEmployeeSubmissions</param>
+        /// <param name="formatPreferences">formatPreferences</param>
         [JsonConstructor]
-        public DestinationResponse(Option<Guid?> id = default, Option<string?> name = default, Option<string?> publicKey = default, Option<string?> keyAlgorithm = default, Option<bool?> active = default, Option<bool?> acceptsEmployeeSubmissions = default)
+        public DestinationResponse(Option<Guid?> id = default, Option<string?> name = default, Option<string?> publicKey = default, Option<string?> keyAlgorithm = default, Option<bool?> active = default, Option<bool?> acceptsEmployeeSubmissions = default, Option<List<ReceiptFormat>?> formatPreferences = default)
         {
             IdOption = id;
             NameOption = name;
@@ -47,6 +48,7 @@ namespace Cheqi.Sdk.Models.Generated
             KeyAlgorithmOption = keyAlgorithm;
             ActiveOption = active;
             AcceptsEmployeeSubmissionsOption = acceptsEmployeeSubmissions;
+            FormatPreferencesOption = formatPreferences;
             OnCreated();
         }
 
@@ -131,6 +133,19 @@ namespace Cheqi.Sdk.Models.Generated
         public bool? AcceptsEmployeeSubmissions { get { return this.AcceptsEmployeeSubmissionsOption; } set { this.AcceptsEmployeeSubmissionsOption = new(value); } }
 
         /// <summary>
+        /// Used to track the state of FormatPreferences
+        /// </summary>
+        [JsonIgnore]
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        public Option<List<ReceiptFormat>?> FormatPreferencesOption { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets FormatPreferences
+        /// </summary>
+        [JsonPropertyName("formatPreferences")]
+        public List<ReceiptFormat>? FormatPreferences { get { return this.FormatPreferencesOption; } set { this.FormatPreferencesOption = new(value); } }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -144,6 +159,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  KeyAlgorithm: ").Append(KeyAlgorithm).Append("\n");
             sb.Append("  Active: ").Append(Active).Append("\n");
             sb.Append("  AcceptsEmployeeSubmissions: ").Append(AcceptsEmployeeSubmissions).Append("\n");
+            sb.Append("  FormatPreferences: ").Append(FormatPreferences).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -177,6 +193,7 @@ namespace Cheqi.Sdk.Models.Generated
             Option<string?> keyAlgorithm = default;
             Option<bool?> active = default;
             Option<bool?> acceptsEmployeeSubmissions = default;
+            Option<List<ReceiptFormat>?> formatPreferences = default;
 
             while (utf8JsonReader.Read())
             {
@@ -211,6 +228,9 @@ namespace Cheqi.Sdk.Models.Generated
                         case "acceptsEmployeeSubmissions":
                             acceptsEmployeeSubmissions = new Option<bool?>(utf8JsonReader.TokenType == JsonTokenType.Null ? (bool?)null : utf8JsonReader.GetBoolean());
                             break;
+                        case "formatPreferences":
+                            formatPreferences = new Option<List<ReceiptFormat>?>(JsonSerializer.Deserialize<List<ReceiptFormat>>(ref utf8JsonReader, jsonSerializerOptions)!);
+                            break;
                         default:
                             break;
                     }
@@ -235,7 +255,10 @@ namespace Cheqi.Sdk.Models.Generated
             if (acceptsEmployeeSubmissions.IsSet && acceptsEmployeeSubmissions.Value == null)
                 throw new ArgumentNullException(nameof(acceptsEmployeeSubmissions), "Property is not nullable for class DestinationResponse.");
 
-            return new DestinationResponse(id, name, publicKey, keyAlgorithm, active, acceptsEmployeeSubmissions);
+            if (formatPreferences.IsSet && formatPreferences.Value == null)
+                throw new ArgumentNullException(nameof(formatPreferences), "Property is not nullable for class DestinationResponse.");
+
+            return new DestinationResponse(id, name, publicKey, keyAlgorithm, active, acceptsEmployeeSubmissions, formatPreferences);
         }
 
         /// <summary>
@@ -271,6 +294,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (destinationResponse.KeyAlgorithmOption.IsSet && destinationResponse.KeyAlgorithm == null)
                 throw new ArgumentNullException(nameof(destinationResponse.KeyAlgorithm), "Property is required for class DestinationResponse.");
 
+            if (destinationResponse.FormatPreferencesOption.IsSet && destinationResponse.FormatPreferences == null)
+                throw new ArgumentNullException(nameof(destinationResponse.FormatPreferences), "Property is required for class DestinationResponse.");
+
             if (destinationResponse.IdOption.IsSet)
                 writer.WriteString("id", destinationResponse.IdOption.Value!.Value);
 
@@ -288,6 +314,12 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (destinationResponse.AcceptsEmployeeSubmissionsOption.IsSet)
                 writer.WriteBoolean("acceptsEmployeeSubmissions", destinationResponse.AcceptsEmployeeSubmissionsOption.Value!.Value);
+
+            if (destinationResponse.FormatPreferencesOption.IsSet)
+            {
+                writer.WritePropertyName("formatPreferences");
+                JsonSerializer.Serialize(writer, destinationResponse.FormatPreferences, jsonSerializerOptions);
+            }
         }
     }
 }

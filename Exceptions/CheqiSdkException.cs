@@ -22,6 +22,8 @@ public class CheqiSdkException : Exception
     public string ErrorCode { get; }
     public int HttpStatusCode { get; }
     public string? CorrelationId { get; }
+    /// <summary>All receipt validation findings when validation prevented issuance.</summary>
+    public Validation.InvoiceValidationReport? ValidationReport { get; init; }
 
     /// <summary>
     /// Creates a new CheqiSdkException with a message.

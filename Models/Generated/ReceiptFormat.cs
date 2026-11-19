@@ -25,9 +25,9 @@ using System.Text.Json.Serialization;
 namespace Cheqi.Sdk.Models.Generated
 {
     /// <summary>
-    /// Receipt output format
+    /// Receipt output selection. Choose at most one invoice format: UBL_INVOICE (generic UBL 2.1, valid against the UBL 2.1-2.5 schemas) or UBL_INVOICE_2_1_EN16931_CORE_2017_V1 (EN 16931:2017 core invoice, UBL 2.1 binding).
     /// </summary>
-    /// <value>Receipt output format</value>
+    /// <value>Receipt output selection. Choose at most one invoice format: UBL_INVOICE (generic UBL 2.1, valid against the UBL 2.1-2.5 schemas) or UBL_INVOICE_2_1_EN16931_CORE_2017_V1 (EN 16931:2017 core invoice, UBL 2.1 binding).</value>
     public enum ReceiptFormat
     {
         /// <summary>
@@ -48,7 +48,12 @@ namespace Cheqi.Sdk.Models.Generated
         /// <summary>
         /// Enum UBLCREDITNOTE for value: UBL_CREDIT_NOTE
         /// </summary>
-        UBLCREDITNOTE = 4
+        UBLCREDITNOTE = 4,
+
+        /// <summary>
+        /// Enum UBLINVOICE21EN16931CORE2017V1 for value: UBL_INVOICE_2_1_EN16931_CORE_2017_V1
+        /// </summary>
+        UBLINVOICE21EN16931CORE2017V1 = 5
     }
 
     /// <summary>
@@ -75,6 +80,9 @@ namespace Cheqi.Sdk.Models.Generated
             if (value.Equals("UBL_CREDIT_NOTE"))
                 return ReceiptFormat.UBLCREDITNOTE;
 
+            if (value.Equals("UBL_INVOICE_2_1_EN16931_CORE_2017_V1"))
+                return ReceiptFormat.UBLINVOICE21EN16931CORE2017V1;
+
             throw new NotImplementedException($"Could not convert value to type ReceiptFormat: '{value}'");
         }
 
@@ -96,6 +104,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value.Equals("UBL_CREDIT_NOTE"))
                 return ReceiptFormat.UBLCREDITNOTE;
+
+            if (value.Equals("UBL_INVOICE_2_1_EN16931_CORE_2017_V1"))
+                return ReceiptFormat.UBLINVOICE21EN16931CORE2017V1;
 
             return null;
         }
@@ -119,6 +130,9 @@ namespace Cheqi.Sdk.Models.Generated
 
             if (value == ReceiptFormat.UBLCREDITNOTE)
                 return "UBL_CREDIT_NOTE";
+
+            if (value == ReceiptFormat.UBLINVOICE21EN16931CORE2017V1)
+                return "UBL_INVOICE_2_1_EN16931_CORE_2017_V1";
 
             throw new NotImplementedException($"Value could not be handled: '{value}'");
         }
