@@ -16,6 +16,8 @@ public sealed class DownloadServiceTests
         var sandbox = service.GenerateDownloadLink(CheqiApiEnvironment.Sandbox);
         Assert.StartsWith(DownloadService.ProductionBaseUrl + "/", production.Url);
         Assert.StartsWith(DownloadService.SandboxBaseUrl + "/", sandbox.Url);
+        Assert.StartsWith(DownloadService.TestBaseUrl + "/", service.GenerateDownloadLink(CheqiApiEnvironment.Test).Url);
+        Assert.Throws<ArgumentOutOfRangeException>(() => service.GenerateDownloadLink((CheqiApiEnvironment)99));
         Assert.Matches("^[A-Za-z0-9_-]{22}$", production.DownloadId);
         Assert.Matches("^[A-Za-z0-9_-]{43}$", production.ContentKey);
         Assert.NotEqual(production.DownloadId, sandbox.DownloadId);

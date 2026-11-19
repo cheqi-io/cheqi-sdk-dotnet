@@ -67,7 +67,7 @@ public sealed class CheqiApiClient : ICheqiApiClient
 
         if (!_httpClient.DefaultRequestHeaders.UserAgent.Any())
         {
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CheqiSDK/3.0.1");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CheqiSDK/3.0.2");
         }
     }
 

@@ -1,13 +1,18 @@
 # Cheqi .NET SDK
 
-The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 3.0.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
+The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 3.2.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
 
 Version 2.0 is a breaking migration from the old server-generated template flow. The library targets .NET 8 and is tested on .NET 8 and .NET 10.
 
 ## Installation and initialization
 
+Version 3.0.2 adds the shared offline receipt validator and uses one validated
+JSON snapshot throughout receipt issuance and recovery. Monetary amounts in
+encrypted receipt payloads are decimal strings, matching Java; caller-owned
+models are not modified.
+
 ```sh
-dotnet add package cheqi-sdk --version 3.0.1
+dotnet add package cheqi-sdk --version 3.0.2
 ```
 
 ```csharp
@@ -254,6 +259,19 @@ make spec-check ENV=prod
 Model generation uses OpenAPI Generator 7.14.0 and runs `scripts/prepare-generated-models.py` to register generated JSON converters, preserve optional enum absence, normalize numeric and date serialization, and fix the model-only generator's submission-response union. Schema drift checks compare parsed YAML so mapping-order changes do not cause false failures.
 
 MIT licensed. Support: support@cheqi.io.
+
+## Local receipt validation
+
+`sdk.ReceiptService.Validate(payload)` returns all validation findings without
+HTTP calls. Issuance, recovery, direct downloads, and device-envelope creation
+reject invalid receipts through `CheqiSdkException.ValidationReport`.
+`ReceiptPayloadValidator.RequireValidJson(payload)` returns the exact validated
+JSON with decimal strings; `ValidateOrThrow(payload)` remains available.
+
+Validation runs the bundled WASM engine offline using Wasmtime 50.0.1. Deploy
+the package's native runtime assets along with the SDK. CI covers Linux, macOS,
+and Windows on .NET 8 and 10. See [the Java/Python capability mapping](docs/sdk-parity.md)
+for service helpers and deployment details.
 
 ## Credit notes in the web wallet
 

@@ -8,6 +8,20 @@ namespace Cheqi.Sdk.Tests;
 
 public sealed class CreditNoteServiceTests
 {
+    [Fact]
+    public async Task AlreadyEncryptedCreditNoteCanBeSubmittedWithoutRematching()
+    {
+        using var harness = new SdkHarness();
+        harness.Enqueue(202, SdkHarness.Submitted);
+        var envelope = new EncryptedCreditNoteEnvelope("match-original", "parent-1", new());
+        var result = await harness.Sdk.CreditNoteService.SubmitEncryptedCreditNoteAsync(envelope,
+            Http.RequestOptions.WithAccessToken("explicit-token"));
+        Assert.Equal("receipt-1", result.CheqiReceiptId);
+        var request = Assert.Single(harness.Requests);
+        Assert.Equal("/credit-note/encrypted", request.Path);
+        Assert.Equal("Bearer explicit-token", request.Authorization);
+        Assert.Equal("parent-1", SdkHarness.Read<EncryptedCreditNoteEnvelope>(request.Body).ParentCheqiReceiptId);
+    }
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
