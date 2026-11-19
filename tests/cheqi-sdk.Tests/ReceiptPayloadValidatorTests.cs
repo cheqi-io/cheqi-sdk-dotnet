@@ -46,6 +46,12 @@ public sealed class ReceiptPayloadValidatorTests
         using var json = JsonDocument.Parse(original);
         Assert.Equal(19.41m, json.RootElement.GetProperty("totalAmount").GetDecimal());
         Assert.Equal(8.905m, json.RootElement.GetProperty("products")[0].GetProperty("unitPrice").GetDecimal());
+
+        receipt.Products[0].UnitPrice = 8.9050000000000001m;
+        using var snapshot = JsonDocument.Parse(validator.RequireValidJson(receipt));
+        Assert.Equal("8.9050000000000001", snapshot.RootElement.GetProperty("products")[0].GetProperty("unitPrice").GetString());
+        Assert.Equal("19.41", snapshot.RootElement.GetProperty("totalAmount").GetString());
+        Assert.Equal(8.9050000000000001m, receipt.Products[0].UnitPrice);
     }
 
     [Fact]

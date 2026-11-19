@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Cheqi.Sdk.Encryption;
 using Cheqi.Sdk.Http;
 using Cheqi.Sdk.Matching;
@@ -19,6 +20,29 @@ public sealed class CreditNoteService
         _api = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _encryption = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         _matching = matchingService ?? throw new ArgumentNullException(nameof(matchingService));
+    }
+
+    /// <summary>Prepare an ordinary encrypted receipt link. The receiving wallet matches the invoice locally.</summary>
+    public PreparedReceiptDownload PrepareDownload(object payload, string baseUrl = "https://receipt.cheqi.io")
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        var node = JsonNode.Parse(payload as string ?? JsonSerializer.Serialize(payload, CheqiJson.CreateOptions())) as JsonObject
+            ?? throw new ArgumentException("Credit-note payload must be an object");
+        var body = node["creditNoteTemplateRequest"] as JsonObject ?? node;
+        foreach (var field in new[] { "documentNumber", "originatorDocumentReference" })
+            if (body[field] is not JsonValue text || !text.TryGetValue<string>(out var value) || string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException($"{field} is required");
+        if (node["taxesApplied"] is not JsonValue taxes || !taxes.TryGetValue<bool>(out var taxesApplied))
+            throw new ArgumentException("taxesApplied must be a boolean");
+        var document = body.DeepClone().AsObject();
+        document["taxesApplied"] = taxesApplied;
+        var downloads = new Download.DownloadService();
+        var link = downloads.GenerateDownloadLink(baseUrl);
+        var envelope = new ReceiptEnvelope(link.DownloadId, new Dictionary<string, ReceiptEnvelopeDocument> {
+            ["CREDIT_NOTE_PAYLOAD"] = new(document.ToJsonString(), ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson)
+        }, 2, "credit-note-payload-v1", Guid.NewGuid());
+        return new PreparedReceiptDownload(link.Url, new ClientReceiptDownloadRequest(link.DownloadId,
+            downloads.EncryptDownloadEnvelope(envelope, link.ContentKey)));
     }
 
     /// <summary>Accepts a serializable object or an already serialized JSON string; values are not recalculated.</summary>

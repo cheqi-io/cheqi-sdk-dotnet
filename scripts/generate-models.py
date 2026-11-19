@@ -24,7 +24,8 @@ with tempfile.TemporaryDirectory(prefix="cheqi-dotnet-gen-") as directory:
         sys.exit("Generator did not produce the expected model files")
     destination = root / "Models/Generated"
     destination.mkdir(parents=True, exist_ok=True)
-    # Keep retired public DTOs for source compatibility; overwrite current models.
+    for path in destination.glob("*.cs"):
+        path.unlink()
     for path in sources:
         shutil.copyfile(path, destination / path.name)
 subprocess.run([sys.executable, str(root / "scripts/prepare-generated-models.py")], cwd=root, check=True)

@@ -92,7 +92,7 @@ namespace Cheqi.Sdk.Models.Generated
             sb.Append("  PublicKey: ").Append(PublicKey).Append("\n");
             sb.Append("  KeyAlgorithm: ").Append(KeyAlgorithm).Append("\n");
             sb.Append("  ClientId: ").Append(ClientId).Append("\n");
-            sb.Append("  ClientSecret: ").Append("<redacted>").Append("\n");
+            sb.Append("  ClientSecret: ").Append(ClientSecret).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

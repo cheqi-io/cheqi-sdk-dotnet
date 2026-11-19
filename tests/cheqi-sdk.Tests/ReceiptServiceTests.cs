@@ -40,7 +40,7 @@ public sealed class ReceiptServiceTests
         var envelope = SdkHarness.Read<EncryptedReceiptEnvelope>(harness.Requests[1].Body);
         Assert.Equal(store, envelope.StoreId);
         Assert.Equal(2, envelope.DeviceDeliveries.Count);
-        var expected = JsonSerializer.Serialize(payload, CheqiJson.CreateOptions());
+        var expected = new Validation.ReceiptPayloadValidator().RequireValidJson(payload);
         Assert.All(envelope.DeviceDeliveries, delivery => Assert.Equal(expected, SdkHarness.Decrypt(delivery, rsa)));
         Assert.NotEqual(envelope.DeviceDeliveries[0].EncryptedContent, envelope.DeviceDeliveries[1].EncryptedContent);
         Assert.DoesNotContain("POS-001", harness.Requests[1].Body);

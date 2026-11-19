@@ -46,7 +46,7 @@ public sealed class ReceiptService
         Guid? storeId = null, RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(identificationDetails);
-        ValidatePayload(receiptPayload);
+        var payloadJson = _validator.RequireValidJson(receiptPayload);
         cancellationToken.ThrowIfCancellationRequested();
         RecipientResolutionResponse match;
         try
@@ -54,7 +54,7 @@ public sealed class ReceiptService
             match = await _matching.MatchCustomerAsync(identificationDetails, options, cancellationToken).ConfigureAwait(false);
         }
         catch (CheqiApiException exception) when (IsRecoverable(exception))
-        { return ReceiptResult.DownloadPrepared(PrepareDownload(receiptPayload)); }
+        { return ReceiptResult.DownloadPrepared(PrepareDownload(payloadJson)); }
         ValidateRoute(match);
         switch (ResolveRoute(match))
         {
@@ -62,17 +62,17 @@ public sealed class ReceiptService
                 if (identificationDetails.PaymentType == null)
                     return new ReceiptResult { State = ReceiptIssueState.DownloadFallback, MatchId = match.MatchId,
                         DeliveryRouteType = Route.DOWNLOADFALLBACK, ExpiresAt = match.ExpiresAt, DownloadEnvelopeRequired = true };
-                return await DeliverDownloadAsync(match.MatchId, receiptPayload, identificationDetails, options, cancellationToken).ConfigureAwait(false);
+                return await DeliverDownloadAsync(match.MatchId, payloadJson, identificationDetails, options, cancellationToken).ConfigureAwait(false);
             case Route.EMAILFALLBACK:
                 return new ReceiptResult { State = ReceiptIssueState.EmailFallback, MatchId = match.MatchId,
                     DeliveryRouteType = Route.EMAILFALLBACK, ExpiresAt = match.ExpiresAt, EmailReceiptRequired = true };
         }
-        var envelope = GenerateEncryptedReceiptEnvelope(match, receiptPayload, storeId);
+        var envelope = GenerateEnvelope(match.MatchId!, match.Recipients, payloadJson, storeId);
         try { return ReceiptResult.Accepted(await SubmitPayloadAsync(envelope, options, cancellationToken).ConfigureAwait(false)); }
         catch (CheqiApiException exception) when (exception.HttpStatusCode == 410)
         { return ReceiptResult.Expired(match.MatchId!); }
         catch (CheqiApiException exception) when (IsAmbiguous(exception))
-        { return ReceiptResult.Pending(match.MatchId!, PrepareDownload(receiptPayload), RetryAfter(exception)); }
+        { return ReceiptResult.Pending(match.MatchId!, PrepareDownload(payloadJson), RetryAfter(exception)); }
     }
 
     /// <summary>Retrieves only the original opaque match ID; never rematches the customer.</summary>
@@ -87,7 +87,7 @@ public sealed class ReceiptService
         RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
         RequireText(matchId, nameof(matchId));
-        ValidatePayload(receiptPayload);
+        var payloadJson = _validator.RequireValidJson(receiptPayload);
         try
         {
             var match = await _api.GetMatchAsync(matchId, options, cancellationToken).ConfigureAwait(false);
@@ -104,7 +104,7 @@ public sealed class ReceiptService
                     return ReceiptResult.Expired(matchId);
                 case MatchState.MATCHED:
                     return ReceiptResult.Accepted(await SubmitPayloadAsync(
-                        GenerateEncryptedReceiptEnvelope(match, receiptPayload, storeId), options, cancellationToken).ConfigureAwait(false));
+                        GenerateEncryptedReceiptEnvelope(match, payloadJson, storeId), options, cancellationToken).ConfigureAwait(false));
                 default: throw new CheqiSdkException("Unknown match state");
             }
         }
@@ -116,24 +116,26 @@ public sealed class ReceiptService
     {
         ValidateRoute(match);
         if (ResolveRoute(match) != Route.DIGITAL) throw new ArgumentException("Match must have a digital owner-device route", nameof(match));
-        return GenerateEnvelope(match.MatchId!, match.Recipients, receiptPayload, storeId);
+        return GenerateEnvelope(match.MatchId!, match.Recipients, _validator.RequireValidJson(receiptPayload), storeId);
     }
 
     public EncryptedReceiptEnvelope GenerateEncryptedReceiptEnvelope(MatchStatusResponse match, ReceiptPayload receiptPayload, Guid? storeId = null)
+        => GenerateEncryptedReceiptEnvelope(match, _validator.RequireValidJson(receiptPayload), storeId);
+
+    private EncryptedReceiptEnvelope GenerateEncryptedReceiptEnvelope(MatchStatusResponse match, string payloadJson, Guid? storeId)
     {
         ArgumentNullException.ThrowIfNull(match);
         if (match.State != MatchState.MATCHED || match.Route != MatchStatusResponse.RouteEnum.DIGITAL)
             throw new ArgumentException("Match must be MATCHED with a digital owner-device route", nameof(match));
-        return GenerateEnvelope(match.MatchId!, match.Recipients, receiptPayload, storeId);
+        return GenerateEnvelope(match.MatchId!, match.Recipients, payloadJson, storeId);
     }
 
-    private EncryptedReceiptEnvelope GenerateEnvelope(string matchId, List<MatchedRecipient>? recipients, ReceiptPayload payload, Guid? storeId)
+    private EncryptedReceiptEnvelope GenerateEnvelope(string matchId, List<MatchedRecipient>? recipients, string payloadJson, Guid? storeId)
     {
         RequireText(matchId, nameof(matchId));
-        ValidatePayload(payload);
         if (recipients == null || recipients.Count == 0 || recipients.Any(recipient => recipient == null))
             throw new ArgumentException("Match must contain owner devices", nameof(recipients));
-        var envelope = new EncryptedReceiptEnvelope(matchId, _encryption.EncryptReceiptForRecipients(JsonSerializer.Serialize(payload, _json), recipients));
+        var envelope = new EncryptedReceiptEnvelope(matchId, _encryption.EncryptReceiptForRecipients(payloadJson, recipients));
         if (storeId.HasValue) envelope.StoreId = storeId;
         return envelope;
     }
@@ -163,10 +165,10 @@ public sealed class ReceiptService
         RequestOptions? options = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(identificationDetails);
-        ValidatePayload(receiptPayload);
+        var payloadJson = _validator.RequireValidJson(receiptPayload);
         if (identificationDetails.PaymentType == null) throw new ArgumentException("PaymentType is required", nameof(identificationDetails));
         cancellationToken.ThrowIfCancellationRequested();
-        return DeliverDownloadAsync(null, receiptPayload, identificationDetails, options, cancellationToken);
+        return DeliverDownloadAsync(null, payloadJson, identificationDetails, options, cancellationToken);
     }
 
     public async Task<ReceiptResult> CompleteDownloadFallbackAsync(ReceiptResult fallbackResult, ReceiptEnvelope receiptEnvelope,
@@ -197,10 +199,10 @@ public sealed class ReceiptService
         return document.ToJsonString(_json);
     }
 
-    private async Task<ReceiptResult> DeliverDownloadAsync(string? matchId, ReceiptPayload payload, IdentificationDetails identification,
+    private async Task<ReceiptResult> DeliverDownloadAsync(string? matchId, string payloadJson, IdentificationDetails identification,
         RequestOptions? options, CancellationToken cancellationToken)
     {
-        var prepared = PrepareDownload(payload, identification);
+        var prepared = PrepareDownload(payloadJson, identification);
         try
         {
             var response = await UploadPreparedDownloadAsync(prepared, options, cancellationToken).ConfigureAwait(false);
@@ -209,12 +211,11 @@ public sealed class ReceiptService
         catch (CheqiApiException exception) when (IsRecoverable(exception)) { return ReceiptResult.DownloadPrepared(prepared); }
     }
 
-    private PreparedReceiptDownload PrepareDownload(ReceiptPayload payload, IdentificationDetails? identification = null)
+    private PreparedReceiptDownload PrepareDownload(string payloadJson, IdentificationDetails? identification = null)
     {
         var link = _downloads.GenerateDownloadLink(RequireDownloadBaseUrl());
-        var plaintext = JsonSerializer.Serialize(payload, _json);
         var documents = new Dictionary<string, ReceiptEnvelopeDocument> {
-            ["RECEIPT_PAYLOAD"] = new(plaintext, ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson)
+            ["RECEIPT_PAYLOAD"] = new(payloadJson, ReceiptEnvelopeDocument.MediaTypeEnum.ApplicationJson)
         };
         if (identification != null)
             documents["IDENTIFICATION_DETAILS"] = new(JsonSerializer.Serialize(identification, _json),
@@ -222,7 +223,7 @@ public sealed class ReceiptService
         var envelope = new ReceiptEnvelope(link.DownloadId,
             documents, 2, "receipt-payload-v1", Guid.NewGuid());
         var request = new ClientReceiptDownloadRequest(link.DownloadId, _downloads.EncryptDownloadEnvelope(envelope, link.ContentKey))
-        { TemplateHash = new VerificationService().CalculateCheqiReceiptHash(plaintext) };
+        { TemplateHash = new VerificationService().CalculateCheqiReceiptHash(payloadJson) };
         return new PreparedReceiptDownload(link.Url, request);
     }
 
@@ -247,9 +248,4 @@ public sealed class ReceiptService
         (match.Recipients?.Count > 0 ? Route.DIGITAL : throw new CheqiSdkException("Resolution did not include deliveryRouteType"));
     internal static void RequireText(string? value, string name)
     { if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException($"{name} is required", name); }
-    private void ValidatePayload(ReceiptPayload payload)
-    {
-        ArgumentNullException.ThrowIfNull(payload);
-        _validator.ValidateOrThrow(payload);
-    }
 }

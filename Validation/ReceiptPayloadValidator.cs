@@ -20,10 +20,12 @@ public sealed class ReceiptPayloadValidator
     private static readonly JsonSerializerOptions PayloadJson = CreatePayloadOptions();
 
     /// <summary>Reports all findings without changing the supplied receipt or contacting Cheqi.</summary>
-    public InvoiceValidationReport Validate(ReceiptPayload payload)
+    public InvoiceValidationReport Validate(ReceiptPayload payload) => ValidateJson(SerializePayload(payload));
+
+    private static string SerializePayload(ReceiptPayload payload)
     {
         ArgumentNullException.ThrowIfNull(payload);
-        try { return ValidateJson(JsonSerializer.Serialize(payload, PayloadJson)); }
+        try { return JsonSerializer.Serialize(payload, PayloadJson); }
         catch (CheqiSdkException) { throw; }
         catch (Exception exception) when (exception is JsonException or ArgumentException or InvalidOperationException)
         {
@@ -82,13 +84,18 @@ public sealed class ReceiptPayloadValidator
     }
 
     /// <summary>Stops issuance with all detected issues before matching, encryption, or upload.</summary>
-    public void ValidateOrThrow(ReceiptPayload payload)
+    public void ValidateOrThrow(ReceiptPayload payload) => RequireValidJson(payload);
+
+    /// <summary>Returns the exact validated JSON to encrypt, preserving decimal amounts as strings.</summary>
+    public string RequireValidJson(ReceiptPayload payload)
     {
-        var report = Validate(payload);
+        var json = SerializePayload(payload);
+        var report = ValidateJson(json);
         if (!report.Valid)
             throw new CheqiSdkException("Invalid receipt payload: " + string.Join("; ",
                 report.Issues.Select(issue => $"{issue.RuleId} — {issue.Path}: {issue.Message}")),
                 CheqiSdkException.ErrorCodes.VALIDATION_ERROR, 0, null) { ValidationReport = report };
+        return json;
     }
 
     private static (Engine, Module) LoadRuntime()

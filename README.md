@@ -1,13 +1,18 @@
 # Cheqi .NET SDK
 
-The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 3.0.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
+The .NET SDK provides the same receipt issuance, encrypted downloads, match recovery, credit-note issuance, decryption, verification, and store management as the Java SDK 3.2.0. Its APIs use `Task`, cancellation tokens, `Guid` identifiers, `decimal` amounts, `System.Text.Json`, dependency injection, and `Microsoft.Extensions.Logging`.
 
 Version 2.0 is a breaking migration from the old server-generated template flow. The library targets .NET 8 and is tested on .NET 8 and .NET 10.
 
 ## Installation and initialization
 
+Version 3.0.2 adds the shared offline receipt validator and uses one validated
+JSON snapshot throughout receipt issuance and recovery. Monetary amounts in
+encrypted receipt payloads are decimal strings, matching Java; caller-owned
+models are not modified.
+
 ```sh
-dotnet add package cheqi-sdk --version 3.0.0
+dotnet add package cheqi-sdk --version 3.0.2
 ```
 
 ```csharp
@@ -103,10 +108,9 @@ var payload = new ReceiptPayload(
     products: new List<Product>
     {
         new("Coffee", "coffee-1", 1, UnitCode.C62, 10m, 10m, 12.10m)
-        { Taxes = new List<Tax> { new(21, "VAT", 10m) { Amount = 2.10m, Category = TaxCategoryCode.STANDARD } } }
     },
-    taxes: new List<Tax> { new(21, "VAT", 10m) { Amount = 2.10m, Category = TaxCategoryCode.STANDARD } },
-    paymentDetails: new PaymentDetails { PaymentMeansCode = "48", PaidAmount = 12.10m, AmountDue = 0m, RoundingAmount = 0m });
+    taxes: new List<Tax> { new(21, "VAT", 10m, amount: 2.10m, category: TaxCategoryCode.STANDARD) },
+    paymentDetails: new PaymentDetails(paidAmount: 12.10m, amountDue: 0m, roundingAmount: 0m));
 
 var result = await sdk.ReceiptService.IssueReceiptAsync(
     identification, payload, cancellationToken: cancellationToken);
@@ -115,38 +119,6 @@ var result = await sdk.ReceiptService.IssueReceiptAsync(
 The SDK resolves a route, serializes the definitive values you supply, independently encrypts the same payload for each owner device with AES-256-GCM and RSA-OAEP-SHA256, and submits only ciphertext. It performs no receipt calculations or template enrichment. An accepted job can still be awaiting device processing; `result.Status` reports that backend status.
 
 Pairing codes, card PARs, payment accounts, email addresses, and original Cheqi receipt IDs can identify customers. A payment type alone is valid anonymous payment context and can resolve a download fallback.
-
-## Validate receipt values
-
-The .NET SDK uses the same pinned, offline receipt validator as Java and Python
-(engine 0.4.4, ABI 1). Issuing, resuming, explicitly downloading, and generating an
-encrypted receipt envelope validate the supplied payload before HTTP or encryption.
-Invalid amounts or missing tax/payment data stop issuance with `VALIDATION_ERROR`;
-the SDK does not calculate, round, or repair caller-supplied values.
-
-```csharp
-var report = sdk.ReceiptService.Validate(payload);
-foreach (var issue in report.Issues)
-    Console.WriteLine($"{issue.RuleId}: {issue.Path} — {issue.Message}");
-
-// Also usable independently of an authenticated SDK instance:
-var validator = new Cheqi.Sdk.Validation.ReceiptPayloadValidator();
-var jsonReport = validator.ValidateJson(receiptJson);
-```
-
-`CheqiSdkException.ValidationReport` contains all detected findings when issuance
-fails validation. The report covers `EN16931_CORE_2017_V1` receipt-payload rules;
-`CompleteDocument` is false because final document validation happens in the wallet.
-Pre-encrypted submissions cannot inspect plaintext and do not run this validator.
-
-The NuGet package embeds the checksum-verified WASM module and its source manifest.
-Wasmtime 50.0.1 supplies a native runtime; deploy its NuGet runtime assets alongside
-the SDK. Validation is offline, limits each call to 64 MiB of WASM memory and
-200 million fuel units, and gives concurrent calls independent instances. A missing
-or unusable runtime raises `CONFIGURATION_ERROR` rather than skipping validation.
-The shared golden reports are tested on Linux, macOS, and Windows with .NET 8 and 10.
-
-See [Java/Python capability mapping](docs/sdk-parity.md) for the public service surface.
 
 ## Outcomes and recovery
 
@@ -288,11 +260,43 @@ Model generation uses OpenAPI Generator 7.14.0 and runs `scripts/prepare-generat
 
 MIT licensed. Support: support@cheqi.io.
 
-### OAuth diagnostic redaction
+## Local receipt validation
 
-OAuth client secrets, access tokens, authorization codes, and PKCE verifiers are
-redacted in SDK model diagnostic strings. Token-endpoint errors omit response
-bodies and parser details that could contain credentials. Explicit JSON
-serialization and credential properties retain their values for authentication.
-Model regeneration preserves retired public DTOs for source compatibility while
-refreshing models still present in the production OpenAPI contract.
+`sdk.ReceiptService.Validate(payload)` returns all validation findings without
+HTTP calls. Issuance, recovery, direct downloads, and device-envelope creation
+reject invalid receipts through `CheqiSdkException.ValidationReport`.
+`ReceiptPayloadValidator.RequireValidJson(payload)` returns the exact validated
+JSON with decimal strings; `ValidateOrThrow(payload)` remains available.
+
+Validation runs the bundled WASM engine offline using Wasmtime 50.0.1. Deploy
+the package's native runtime assets along with the SDK. CI covers Linux, macOS,
+and Windows on .NET 8 and 10. See [the Java/Python capability mapping](docs/sdk-parity.md)
+for service helpers and deployment details.
+
+## Credit notes in the web wallet
+
+For the web wallet, issue the credit note through an ordinary encrypted receipt
+link. Include its own `documentNumber`, the original invoice's exact number in
+`originatorDocumentReference`, and the normal `taxesApplied` boolean. The helper
+also accepts the existing generation wrapper with `taxesApplied` at its root and
+`creditNoteTemplateRequest` as its body. Amounts are preserved without calculations.
+
+The reference stays inside the ciphertext. There is no backend invoice lookup,
+reference hash, parent Cheqi ID or encrypted parent-link field. Once the customer
+opens the credit note's link, the wallet matches the decrypted reference to one
+local invoice with that exact document number from the same issuer. If no unique
+invoice is available, the note remains visible on its own and can link later.
+The original invoice is unchanged, and both documents support ordinary PDF/XML
+export and independent removal.
+
+Preparation is local and reuses the existing `PreparedReceiptDownload` result and
+backend-generated envelope/upload models. Persist it before upload; retry the same
+prepared ciphertext after uncertain outcomes. For a custom receipt host, supply
+`baseUrl` (`base_url` in Python) to preparation. The browser needs the updated
+credit-note envelope support; no new backend routing endpoint or migration is needed.
+
+```csharp
+var prepared = sdk.CreditNoteService.PrepareDownload(creditNotePayload);
+// Persist prepared and show prepared.DownloadUrl as the normal receipt link/QR.
+await sdk.ReceiptService.UploadPreparedDownloadAsync(prepared);
+```

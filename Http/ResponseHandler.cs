@@ -91,20 +91,12 @@ public class ResponseHandler
                     }
                 }
                 catch (Exception exception) when (exception is JsonException or InvalidOperationException or FormatException)
-                {
-                if (typeof(T) == typeof(Cheqi.Sdk.Models.Generated.OAuthTokenExchangeResponse))
-                    throw new CheqiApiException("Invalid token response", (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId);
-                throw new CheqiApiException("Invalid JSON response", exception, (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId);
-            }
+                { throw new CheqiApiException("Invalid JSON response", exception, (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId); }
             }
             T? result;
             try { result = JsonSerializer.Deserialize<T>(responseJson, _jsonOptions); }
             catch (Exception exception) when (exception is JsonException or ArgumentException or NotImplementedException or InvalidOperationException or FormatException)
-            {
-                if (typeof(T) == typeof(Cheqi.Sdk.Models.Generated.OAuthTokenExchangeResponse))
-                    throw new CheqiApiException("Invalid token response", (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId);
-                throw new CheqiApiException("Invalid JSON response", exception, (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId);
-            }
+            { throw new CheqiApiException("Invalid JSON response", exception, (int)response.StatusCode, CheqiApiException.ErrorCodes.INVALID_RESPONSE, correlationId); }
             if (result == null)
             {
                 throw new CheqiApiException(
@@ -121,7 +113,7 @@ public class ResponseHandler
         }
         else
         {
-            throw BuildApiException((int)response.StatusCode, typeof(T) == typeof(Cheqi.Sdk.Models.Generated.OAuthTokenExchangeResponse) ? "" : responseJson, correlationId, operationName);
+            throw BuildApiException((int)response.StatusCode, responseJson, correlationId, operationName);
         }
     }
 
@@ -170,7 +162,7 @@ public class ResponseHandler
         }
         else
         {
-            throw BuildApiException((int)response.StatusCode, typeof(T) == typeof(Cheqi.Sdk.Models.Generated.OAuthTokenExchangeResponse) ? "" : responseJson, correlationId, operationName);
+            throw BuildApiException((int)response.StatusCode, responseJson, correlationId, operationName);
         }
     }
 

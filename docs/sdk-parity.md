@@ -14,11 +14,12 @@ need not have identical names.
 | Change a webhook subscription URL | `WebhookService.UpdateSubscriptionUrlAsync` |
 | Obtain a client-credentials token | `OAuthService.RequestAccessTokenAsync` |
 | Resolve a customer/device route | `MatchingService.MatchCustomerAsync` |
-| Validate caller-supplied receipt values | `ReceiptService.Validate`; standalone `ReceiptPayloadValidator.Validate`, `ValidateJson`, `ValidateOrThrow`; `CheqiSdkException.ValidationReport` |
+| Validate caller-supplied receipt values | `ReceiptService.Validate`; standalone `ReceiptPayloadValidator.Validate`, `ValidateJson`, `ValidateOrThrow`, `RequireValidJson`; `CheqiSdkException.ValidationReport` |
 | Issue, recover by original match, generate and submit encrypted receipts | `ReceiptService.IssueReceiptAsync`, `GetMatchAsync`, `ResumeReceiptAsync`, `GenerateEncryptedReceiptEnvelope`, `SubmitEncryptedReceiptAsync` |
 | Issue downloads, upload a persisted fallback and complete a fallback envelope | `ReceiptService.IssueDownloadReceiptAsync`, `UploadPreparedDownloadAsync`, `CompleteDownloadFallbackAsync` |
 | Python's legacy version 1 browser document helper | `ReceiptService.BuildDownloadCheqiDocument` |
 | Issue a credit note and Python's low-level encrypted submission helper | `CreditNoteService.IssueCreditNoteAsync`, `SubmitEncryptedCreditNoteAsync` |
+| Prepare an encrypted credit-note link for wallet-local invoice matching | `CreditNoteService.PrepareDownload` |
 | Device encryption and receipt/return-request decryption | `EncryptionService.EncryptForDevice`, `EncryptReceiptForRecipient`, `EncryptCreditNoteForRecipient`; `DecryptionService.DecryptReceipt`, `DecryptCreditNoteInitiation`, `DecryptCreditNoteInitiationRequest` |
 | Download URL/key generation, parsing and envelope encryption/decryption | `DownloadService.GenerateDownloadLink`, `BuildDownloadUrl`, `ParseDownloadUrl`, `EncryptDownloadEnvelope`, `DecryptDownloadEnvelope` |
 | Canonical JSON/XML hashes and Python's verification helpers | `VerificationService.CanonicalizeCheqiReceipt`, `CalculateCheqiReceiptHash`, `CanonicalizeUbl`, `CalculateUblHash`, `CanonicalizeAndHashJson`, `CanonicalizeAndHashXml`, `VerifyJsonHash`, `VerifyXmlHash` |
@@ -33,5 +34,12 @@ Python reference. `Validation/Resources/manifest.json` records the engine versio
 clean source commit, target, ABI and SHA-256 digest; the digest and provenance are
 checked before module compilation. The tests compare every shared report, exercise
 concurrent calls, reject corrupted bundles, stop invalid receipts before HTTP, and
-verify that validation leaves numeric wire serialization and encrypted plaintext
-unchanged.
+verify that validation leaves caller-owned models unchanged. Receipt issuance
+serializes once with exact decimal strings, validates that JSON, and reuses it
+for device encryption, recovery, and download fallback. Callback mutations cannot
+change the validated snapshot. This matches Java's receipt payload representation;
+ordinary DTO serialization and the legacy document builder retain their existing format.
+
+Validation uses the Wasmtime native runtime on supported .NET platforms. Java
+uses its own runtime; matching validation behavior does not imply identical
+deployment dependencies.
